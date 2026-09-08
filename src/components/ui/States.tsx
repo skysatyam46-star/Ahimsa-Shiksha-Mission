@@ -1,0 +1,217 @@
+import React from 'react';
+import {
+  AlertCircle,
+  RotateCcw,
+  Sparkles,
+  Headphones,
+  Image as ImageIcon,
+  FileText,
+  Bell,
+} from 'lucide-react';
+import { PrimaryButton, SecondaryButton } from './Buttons';
+
+/* --------------------------------------------------
+   EMPTY STATE
+-------------------------------------------------- */
+interface EmptyStateProps {
+  title?: string;
+  description?: string;
+  icon?: React.ReactNode;
+  actionText?: string;
+  onAction?: () => void;
+  className?: string;
+}
+
+export const EmptyState: React.FC<EmptyStateProps> = ({
+  title = 'यहाँ अभी कोई सामग्री उपलब्ध नहीं है',
+  description = 'कृपया बाद में पुनः देखें या अन्य अनुभागों का अवलोकन करें।',
+  icon,
+  actionText,
+  onAction,
+  className = '',
+}) => {
+  return (
+    <div
+      className={`w-full py-12 px-6 flex flex-col items-center justify-center text-center bg-white border border-[#E8E5DF] rounded-2xl ${className}`}
+    >
+      <div className="w-14 h-14 rounded-full bg-[#EEF3FA] text-[#16325C] flex items-center justify-center mb-4">
+        {icon || <Sparkles size={24} strokeWidth={1.8} />}
+      </div>
+
+      <h3 className="text-[17px] font-semibold text-[#16325C] mb-1.5 leading-snug">
+        {title}
+      </h3>
+
+      <p className="text-[14px] text-[#5C6773] max-w-[280px] leading-relaxed mb-5">
+        {description}
+      </p>
+
+      {actionText && onAction && (
+        <SecondaryButton size="sm" onClick={onAction}>
+          {actionText}
+        </SecondaryButton>
+      )}
+    </div>
+  );
+};
+
+/* --------------------------------------------------
+   CONTENT-SPECIFIC REUSABLE EMPTY STATES
+-------------------------------------------------- */
+export const AudioEmptyState: React.FC<{
+  actionText?: string;
+  onAction?: () => void;
+  className?: string;
+}> = ({ actionText, onAction, className = '' }) => (
+  <EmptyState
+    icon={<Headphones size={24} strokeWidth={1.8} />}
+    title="अभी कोई ऑडियो उपलब्ध नहीं है"
+    description="नए ऑडियो संदेश यहाँ दिखाई देंगे।"
+    actionText={actionText}
+    onAction={onAction}
+    className={className}
+  />
+);
+
+export const PhotoEmptyState: React.FC<{
+  actionText?: string;
+  onAction?: () => void;
+  className?: string;
+}> = ({ actionText, onAction, className = '' }) => (
+  <EmptyState
+    icon={<ImageIcon size={24} strokeWidth={1.8} />}
+    title="अभी कोई फोटो उपलब्ध नहीं है"
+    description="मिशन की गतिविधियों की नई तस्वीरें यहाँ दिखाई देंगी।"
+    actionText={actionText}
+    onAction={onAction}
+    className={className}
+  />
+);
+
+export const DocumentEmptyState: React.FC<{
+  actionText?: string;
+  onAction?: () => void;
+  className?: string;
+}> = ({ actionText, onAction, className = '' }) => (
+  <EmptyState
+    icon={<FileText size={24} strokeWidth={1.8} />}
+    title="अभी कोई दस्तावेज उपलब्ध नहीं है"
+    description="नए दस्तावेज और अध्ययन सामग्री यहाँ दिखाई देंगे।"
+    actionText={actionText}
+    onAction={onAction}
+    className={className}
+  />
+);
+
+export const NoticeEmptyState: React.FC<{
+  actionText?: string;
+  onAction?: () => void;
+  className?: string;
+}> = ({ actionText, onAction, className = '' }) => (
+  <EmptyState
+    icon={<Bell size={24} strokeWidth={1.8} />}
+    title="अभी कोई सूचना उपलब्ध नहीं है"
+    description="मिशन की नई सूचनाएँ और अपडेट यहाँ दिखाई देंगे।"
+    actionText={actionText}
+    onAction={onAction}
+    className={className}
+  />
+);
+
+/* --------------------------------------------------
+   LOADING STATE
+-------------------------------------------------- */
+interface LoadingStateProps {
+  message?: string;
+  variant?: 'spinner' | 'skeleton';
+  className?: string;
+}
+
+export const LoadingState: React.FC<LoadingStateProps> = ({
+  message = 'सामग्री लोड हो रही है...',
+  variant = 'skeleton',
+  className = '',
+}) => {
+  if (variant === 'spinner') {
+    return (
+      <div
+        className={`w-full py-10 flex flex-col items-center justify-center gap-3 text-center ${className}`}
+      >
+        <div className="w-8 h-8 rounded-full border-3 border-[#EEF3FA] border-t-[#16325C] animate-spin" />
+        <span className="text-[14px] text-[#5C6773] font-medium">
+          {message}
+        </span>
+      </div>
+    );
+  }
+
+  // Calm Editorial Skeleton Cards
+  return (
+    <div className={`w-full flex flex-col gap-3.5 animate-pulse ${className}`}>
+      <div className="w-full bg-white border border-[#E8E5DF] rounded-2xl p-4 flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className="h-4 w-28 bg-[#EEF3FA] rounded-md" />
+          <div className="h-3 w-16 bg-[#EEF3FA] rounded-md" />
+        </div>
+        <div className="h-5 w-3/4 bg-[#E8E5DF] rounded-md" />
+        <div className="h-4 w-full bg-[#FAF8F5] rounded-md" />
+        <div className="h-4 w-2/3 bg-[#FAF8F5] rounded-md" />
+        <div className="flex justify-between items-center pt-2">
+          <div className="h-3 w-20 bg-[#EEF3FA] rounded-md" />
+          <div className="h-8 w-8 bg-[#EEF3FA] rounded-full" />
+        </div>
+      </div>
+
+      <div className="w-full bg-white border border-[#E8E5DF] rounded-2xl p-4 flex flex-col gap-3">
+        <div className="w-full aspect-video bg-[#EEF3FA] rounded-xl" />
+        <div className="h-5 w-4/5 bg-[#E8E5DF] rounded-md" />
+        <div className="h-4 w-1/2 bg-[#FAF8F5] rounded-md" />
+      </div>
+    </div>
+  );
+};
+
+/* --------------------------------------------------
+   ERROR STATE
+-------------------------------------------------- */
+interface ErrorStateProps {
+  title?: string;
+  message?: string;
+  onRetry?: () => void;
+  className?: string;
+}
+
+export const ErrorState: React.FC<ErrorStateProps> = ({
+  title = 'लोड करने में समस्या हुई',
+  message = 'कृपया अपने इंटरनेट कनेक्शन की जांच करें और पुनः प्रयास करें।',
+  onRetry,
+  className = '',
+}) => {
+  return (
+    <div
+      className={`w-full py-10 px-6 flex flex-col items-center justify-center text-center bg-[#FAF8F5] border border-[#E8E5DF] rounded-2xl ${className}`}
+    >
+      <div className="w-12 h-12 rounded-full bg-[#FEF2F2] text-[#DC2626] flex items-center justify-center mb-3.5">
+        <AlertCircle size={24} />
+      </div>
+
+      <h3 className="text-[17px] font-semibold text-[#16325C] mb-1 leading-snug">
+        {title}
+      </h3>
+
+      <p className="text-[14px] text-[#5C6773] max-w-[280px] leading-relaxed mb-5">
+        {message}
+      </p>
+
+      {onRetry && (
+        <PrimaryButton
+          size="sm"
+          icon={<RotateCcw size={14} />}
+          onClick={onRetry}
+        >
+          पुनः प्रयास करें
+        </PrimaryButton>
+      )}
+    </div>
+  );
+};

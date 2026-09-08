@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+@theme {
+  --font-hindi: "Noto Sans Devanagari", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Global Color System inspired by Ahimsa Shiksha Mission Logo */
+  --color-brand-blue: #16325C;
+  --color-brand-blue-hover: #0F2342;
+  --color-brand-blue-light: #254B85;
+  --color-brand-blue-soft: #EEF3FA;
+
+  --color-brand-green: #2E7D32;
+  --color-brand-green-soft: #F0FDF4;
+
+  --color-brand-gold: #D97706;
+  --color-brand-gold-soft: #FEF3C7;
+
+  --color-page-bg: #FAF8F5;
+  --color-card-surface: #FFFFFF;
+  --color-card-surface-subtle: #F6F4EE;
+
+  --color-charcoal-primary: #1F2421;
+  --color-charcoal-secondary: #5C6773;
+  --color-charcoal-muted: #8C96A3;
+
+  --color-border-subtle: #E8E5DF;
+}
+
+@layer base {
+  html, body {
+    font-family: var(--font-hindi);
+    background-color: var(--color-page-bg);
+    color: var(--color-charcoal-primary);
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Custom scrollbar & mobile touch feel */
+* {
+  box-sizing: border-box;
+}
+
+/* Subtle peaceful active button press */
+.tap-active:active {
+  transform: scale(0.98);
+  transition: transform 100ms ease-out;
+}
+
+/* ==================================================
+   CALM, EDITORIAL DARK MODE ARCHITECTURE
+   Near-black / deep navy palette with subtle blue accents
+   ================================================== */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #080E18;
+  color: #F1F5F9;
+}
+
+/* Outer Desktop Frame */
+html.dark .bg-\[\#F0EDE6\] {
+  background-color: #050912 !important;
+}
+
+/* Mobile Screen Canvas */
+html.dark .bg-\[\#FAF8F5\],
+html.dark [data-theme='dark'] .bg-\[\#FAF8F5\] {
+  background-color: #0B1320 !important;
+}
+
+/* Header & Bottom Navigation Bar */
+html.dark .bg-\[\#FAF8F5\]\/95,
+html.dark .bg-\[\#FFFFFF\]\/95 {
+  background-color: rgba(13, 22, 37, 0.95) !important;
+}
+
+/* Cards & Content Surfaces */
+html.dark .bg-white,
+html.dark .bg-\[\#FFFFFF\],
+html.dark article.bg-white {
+  background-color: #121D2F !important;
+}
+
+/* Subtle Secondary Backgrounds */
+html.dark .bg-\[\#F6F4EE\],
+html.dark .bg-\[\#EEF3FA\] {
+  background-color: rgba(37, 75, 133, 0.22) !important;
+}
+
+html.dark .bg-\[\#FEF8EC\] {
+  background-color: rgba(217, 119, 6, 0.14) !important;
+}
+
+html.dark .bg-\[\#F0FDF4\] {
+  background-color: rgba(34, 197, 94, 0.12) !important;
+}
+
+/* Borders */
+html.dark .border-\[\#E8E5DF\],
+html.dark .border-\[\#E8E5DF\]\/70,
+html.dark .border-\[\#E8E5DF\]\/60,
+html.dark .border-\[\#E8E5DF\]\/50 {
+  border-color: #1E2D44 !important;
+}
+
+html.dark .border-\[\#CBD5E1\] {
+  border-color: #2D3E5B !important;
+}
+
+html.dark .sm\:border-\[\#E8E5DF\] {
+  border-color: #1E2D44 !important;
+}
+
+html.dark .sm\:shadow-\[0_12px_40px_rgba\(22\,50\,92\,0\.08\)\] {
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55) !important;
+}
+
+/* Text Hierarchy */
+html.dark .text-\[\#16325C\] {
+  color: #93C5FD !important;
+}
+
+html.dark .text-\[\#0F2342\] {
+  color: #BFDBFE !important;
+}
+
+html.dark .text-\[\#1F2421\] {
+  color: #F1F5F9 !important;
+}
+
+html.dark .text-\[\#5C6773\] {
+  color: #94A3B8 !important;
+}
+
+html.dark .text-\[\#78828D\],
+html.dark .text-\[\#8C96A3\] {
+  color: #64748B !important;
+}
+
+/* Inputs & Forms */
+html.dark input {
+  background-color: #121D2F;
+  color: #F1F5F9;
+  border-color: #1E2D44;
+}
+
+html.dark input::placeholder {
+  color: #64748B;
+}
+
+/* Hover States in Dark Mode */
+html.dark .group:hover .group-hover\:text-\[\#0F2342\] {
+  color: #BFDBFE !important;
+}
+
+html.dark .group:hover .group-hover\:bg-\[\#E2ECF8\] {
+  background-color: rgba(59, 130, 246, 0.25) !important;
+}
+

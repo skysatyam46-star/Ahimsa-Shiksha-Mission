@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160" fill="none">
+  <!-- Circular outer background with gentle soft shadow aura -->
+  <circle cx="80" cy="80" r="76" fill="#FAF8F5" stroke="#E2E8F0" stroke-width="2"/>
+  
+  <!-- Outer Ring: Deep Trust Blue -->
+  <circle cx="80" cy="80" r="70" stroke="#16325C" stroke-width="4" fill="#FFFFFF"/>
+  
+  <!-- Golden Sun of Knowledge (Surya / Radiance of Shiksha) -->
+  <g id="golden-sun" transform="translate(80, 52)">
+    <!-- Sun Rays -->
+    <path d="M0 -26 L0 -20" stroke="#D97706" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M18 -18 L14 -14" stroke="#D97706" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M26 0 L20 0" stroke="#D97706" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M18 18 L14 14" stroke="#D97706" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M-18 -18 L-14 -14" stroke="#D97706" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M-26 0 L-20 0" stroke="#D97706" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M-18 18 L-14 14" stroke="#D97706" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Central Rising Golden Sun Disc -->
+    <circle cx="0" cy="0" r="13" fill="#D97706"/>
+    <circle cx="0" cy="0" r="8" fill="#FBBF24"/>
+  </g>
+  
+  <!-- Twin Natural Green Olive/Bodhi Leaves of Ahimsa (Life, Nature, Peace) -->
+  <g id="green-leaves">
+    <!-- Left Leaf -->
+    <path d="M80 84 C62 80 44 94 40 108 C54 110 70 102 78 88 Z" fill="#2E7D32" opacity="0.95"/>
+    <path d="M40 108 C55 98 68 90 78 88" stroke="#A7F3D0" stroke-width="1.2" stroke-linecap="round"/>
+    <!-- Right Leaf -->
+    <path d="M80 84 C98 80 116 94 120 108 C106 110 90 102 82 88 Z" fill="#2E7D32" opacity="0.95"/>
+    <path d="M120 108 C105 98 92 90 82 88" stroke="#A7F3D0" stroke-width="1.2" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Open Book of Knowledge / Shiksha in Calm Deep Blue -->
+  <g id="open-book">
+    <!-- Base / spine connection -->
+    <path d="M80 114 L80 94" stroke="#16325C" stroke-width="3" stroke-linecap="round"/>
+    <!-- Left Page -->
+    <path d="M80 95 C68 91 52 90 42 94 L42 118 C52 114 68 115 80 120 Z" fill="#16325C"/>
+    <path d="M47 98 C56 95 68 96 76 99" stroke="#93C5FD" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M47 104 C56 101 68 102 76 105" stroke="#93C5FD" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M47 110 C56 107 68 108 76 111" stroke="#93C5FD" stroke-width="1.2" stroke-linecap="round"/>
+    
+    <!-- Right Page -->
+    <path d="M80 95 C92 91 108 90 118 94 L118 118 C108 114 92 115 80 120 Z" fill="#16325C"/>
+    <path d="M113 98 C104 95 92 96 84 99" stroke="#93C5FD" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M113 104 C104 101 92 102 84 105" stroke="#93C5FD" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M113 110 C104 107 92 108 84 111" stroke="#93C5FD" stroke-width="1.2" stroke-linecap="round"/>
+  </g>
+
+  <!-- Central Ahimsa Lamp / Radiance Flame of Truth -->
+  <path d="M80 72 C77 78 76 83 80 87 C84 83 83 78 80 72 Z" fill="#F59E0B"/>
+  <circle cx="80" cy="84" r="2.5" fill="#FEF08A"/>
+</svg>

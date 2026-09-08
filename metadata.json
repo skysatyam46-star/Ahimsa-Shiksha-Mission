@@ -1,0 +1,6 @@
+{
+  "name": "अहिंसा शिक्षा मिशन",
+  "description": "शांत, सरल एवं विश्वसनीय मोबाइल मंच — सत्य, अहिंसा, शिक्षा और मानवता के विचार, वीडियो व ज्ञानवर्धक सामग्री।",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
