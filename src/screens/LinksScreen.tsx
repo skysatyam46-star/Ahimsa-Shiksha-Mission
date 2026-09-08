@@ -1,6 +1,7 @@
 import React from 'react';
 import { Globe, Youtube, Users, BookOpen, ExternalLink, Link as LinkIcon } from 'lucide-react';
 import { PageContainer, SectionHeading, BackButton, Footer } from '../components';
+import { LinksEmptyState } from '../components/ui/States';
 import { useApp } from '../context/AppContext';
 import { useData } from '../context/DataContext';
 
@@ -46,38 +47,49 @@ export const LinksScreen: React.FC<LinksScreenProps> = ({
       />
 
       {/* Links List */}
-      <div className="flex flex-col gap-3">
-        {dynamicLinks.map((link) => {
-          const { icon: Icon, color, bg } = getCategoryIcon(link.category);
-          return (
-            <a
-              key={link.id}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full bg-white border border-[#E8E5DF] rounded-2xl p-4 shadow-2xs hover:border-[#16325C]/30 hover:shadow-xs transition-all flex items-center justify-between group tap-active"
-            >
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className={`w-11 h-11 rounded-xl ${bg} ${color} flex items-center justify-center shrink-0`}>
-                  <Icon size={22} strokeWidth={1.8} />
+      {dynamicLinks.length > 0 ? (
+        <div className="flex flex-col gap-3">
+          {dynamicLinks.map((link) => {
+            const { icon: Icon, color, bg } = getCategoryIcon(link.category);
+            return (
+              <a
+                key={link.id}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full bg-white border border-[#E8E5DF] rounded-2xl p-4 shadow-2xs hover:border-[#16325C]/30 hover:shadow-xs transition-all flex items-center justify-between group tap-active"
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className={`w-11 h-11 rounded-xl ${bg} ${color} flex items-center justify-center shrink-0`}>
+                    <Icon size={22} strokeWidth={1.8} />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-[15px] font-bold text-[#1F2421] group-hover:text-[#16325C] transition-colors leading-tight mb-0.5">
+                      {link.title}
+                    </h3>
+                    <p className="text-[12px] text-[#5C6773] truncate">
+                      {link.description || link.url}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <h3 className="text-[15px] font-bold text-[#1F2421] group-hover:text-[#16325C] transition-colors leading-tight mb-0.5">
-                    {link.title}
-                  </h3>
-                  <p className="text-[12px] text-[#5C6773] truncate">
-                    {link.description || link.url}
-                  </p>
-                </div>
-              </div>
 
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8C96A3] group-hover:text-[#16325C] group-hover:bg-[#EEF3FA] shrink-0 transition-colors">
-                <ExternalLink size={16} />
-              </div>
-            </a>
-          );
-        })}
-      </div>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8C96A3] group-hover:text-[#16325C] group-hover:bg-[#EEF3FA] shrink-0 transition-colors">
+                  <ExternalLink size={16} />
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="my-2">
+          <LinksEmptyState
+            title={t.emptyLinksTitle}
+            description={t.emptyLinksDesc}
+            actionText={t.back}
+            onAction={onBack || (() => onNavigate('/settings'))}
+          />
+        </div>
+      )}
 
       <Footer className="mt-10" />
     </PageContainer>

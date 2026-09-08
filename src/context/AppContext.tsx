@@ -122,6 +122,13 @@ export interface Translations {
   openLink: string;
 
   // Empty States
+  emptyHomeTitle: string;
+  emptyHomeDesc: string;
+  emptyHomeAction: string;
+  emptyVicharTitle: string;
+  emptyVicharDesc: string;
+  emptyVideoTitle: string;
+  emptyVideoDesc: string;
   emptyAudioTitle: string;
   emptyAudioDesc: string;
   emptyPhotoTitle: string;
@@ -130,6 +137,15 @@ export interface Translations {
   emptyDocDesc: string;
   emptyNoticeTitle: string;
   emptyNoticeDesc: string;
+  emptySearchTitle: string;
+  emptySearchDesc: string;
+  emptyRecentTitle: string;
+  emptyLinksTitle: string;
+  emptyLinksDesc: string;
+  emptyFounderTitle: string;
+  emptyFounderDesc: string;
+  emptyContactTitle: string;
+  emptyContactDesc: string;
 }
 
 const TRANSLATIONS: Record<Language, Translations> = {
@@ -238,14 +254,30 @@ const TRANSLATIONS: Record<Language, Translations> = {
     studyResourcesDesc: 'Ahimsa aur naitik shiksha par adhyayan samagri',
     openLink: 'Kholein',
 
+    emptyHomeTitle: 'Abhi koi published samagri uplabdh nahi hai.',
+    emptyHomeDesc: 'Nayi samagri jald yahan dikhayi degi.',
+    emptyHomeAction: 'Samagri Categories Dekhein',
+    emptyVicharTitle: 'Abhi koi vichar uplabdh nahi hai',
+    emptyVicharDesc: 'Naye vichar aur sandesh jald yahan prakashit kiye jayenge.',
+    emptyVideoTitle: 'Abhi koi video uplabdh nahi hai',
+    emptyVideoDesc: 'Naye video vyakhyan jald yahan prakashit kiye jayenge.',
     emptyAudioTitle: 'Abhi koi audio uplabdh nahi hai',
     emptyAudioDesc: 'Naye audio sandesh yahan dikhayi denge.',
     emptyPhotoTitle: 'Abhi koi photo uplabdh nahi hai',
     emptyPhotoDesc: 'Mission ki nayi tasveerein yahan dikhayi dengi.',
     emptyDocTitle: 'Abhi koi dastavez uplabdh nahi hai',
-    emptyDocDesc: 'Naye dastavez aur PDF yahan dikhayi denge.',
+    emptyDocDesc: 'Naye dastavez aur adhyayan samagri yahan dikhayi denge.',
     emptyNoticeTitle: 'Abhi koi soochana uplabdh nahi hai',
-    emptyNoticeDesc: 'Mission ki nayi ghoshnayein yahan dikhayi dengi.',
+    emptyNoticeDesc: 'Mission ki nayi soochanaayein aur update yahan dikhayi denge.',
+    emptySearchTitle: 'Koi parinam nahi mila',
+    emptySearchDesc: 'Kisi doosre shabd se khojne ka prayas karein.',
+    emptyRecentTitle: 'Abhi koi haal ki samagri uplabdh nahi hai.',
+    emptyLinksTitle: 'Abhi koi mahatvapoorna link nahi hai',
+    emptyLinksDesc: 'Mahatvapoorna links jald jode jayenge.',
+    emptyFounderTitle: 'Sansthapak parichay ki jaankari jald uplabdh hogi.',
+    emptyFounderDesc: 'Yeh jaankari abhi uplabdh nahi hai.',
+    emptyContactTitle: 'Sampark vivaran jald uplabdh hoga.',
+    emptyContactDesc: 'Yeh jaankari abhi uplabdh nahi hai.',
   },
 
   hi: {
@@ -330,7 +362,7 @@ const TRANSLATIONS: Record<Language, Translations> = {
     founderBioPlaceholder: 'संस्थापक के बारे में संक्षिप्त परिचय यहाँ प्रदर्शित होगा।',
     founderMessageTitle: 'संस्थापक का संदेश',
     founderMessagePlaceholder: '“अहिंसा और सत्य ही वह आधारशिला हैं जिस पर एक न्यायपूर्ण और दयालु समाज की रचना हो सकती है। हमारा संकल्प है कि शिक्षा हर हृदय में करुणा का दीप प्रज्वलित करे।”',
-    placeholderNotice: 'यह स्थानधारक (placeholder) जानकारी है। आधिकारिक विवरण उपलब्ध होने पर इसे अद्यतन किया जाएगा।',
+    placeholderNotice: 'यह जानकारी आधिकारिक विवरण उपलब्ध होने पर अद्यतन की जाएगी।',
 
     contactHeading: 'संपर्क',
     contactSubheading: 'मिशन से संपर्क करें',
@@ -339,7 +371,7 @@ const TRANSLATIONS: Record<Language, Translations> = {
     addressLabel: 'पता',
     callButton: 'कॉल करें',
     emailButton: 'ईमेल भेजें',
-    mockContactNotice: 'यह संपर्क विवरण स्थानधारक (mock) है। कोई वास्तविक विवरण अभी उपलब्ध नहीं कराया गया है।',
+    mockContactNotice: 'संपर्क विवरण जल्द उपलब्ध कराया जाएगा।',
 
     linksHeading: 'महत्वपूर्ण लिंक',
     linksSubheading: 'आधिकारिक और उपयोगी संसाधन',
@@ -353,6 +385,13 @@ const TRANSLATIONS: Record<Language, Translations> = {
     studyResourcesDesc: 'अहिंसा और नैतिक शिक्षा पर अध्ययन सामग्री',
     openLink: 'खोलें',
 
+    emptyHomeTitle: 'अभी कोई प्रकाशित सामग्री उपलब्ध नहीं है।',
+    emptyHomeDesc: 'नई सामग्री जल्द यहाँ दिखाई देगी।',
+    emptyHomeAction: 'सामग्री श्रेणियाँ देखें',
+    emptyVicharTitle: 'अभी कोई विचार उपलब्ध नहीं है',
+    emptyVicharDesc: 'नए विचार और संदेश जल्द यहाँ प्रकाशित किए जाएँगे।',
+    emptyVideoTitle: 'अभी कोई वीडियो उपलब्ध नहीं है',
+    emptyVideoDesc: 'नए वीडियो व्याख्यान जल्द यहाँ प्रकाशित किए जाएँगे।',
     emptyAudioTitle: 'अभी कोई ऑडियो उपलब्ध नहीं है',
     emptyAudioDesc: 'नए ऑडियो संदेश यहाँ दिखाई देंगे।',
     emptyPhotoTitle: 'अभी कोई फोटो उपलब्ध नहीं है',
@@ -361,6 +400,15 @@ const TRANSLATIONS: Record<Language, Translations> = {
     emptyDocDesc: 'नए दस्तावेज और अध्ययन सामग्री यहाँ दिखाई देंगे।',
     emptyNoticeTitle: 'अभी कोई सूचना उपलब्ध नहीं है',
     emptyNoticeDesc: 'मिशन की नई सूचनाएँ और अपडेट यहाँ दिखाई देंगे।',
+    emptySearchTitle: 'कोई परिणाम नहीं मिला',
+    emptySearchDesc: 'किसी दूसरे शब्द से खोजने का प्रयास करें।',
+    emptyRecentTitle: 'अभी कोई हाल की सामग्री उपलब्ध नहीं है।',
+    emptyLinksTitle: 'अभी कोई महत्वपूर्ण लिंक नहीं है',
+    emptyLinksDesc: 'महत्वपूर्ण लिंक जल्द जोड़े जाएँगे।',
+    emptyFounderTitle: 'संस्थापक परिचय की जानकारी जल्द उपलब्ध होगी।',
+    emptyFounderDesc: 'यह जानकारी अभी उपलब्ध नहीं है।',
+    emptyContactTitle: 'संपर्क विवरण जल्द उपलब्ध होगा।',
+    emptyContactDesc: 'यह जानकारी अभी उपलब्ध नहीं है।',
   },
 
   en: {
@@ -445,7 +493,7 @@ const TRANSLATIONS: Record<Language, Translations> = {
     founderBioPlaceholder: 'A brief introduction of the founder will appear here.',
     founderMessageTitle: "Founder's Message",
     founderMessagePlaceholder: '“Non-violence and truth are the foundation upon which a just and compassionate society can be built. Our resolve is that education lights the lamp of compassion in every heart.”',
-    placeholderNotice: 'This is placeholder information. It will be updated when official details are provided.',
+    placeholderNotice: 'This information will be updated when official details are provided.',
 
     contactHeading: 'Contact',
     contactSubheading: 'Get in touch with the mission',
@@ -454,7 +502,7 @@ const TRANSLATIONS: Record<Language, Translations> = {
     addressLabel: 'Address',
     callButton: 'Call',
     emailButton: 'Email',
-    mockContactNotice: 'This contact information is placeholder (mock). No real details have been provided yet.',
+    mockContactNotice: 'Official contact details will be made available soon.',
 
     linksHeading: 'Important Links',
     linksSubheading: 'Official and useful resources',
@@ -468,6 +516,13 @@ const TRANSLATIONS: Record<Language, Translations> = {
     studyResourcesDesc: 'Study material on non-violence and moral education',
     openLink: 'Open',
 
+    emptyHomeTitle: 'No published content available yet.',
+    emptyHomeDesc: 'New content will appear here soon.',
+    emptyHomeAction: 'View Content Categories',
+    emptyVicharTitle: 'No thoughts available yet',
+    emptyVicharDesc: 'New thoughts and messages will be published here soon.',
+    emptyVideoTitle: 'No videos available yet',
+    emptyVideoDesc: 'New video lectures will be published here soon.',
     emptyAudioTitle: 'No audio available yet',
     emptyAudioDesc: 'New audio messages will appear here.',
     emptyPhotoTitle: 'No photos available yet',
@@ -476,6 +531,15 @@ const TRANSLATIONS: Record<Language, Translations> = {
     emptyDocDesc: 'New documents and study materials will appear here.',
     emptyNoticeTitle: 'No notices available yet',
     emptyNoticeDesc: 'New mission announcements will appear here.',
+    emptySearchTitle: 'No results found',
+    emptySearchDesc: 'Try searching with a different keyword.',
+    emptyRecentTitle: 'No recent content available yet.',
+    emptyLinksTitle: 'No important links available yet',
+    emptyLinksDesc: 'Important links will be added soon.',
+    emptyFounderTitle: 'Founder information will be available soon.',
+    emptyFounderDesc: 'This information is not yet available.',
+    emptyContactTitle: 'Contact details will be available soon.',
+    emptyContactDesc: 'This information is not yet available.',
   },
 };
 

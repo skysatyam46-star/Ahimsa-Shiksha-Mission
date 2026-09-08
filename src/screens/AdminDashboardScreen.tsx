@@ -299,13 +299,24 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
           </div>
 
           <div className="flex flex-col gap-2">
-            {recentItems.map((item) => (
-              <RecentContentRow
-                key={`${item.type}-${item.id}`}
-                item={item}
-                onClick={handleRecentItemClick}
-              />
-            ))}
+            {recentItems.length > 0 ? (
+              recentItems.map((item) => (
+                <RecentContentRow
+                  key={`${item.type}-${item.id}`}
+                  item={item}
+                  onClick={handleRecentItemClick}
+                />
+              ))
+            ) : (
+              <div className="w-full py-8 px-4 bg-white dark:bg-slate-800 border border-[#E8E5DF] dark:border-slate-700 rounded-xl text-center flex flex-col items-center justify-center">
+                <p className="text-[14px] font-medium text-[#16325C] dark:text-[#93C5FD] mb-1">
+                  अभी कोई हालिया सामग्री नहीं है
+                </p>
+                <p className="text-[12px] text-[#5C6773] dark:text-gray-400">
+                  ऊपर दिए गए Quick Actions से नई सामग्री जोड़ें।
+                </p>
+              </div>
+            )}
           </div>
         </section>
 

@@ -1,13 +1,16 @@
 import React, { useState, useMemo } from 'react';
-import { Search, ArrowUpDown } from 'lucide-react';
+import { ArrowUpDown } from 'lucide-react';
 import {
   PageContainer,
   SectionHeading,
   MessageCard,
   SearchField,
+  VicharEmptyState,
+  SearchEmptyState,
   Footer,
 } from '../components';
 import { useData } from '../context/DataContext';
+import { useApp } from '../context/AppContext';
 
 interface VicharScreenProps {
   onNavigateToDetail?: (path: string) => void;
@@ -16,6 +19,7 @@ interface VicharScreenProps {
 export const VicharScreen: React.FC<VicharScreenProps> = ({ onNavigateToDetail }) => {
   const [search, setSearch] = useState('');
   const { getPublishedVichar } = useData();
+  const { t } = useApp();
 
   const publishedVicharList = getPublishedVichar();
 
@@ -26,7 +30,9 @@ export const VicharScreen: React.FC<VicharScreenProps> = ({ onNavigateToDetail }
     return publishedVicharList.filter(
       (item) =>
         (item.title && item.title.toLowerCase().includes(q)) ||
+        ((item as any).titleHindi && (item as any).titleHindi.toLowerCase().includes(q)) ||
         (item.leadParagraph && item.leadParagraph.toLowerCase().includes(q)) ||
+        ((item as any).textHindi && (item as any).textHindi.toLowerCase().includes(q)) ||
         (item.author && item.author.toLowerCase().includes(q)) ||
         (item.topic && item.topic.toLowerCase().includes(q))
     );
@@ -36,8 +42,8 @@ export const VicharScreen: React.FC<VicharScreenProps> = ({ onNavigateToDetail }
     <PageContainer>
       {/* 1. Page Header */}
       <SectionHeading
-        title="विचार"
-        subtitle="अहिंसा, शिक्षा, मानवता और जीवन से जुड़े विचार।"
+        title={t.vicharTitle}
+        subtitle={t.vicharSubtitle}
         level={1}
         className="mb-2"
       />
@@ -46,16 +52,16 @@ export const VicharScreen: React.FC<VicharScreenProps> = ({ onNavigateToDetail }
       <SearchField
         value={search}
         onChange={setSearch}
-        placeholder="🔎 विचार खोजें..."
+        placeholder={t.searchPlaceholder}
         className="mb-3"
       />
 
       {/* 3. Subtle Sort / Count Label */}
       <div className="flex items-center justify-between text-[13px] text-[#5C6773] mb-3.5 px-0.5">
-        <span>कुल {filteredMessages.length} विचार</span>
+        <span>{t.totalCount}: {filteredMessages.length}</span>
         <span className="inline-flex items-center gap-1 font-medium text-[#16325C]/80">
           <ArrowUpDown size={12} />
-          नवीनतम पहले
+          {t.newestFirst}
         </span>
       </div>
 
@@ -65,31 +71,30 @@ export const VicharScreen: React.FC<VicharScreenProps> = ({ onNavigateToDetail }
           {filteredMessages.map((item) => (
             <MessageCard
               key={item.id}
-              typeLabel="📝 संदेश"
-              title={item.titleHindi}
+              typeLabel={item.typeLabel || '📝 संदेश'}
+              title={item.title || (item as any).titleHindi}
               date={item.date}
-              content={item.textHindi}
+              content={item.leadParagraph || (item as any).textHindi || (item.paragraphs && item.paragraphs[0]) || ''}
               author={item.author}
               topic={item.topic}
+              source={item.source}
               onReadMore={() => onNavigateToDetail?.(`/vichar/${item.id}`)}
             />
           ))}
         </div>
+      ) : search.trim() ? (
+        <div className="my-2">
+          <SearchEmptyState
+            title={t.emptySearchTitle}
+            description={t.emptySearchDesc}
+          />
+        </div>
       ) : (
-        /* Empty State Component */
-        <div
-          role="status"
-          className="flex flex-col items-center justify-center py-12 px-6 text-center bg-white rounded-2xl border border-[#E8E5DF] my-2"
-        >
-          <div className="w-12 h-12 rounded-full bg-[#EEF3FA] text-[#16325C] flex items-center justify-center mb-3">
-            <Search size={20} />
-          </div>
-          <h3 className="text-[16px] font-semibold text-[#16325C] mb-1">
-            अभी कोई विचार उपलब्ध नहीं है।
-          </h3>
-          <p className="text-[13px] text-[#5C6773] max-w-[260px] leading-relaxed">
-            आपके द्वारा खोजे गए शब्द से संबंधित कोई विचार नहीं मिला। कृपया अन्य शब्द का प्रयास करें।
-          </p>
+        <div className="my-2">
+          <VicharEmptyState
+            title={t.emptyVicharTitle}
+            description={t.emptyVicharDesc}
+          />
         </div>
       )}
 

@@ -1,14 +1,14 @@
 import React, { useState, useMemo } from 'react';
-import { Search } from 'lucide-react';
 import {
   PageContainer,
   SectionHeading,
   SearchField,
   SearchResultCard,
-  EmptyState,
+  SearchEmptyState,
   Footer,
 } from '../components';
 import { useData } from '../context/DataContext';
+import { useApp } from '../context/AppContext';
 
 interface KhojScreenProps {
   onNavigateToDetail?: (path: string) => void;
@@ -29,6 +29,7 @@ const suggestions = ['अहिंसा', 'शिक्षा', 'सत्य',
 
 export const KhojScreen: React.FC<KhojScreenProps> = ({ onNavigateToDetail }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const { t } = useApp();
   const {
     getPublishedVichar,
     getPublishedVideos,
@@ -161,8 +162,8 @@ export const KhojScreen: React.FC<KhojScreenProps> = ({ onNavigateToDetail }) =>
     <PageContainer>
       {/* 1. Header */}
       <SectionHeading
-        title="खोजें"
-        subtitle="विचार, वीडियो और सामग्री खोजें"
+        title={t.khojTitle}
+        subtitle={t.khojSubtitle}
         level={1}
         className="mb-3"
       />
@@ -171,20 +172,20 @@ export const KhojScreen: React.FC<KhojScreenProps> = ({ onNavigateToDetail }) =>
       <SearchField
         value={searchTerm}
         onChange={setSearchTerm}
-        placeholder="🔎 विचार, वीडियो और सामग्री खोजें…"
+        placeholder={t.searchPlaceholder}
         onClear={() => setSearchTerm('')}
         className="mb-4"
       />
 
-      {/* 3. Initial Search State (Shown when no search term is entered) */}
+      {/* 3. Initial Search State */}
       {!hasSearched && (
         <div className="bg-white border border-[#E8E5DF] rounded-2xl p-4 my-1 flex flex-col gap-3">
           <div>
             <h3 className="text-[15px] font-semibold text-[#16325C]">
-              क्या खोजें?
+              सुझाए गए विषय
             </h3>
             <p className="text-[13px] text-[#5C6773] mt-0.5 leading-normal">
-              मिशन के विचार, वीडियो, ऑडियो व दस्तावेज खोजने हेतु नीचे दिए गए विषयों पर टैप करें:
+              सामग्री खोजने हेतु नीचे दिए गए विषयों पर टैप करें:
             </p>
           </div>
 
@@ -208,10 +209,10 @@ export const KhojScreen: React.FC<KhojScreenProps> = ({ onNavigateToDetail }) =>
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between text-[13px] text-[#5C6773] px-0.5">
             <span className="font-semibold text-[#16325C]">
-              खोज परिणाम ({searchResults.length})
+              परिणाम ({searchResults.length})
             </span>
             <span className="text-[#8C96A3]">
-              “{searchTerm}” के लिए
+              “{searchTerm}”
             </span>
           </div>
 
@@ -229,11 +230,9 @@ export const KhojScreen: React.FC<KhojScreenProps> = ({ onNavigateToDetail }) =>
               ))}
             </div>
           ) : (
-            /* No Results State */
-            <EmptyState
-              icon={<Search size={22} className="text-[#16325C]" />}
-              title="कोई परिणाम नहीं मिला"
-              description="किसी दूसरे शब्द से खोजने का प्रयास करें।"
+            <SearchEmptyState
+              title={t.emptySearchTitle}
+              description={t.emptySearchDesc}
               className="my-2"
             />
           )}

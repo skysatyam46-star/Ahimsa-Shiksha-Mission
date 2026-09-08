@@ -7,6 +7,10 @@ import {
   Image as ImageIcon,
   FileText,
   Bell,
+  BookOpen,
+  Video,
+  Search,
+  ExternalLink,
 } from 'lucide-react';
 import { PrimaryButton, SecondaryButton } from './Buttons';
 
@@ -42,7 +46,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         {title}
       </h3>
 
-      <p className="text-[14px] text-[#5C6773] max-w-[280px] leading-relaxed mb-5">
+      <p className="text-[14px] text-[#5C6773] max-w-[320px] leading-relaxed mb-5">
         {description}
       </p>
 
@@ -58,15 +62,92 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 /* --------------------------------------------------
    CONTENT-SPECIFIC REUSABLE EMPTY STATES
 -------------------------------------------------- */
-export const AudioEmptyState: React.FC<{
+export const HomeEmptyState: React.FC<{
+  title?: string;
+  description?: string;
   actionText?: string;
   onAction?: () => void;
   className?: string;
-}> = ({ actionText, onAction, className = '' }) => (
+}> = ({
+  title = 'अभी कोई प्रकाशित सामग्री उपलब्ध नहीं है।',
+  description = 'नई सामग्री जल्द यहाँ दिखाई देगी।',
+  actionText,
+  onAction,
+  className = '',
+}) => (
+  <EmptyState
+    icon={<Sparkles size={24} strokeWidth={1.8} />}
+    title={title}
+    description={description}
+    actionText={actionText}
+    onAction={onAction}
+    className={className}
+  />
+);
+
+export const VicharEmptyState: React.FC<{
+  title?: string;
+  description?: string;
+  actionText?: string;
+  onAction?: () => void;
+  className?: string;
+}> = ({
+  title = 'अभी कोई विचार उपलब्ध नहीं है',
+  description = 'नए विचार और संदेश जल्द यहाँ प्रकाशित किए जाएँगे।',
+  actionText,
+  onAction,
+  className = '',
+}) => (
+  <EmptyState
+    icon={<BookOpen size={24} strokeWidth={1.8} />}
+    title={title}
+    description={description}
+    actionText={actionText}
+    onAction={onAction}
+    className={className}
+  />
+);
+
+export const VideoEmptyState: React.FC<{
+  title?: string;
+  description?: string;
+  actionText?: string;
+  onAction?: () => void;
+  className?: string;
+}> = ({
+  title = 'अभी कोई वीडियो उपलब्ध नहीं है',
+  description = 'नए वीडियो व्याख्यान जल्द यहाँ प्रकाशित किए जाएँगे।',
+  actionText,
+  onAction,
+  className = '',
+}) => (
+  <EmptyState
+    icon={<Video size={24} strokeWidth={1.8} />}
+    title={title}
+    description={description}
+    actionText={actionText}
+    onAction={onAction}
+    className={className}
+  />
+);
+
+export const AudioEmptyState: React.FC<{
+  title?: string;
+  description?: string;
+  actionText?: string;
+  onAction?: () => void;
+  className?: string;
+}> = ({
+  title = 'अभी कोई ऑडियो उपलब्ध नहीं है',
+  description = 'नए ऑडियो संदेश यहाँ दिखाई देंगे।',
+  actionText,
+  onAction,
+  className = '',
+}) => (
   <EmptyState
     icon={<Headphones size={24} strokeWidth={1.8} />}
-    title="अभी कोई ऑडियो उपलब्ध नहीं है"
-    description="नए ऑडियो संदेश यहाँ दिखाई देंगे।"
+    title={title}
+    description={description}
     actionText={actionText}
     onAction={onAction}
     className={className}
@@ -74,14 +155,22 @@ export const AudioEmptyState: React.FC<{
 );
 
 export const PhotoEmptyState: React.FC<{
+  title?: string;
+  description?: string;
   actionText?: string;
   onAction?: () => void;
   className?: string;
-}> = ({ actionText, onAction, className = '' }) => (
+}> = ({
+  title = 'अभी कोई फोटो उपलब्ध नहीं है',
+  description = 'मिशन की गतिविधियों की नई तस्वीरें यहाँ दिखाई देंगी।',
+  actionText,
+  onAction,
+  className = '',
+}) => (
   <EmptyState
     icon={<ImageIcon size={24} strokeWidth={1.8} />}
-    title="अभी कोई फोटो उपलब्ध नहीं है"
-    description="मिशन की गतिविधियों की नई तस्वीरें यहाँ दिखाई देंगी।"
+    title={title}
+    description={description}
     actionText={actionText}
     onAction={onAction}
     className={className}
@@ -89,14 +178,22 @@ export const PhotoEmptyState: React.FC<{
 );
 
 export const DocumentEmptyState: React.FC<{
+  title?: string;
+  description?: string;
   actionText?: string;
   onAction?: () => void;
   className?: string;
-}> = ({ actionText, onAction, className = '' }) => (
+}> = ({
+  title = 'अभी कोई दस्तावेज उपलब्ध नहीं है',
+  description = 'नए दस्तावेज और अध्ययन सामग्री यहाँ दिखाई देंगे।',
+  actionText,
+  onAction,
+  className = '',
+}) => (
   <EmptyState
     icon={<FileText size={24} strokeWidth={1.8} />}
-    title="अभी कोई दस्तावेज उपलब्ध नहीं है"
-    description="नए दस्तावेज और अध्ययन सामग्री यहाँ दिखाई देंगे।"
+    title={title}
+    description={description}
     actionText={actionText}
     onAction={onAction}
     className={className}
@@ -104,14 +201,68 @@ export const DocumentEmptyState: React.FC<{
 );
 
 export const NoticeEmptyState: React.FC<{
+  title?: string;
+  description?: string;
   actionText?: string;
   onAction?: () => void;
   className?: string;
-}> = ({ actionText, onAction, className = '' }) => (
+}> = ({
+  title = 'अभी कोई सूचना उपलब्ध नहीं है',
+  description = 'मिशन की नई सूचनाएँ और अपडेट यहाँ दिखाई देंगे।',
+  actionText,
+  onAction,
+  className = '',
+}) => (
   <EmptyState
     icon={<Bell size={24} strokeWidth={1.8} />}
-    title="अभी कोई सूचना उपलब्ध नहीं है"
-    description="मिशन की नई सूचनाएँ और अपडेट यहाँ दिखाई देंगे।"
+    title={title}
+    description={description}
+    actionText={actionText}
+    onAction={onAction}
+    className={className}
+  />
+);
+
+export const SearchEmptyState: React.FC<{
+  title?: string;
+  description?: string;
+  actionText?: string;
+  onAction?: () => void;
+  className?: string;
+}> = ({
+  title = 'कोई परिणाम नहीं मिला',
+  description = 'किसी दूसरे शब्द से खोजने का प्रयास करें।',
+  actionText,
+  onAction,
+  className = '',
+}) => (
+  <EmptyState
+    icon={<Search size={24} strokeWidth={1.8} />}
+    title={title}
+    description={description}
+    actionText={actionText}
+    onAction={onAction}
+    className={className}
+  />
+);
+
+export const LinksEmptyState: React.FC<{
+  title?: string;
+  description?: string;
+  actionText?: string;
+  onAction?: () => void;
+  className?: string;
+}> = ({
+  title = 'अभी कोई महत्वपूर्ण लिंक नहीं है',
+  description = 'महत्वपूर्ण लिंक जल्द जोड़े जाएँगे।',
+  actionText,
+  onAction,
+  className = '',
+}) => (
+  <EmptyState
+    icon={<ExternalLink size={24} strokeWidth={1.8} />}
+    title={title}
+    description={description}
     actionText={actionText}
     onAction={onAction}
     className={className}

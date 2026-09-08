@@ -241,94 +241,112 @@ export const AdminLinksScreen: React.FC<AdminLinksScreenProps> = ({ onNavigate }
       )}
 
       {/* Links List with Reordering */}
-      <div className="flex flex-col gap-2.5">
-        {sortedLinks.map((link, idx) => (
-          <div
-            key={link.id}
-            className="bg-white dark:bg-[#1E293B] border border-[#E8E5DF] dark:border-[#334155] rounded-2xl p-3.5 shadow-2xs flex items-center justify-between gap-3"
+      {sortedLinks.length === 0 ? (
+        <div className="p-8 text-center bg-white dark:bg-[#1E293B] rounded-2xl border border-[#E8E5DF] dark:border-[#334155]">
+          <Globe size={32} className="mx-auto text-[#8C96A3] mb-2" />
+          <h3 className="text-[15px] font-bold text-[#1F2421] dark:text-white">कोई लिंक नहीं मिला</h3>
+          <p className="text-[12.5px] text-[#5C6773] dark:text-gray-400 mt-1 mb-4">
+            अभी तक कोई महत्वपूर्ण लिंक नहीं जोड़ा गया है।
+          </p>
+          <button
+            type="button"
+            onClick={handleStartAdd}
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#16325C] text-white text-[12.5px] font-bold rounded-xl"
           >
-            {/* Reorder Buttons */}
-            <div className="flex flex-col items-center gap-1 shrink-0">
-              <button
-                type="button"
-                disabled={idx === 0}
-                onClick={() => moveUp(idx)}
-                className={`p-1 rounded ${
-                  idx === 0
-                    ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                    : 'text-[#5C6773] hover:bg-[#EEF3FA] dark:hover:bg-slate-800'
-                }`}
-                title="Move Up"
-              >
-                <ArrowUp size={14} />
-              </button>
-              <button
-                type="button"
-                disabled={idx === sortedLinks.length - 1}
-                onClick={() => moveDown(idx)}
-                className={`p-1 rounded ${
-                  idx === sortedLinks.length - 1
-                    ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                    : 'text-[#5C6773] hover:bg-[#EEF3FA] dark:hover:bg-slate-800'
-                }`}
-                title="Move Down"
-              >
-                <ArrowDown size={14} />
-              </button>
-            </div>
-
-            {/* Link Details */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span
-                  className={`text-[10.5px] font-bold px-1.5 py-0.2 rounded ${
-                    link.status === 'published'
-                      ? 'bg-emerald-100 text-[#2E7D32] dark:bg-emerald-950 dark:text-emerald-300'
-                      : 'bg-amber-100 text-[#D97706] dark:bg-amber-950 dark:text-amber-300'
+            <Plus size={14} />
+            पहला लिंक जोड़ें
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          {sortedLinks.map((link, idx) => (
+            <div
+              key={link.id}
+              className="bg-white dark:bg-[#1E293B] border border-[#E8E5DF] dark:border-[#334155] rounded-2xl p-3.5 shadow-2xs flex items-center justify-between gap-3"
+            >
+              {/* Reorder Buttons */}
+              <div className="flex flex-col items-center gap-1 shrink-0">
+                <button
+                  type="button"
+                  disabled={idx === 0}
+                  onClick={() => moveUp(idx)}
+                  className={`p-1 rounded ${
+                    idx === 0
+                      ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                      : 'text-[#5C6773] hover:bg-[#EEF3FA] dark:hover:bg-slate-800'
                   }`}
+                  title="Move Up"
                 >
-                  {link.status === 'published' ? 'Published' : 'Draft'}
-                </span>
-                <h4 className="text-[14px] font-bold text-[#1F2421] dark:text-white truncate">
-                  {link.title}
-                </h4>
+                  <ArrowUp size={14} />
+                </button>
+                <button
+                  type="button"
+                  disabled={idx === sortedLinks.length - 1}
+                  onClick={() => moveDown(idx)}
+                  className={`p-1 rounded ${
+                    idx === sortedLinks.length - 1
+                      ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                      : 'text-[#5C6773] hover:bg-[#EEF3FA] dark:hover:bg-slate-800'
+                  }`}
+                  title="Move Down"
+                >
+                  <ArrowDown size={14} />
+                </button>
               </div>
-              <p className="text-[12px] text-[#5C6773] dark:text-gray-400 truncate">
-                {link.description || link.url}
-              </p>
-              <a
-                href={link.url}
-                target="_blank"
-                rel="noreferrer"
-                className="text-[11px] text-[#16325C] dark:text-[#93C5FD] hover:underline inline-flex items-center gap-1 mt-0.5"
-              >
-                <span>{link.url}</span>
-                <ExternalLink size={10} />
-              </a>
-            </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-1 shrink-0">
-              <button
-                type="button"
-                onClick={() => handleStartEdit(link)}
-                className="p-2 text-[#16325C] dark:text-[#93C5FD] hover:bg-[#EEF3FA] dark:hover:bg-slate-800 rounded-xl transition-colors"
-                title="Edit"
-              >
-                <Edit3 size={15} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setItemToDelete(link)}
-                className="p-2 text-[#DC2626] hover:bg-red-50 dark:hover:bg-red-950/40 rounded-xl transition-colors"
-                title="Delete"
-              >
-                <Trash2 size={15} />
-              </button>
+              {/* Link Details */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span
+                    className={`text-[10.5px] font-bold px-1.5 py-0.2 rounded ${
+                      link.status === 'published'
+                        ? 'bg-emerald-100 text-[#2E7D32] dark:bg-emerald-950 dark:text-emerald-300'
+                        : 'bg-amber-100 text-[#D97706] dark:bg-amber-950 dark:text-amber-300'
+                    }`}
+                  >
+                    {link.status === 'published' ? 'Published' : 'Draft'}
+                  </span>
+                  <h4 className="text-[14px] font-bold text-[#1F2421] dark:text-white truncate">
+                    {link.title}
+                  </h4>
+                </div>
+                <p className="text-[12px] text-[#5C6773] dark:text-gray-400 truncate">
+                  {link.description || link.url}
+                </p>
+                <a
+                  href={link.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[11px] text-[#16325C] dark:text-[#93C5FD] hover:underline inline-flex items-center gap-1 mt-0.5"
+                >
+                  <span>{link.url}</span>
+                  <ExternalLink size={10} />
+                </a>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleStartEdit(link)}
+                  className="p-2 text-[#16325C] dark:text-[#93C5FD] hover:bg-[#EEF3FA] dark:hover:bg-slate-800 rounded-xl transition-colors"
+                  title="Edit"
+                >
+                  <Edit3 size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setItemToDelete(link)}
+                  className="p-2 text-[#DC2626] hover:bg-red-50 dark:hover:bg-red-950/40 rounded-xl transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal

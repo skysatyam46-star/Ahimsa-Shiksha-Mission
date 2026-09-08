@@ -7,21 +7,15 @@ import {
   PhotoCard,
   DocumentCard,
   NoticeCard,
-  ShareButton,
+  HomeEmptyState,
   Footer,
 } from '../components';
 import {
   Search,
   ArrowRight,
-  Sparkles,
 } from 'lucide-react';
-import {
-  peacefulSunThumbnail,
-  peacefulAshramPhoto,
-  satyagrahaThumbnail,
-  workshopPhoto,
-} from '../data/homeFeed';
 import { useApp } from '../context/AppContext';
+import { useData } from '../context/DataContext';
 
 interface HomeScreenProps {
   onNavigateToTab: (tabId: 'vichar' | 'video' | 'samagri' | 'khoj') => void;
@@ -33,6 +27,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onNavigateToRoute,
 }) => {
   const { t } = useApp();
+  const {
+    getPublishedVichar,
+    getPublishedVideos,
+    getPublishedAudio,
+    getPublishedPhotos,
+    getPublishedDocuments,
+    getPublishedNotices,
+  } = useData();
 
   const navigate = (path: string, fallbackTab: 'vichar' | 'video' | 'samagri' | 'khoj') => {
     if (onNavigateToRoute) {
@@ -41,9 +43,51 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       onNavigateToTab(fallbackTab);
     }
   };
+
+  // Aggregate all published items in chronological order (newest first)
+  const allPublishedItems = React.useMemo(() => {
+    const list: Array<{
+      id: string;
+      itemType: 'vichar' | 'video' | 'audio' | 'photo' | 'document' | 'notice';
+      date: string;
+      createdAt: string;
+      raw: any;
+    }> = [];
+
+    getPublishedVichar().forEach((v) =>
+      list.push({ id: v.id, itemType: 'vichar', date: v.date, createdAt: v.createdAt, raw: v })
+    );
+    getPublishedVideos().forEach((v) =>
+      list.push({ id: v.id, itemType: 'video', date: v.date, createdAt: v.createdAt, raw: v })
+    );
+    getPublishedAudio().forEach((a) =>
+      list.push({ id: a.id, itemType: 'audio', date: a.date, createdAt: a.createdAt, raw: a })
+    );
+    getPublishedPhotos().forEach((p) =>
+      list.push({ id: p.id, itemType: 'photo', date: p.date, createdAt: p.createdAt, raw: p })
+    );
+    getPublishedDocuments().forEach((d) =>
+      list.push({ id: d.id, itemType: 'document', date: d.date, createdAt: d.createdAt, raw: d })
+    );
+    getPublishedNotices().forEach((n) =>
+      list.push({ id: n.id, itemType: 'notice', date: n.date, createdAt: n.createdAt, raw: n })
+    );
+
+    return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [
+    getPublishedVichar,
+    getPublishedVideos,
+    getPublishedAudio,
+    getPublishedPhotos,
+    getPublishedDocuments,
+    getPublishedNotices,
+  ]);
+
+  const hasContent = allPublishedItems.length > 0;
+
   return (
     <PageContainer>
-      {/* 3. Welcome Section: Compact peaceful greeting */}
+      {/* Welcome Section: Compact peaceful greeting */}
       <section
         id="welcome-section"
         className="pt-1 pb-3 flex flex-col gap-1 border-b border-[#E8E5DF]/70 mb-4"
@@ -59,7 +103,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </p>
       </section>
 
-      {/* 4. Search Shortcut */}
+      {/* Search Shortcut */}
       <div
         id="home-search-shortcut"
         role="button"
@@ -74,7 +118,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </span>
       </div>
 
-      {/* 5. Main Feed Heading */}
+      {/* Main Feed Heading */}
       <div className="flex items-center justify-between mb-3.5 px-0.5">
         <h3 className="text-[17px] font-bold text-[#16325C] tracking-tight">
           {t.newestFirst}
@@ -89,198 +133,119 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </button>
       </div>
 
-      {/* 6. Mixed Chronological Content Feed */}
-      <div className="flex flex-col gap-3.5">
-        {/* Item 1: 7 सितंबर 2026 — Message Card */}
-        <MessageCard
-          typeLabel="📝 संदेश"
-          title="अहिंसा का वास्तविक अर्थ"
-          date="7 सितंबर 2026"
-          content="अहिंसा केवल हिंसा से दूर रहना नहीं, बल्कि अपने विचार, वचन और कर्म में सभी के प्रति सद्भाव रखना है..."
-          author="अहिंसा शिक्षा मिशन"
-          onReadMore={() => navigate('/vichar/1', 'vichar')}
-        />
+      {/* Feed Content or Production Empty State */}
+      {hasContent ? (
+        <div className="flex flex-col gap-3.5">
+          {allPublishedItems.map((feedItem) => {
+            const { itemType, raw } = feedItem;
 
-        {/* Item 2: 6 सितंबर 2026 — Video Card */}
-        <VideoCard
-          typeLabel="🎥 वीडियो"
-          title="अहिंसा और मानवता पर विचार"
-          date="6 सितंबर 2026"
-          duration="१४:२०"
-          speaker="आचार्य विद्यानंद"
-          thumbnailUrl={peacefulSunThumbnail}
-          onClick={() => navigate('/video/1', 'video')}
-        />
+            if (itemType === 'vichar') {
+              return (
+                <MessageCard
+                  key={`vichar-${raw.id}`}
+                  typeLabel={raw.typeLabel || '📝 संदेश'}
+                  title={raw.title}
+                  date={raw.date}
+                  content={raw.leadParagraph || (raw.paragraphs && raw.paragraphs[0]) || ''}
+                  author={raw.author}
+                  source={raw.source}
+                  onReadMore={() => navigate(`/vichar/${raw.id}`, 'vichar')}
+                />
+              );
+            }
 
-        {/* Item 3: 5 सितंबर 2026 — Audio Card */}
-        <AudioCard
-          typeLabel="🎧 ऑडियो संदेश"
-          title="मानवता पर विशेष संदेश"
-          date="5 सितंबर 2026"
-          speaker="सत्य प्रकाश जी"
-          duration="०२:३५"
-          currentTime="०१:१४"
-          progressPercent={48}
-          onOpen={() => navigate('/audio/1', 'samagri')}
-        />
+            if (itemType === 'video') {
+              return (
+                <VideoCard
+                  key={`video-${raw.id}`}
+                  typeLabel={raw.typeLabel || '🎥 वीडियो'}
+                  title={raw.title}
+                  date={raw.date}
+                  duration={raw.duration}
+                  speaker={raw.speaker}
+                  thumbnailUrl={raw.thumbnailUrl}
+                  onClick={() => navigate(`/video/${raw.id}`, 'video')}
+                />
+              );
+            }
 
-        {/* Item 4: 4 सितंबर 2026 — Photo Card */}
-        <PhotoCard
-          typeLabel="🖼️ फोटो"
-          title="मिशन की एक झलक"
-          date="4 सितंबर 2026"
-          caption="सत्य और शांति के वातावरण में आयोजित विचार गोष्ठी का एक पावन दृश्य।"
-          imageUrl={peacefulAshramPhoto}
-          onViewPhoto={() => navigate('/photo/1', 'samagri')}
-        />
+            if (itemType === 'audio') {
+              return (
+                <AudioCard
+                  key={`audio-${raw.id}`}
+                  typeLabel={raw.typeLabel || '🎧 ऑडियो संदेश'}
+                  title={raw.title}
+                  date={raw.date}
+                  speaker={raw.speaker}
+                  duration={raw.duration}
+                  currentTime={raw.currentTime || '००:००'}
+                  progressPercent={0}
+                  onOpen={() => navigate(`/audio/${raw.id}`, 'samagri')}
+                />
+              );
+            }
 
-        {/* Item 5: 3 सितंबर 2026 — Document Card */}
-        <DocumentCard
-          typeLabel="📄 दस्तावेज"
-          title="शिक्षा और अहिंसा"
-          description="अहिंसा एवं शिक्षा से संबंधित विशेष सामग्री।"
-          date="3 सितंबर 2026"
-          fileType="PDF"
-          fileSize="१.८ MB"
-          pages="१६"
-          onRead={() => navigate('/document/1', 'samagri')}
-          onDownload={() => navigate('/document/1', 'samagri')}
-        />
+            if (itemType === 'photo') {
+              return (
+                <PhotoCard
+                  key={`photo-${raw.id}`}
+                  typeLabel={raw.typeLabel || '🖼️ फोटो'}
+                  title={raw.title}
+                  date={raw.date}
+                  caption={raw.caption}
+                  imageUrl={raw.imageUrl}
+                  onViewPhoto={() => navigate(`/photo/${raw.id}`, 'samagri')}
+                />
+              );
+            }
 
-        {/* Item 6: 2 सितंबर 2026 — Notice Card */}
-        <NoticeCard
-          typeLabel="📢 सूचना"
-          title="आगामी कार्यक्रम की जानकारी"
-          date="2 सितंबर 2026"
-          message="मिशन से संबंधित आगामी कार्यक्रम और आवश्यक जानकारी। आगामी १५ सितंबर को आयोजित होने वाली शांति संगोष्ठी में आप सादर आमंत्रित हैं।"
-          actionText="पूरी सूचना →"
-          onAction={() => navigate('/notice/1', 'samagri')}
-          variant="blue"
-        />
+            if (itemType === 'document') {
+              return (
+                <DocumentCard
+                  key={`doc-${raw.id}`}
+                  typeLabel={raw.typeLabel || '📄 दस्तावेज'}
+                  title={raw.title}
+                  description={raw.description}
+                  date={raw.date}
+                  fileType={raw.fileType || 'PDF'}
+                  fileSize={raw.fileSize || ''}
+                  pages={raw.pages || ''}
+                  onRead={() => navigate(`/document/${raw.id}`, 'samagri')}
+                  onDownload={() => navigate(`/document/${raw.id}`, 'samagri')}
+                />
+              );
+            }
 
-        {/* Item 7: 1 सितंबर 2026 — Message Card (Continuing the feed) */}
-        <MessageCard
-          typeLabel="📝 संदेश"
-          title="सत्य और आंतरिक शांति"
-          date="1 सितंबर 2026"
-          content="सत्य की राह में कठिनाइयाँ हो सकती हैं, किंतु वही मार्ग आत्मा को निर्भय और स्थिर बनाता है। जहाँ भय नहीं, वहीं वास्तविक शांति है।"
-          author="महात्मा गांधी"
-          source="सत्य के प्रयोग से"
-          onReadMore={() => navigate('/vichar/2', 'vichar')}
-        />
+            if (itemType === 'notice') {
+              return (
+                <NoticeCard
+                  key={`notice-${raw.id}`}
+                  typeLabel={raw.typeLabel || '📢 सूचना'}
+                  title={raw.title}
+                  date={raw.date}
+                  message={raw.content}
+                  actionText="पूरी सूचना →"
+                  onAction={() => navigate(`/notice/${raw.id}`, 'samagri')}
+                  variant={raw.variant || 'blue'}
+                />
+              );
+            }
 
-        {/* Item 8: 31 अगस्त 2026 — Video Card */}
-        <VideoCard
-          typeLabel="🎥 वीडियो"
-          title="गांधी जी और अहिंसात्मक सत्याग्रह"
-          date="31 अगस्त 2026"
-          duration="१८:४५"
-          speaker="डॉ. रवींद्र कुमार"
-          thumbnailUrl={satyagrahaThumbnail}
-          onClick={() => navigate('/video/2', 'video')}
-        />
-
-        {/* 14. Mission Introduction: Compact Mission Card */}
-        <div
-          id="mission-intro-card"
-          className="w-full bg-[#FAF8F5] border border-[#E8E5DF] rounded-2xl p-4.5 my-1 flex flex-col gap-2.5 shadow-2xs"
-        >
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#2E7D32]" />
-            <h4 className="text-[16px] font-bold text-[#16325C] tracking-tight">
-              हमारा मिशन
-            </h4>
-          </div>
-
-          <p className="text-[14px] text-[#5C6773] leading-relaxed">
-            अहिंसा, शिक्षा, सत्य और मानवता के विचारों को लोगों तक पहुँचाना।
-          </p>
-
-          <div className="flex justify-start pt-1">
-            <button
-              type="button"
-              onClick={() => onNavigateToTab('vichar')}
-              className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#16325C] hover:text-[#0F2342] transition-colors tap-active"
-            >
-              <span>और जानें</span>
-              <ArrowRight size={14} />
-            </button>
-          </div>
+            return null;
+          })}
         </div>
-
-        {/* 15. Today's Thought: Featured Thought Card */}
-        <div
-          id="todays-thought-card"
-          className="w-full bg-linear-to-b from-[#FEFBF6] to-[#FAF6EE] border border-[#D97706]/25 rounded-2xl p-4.5 my-1 flex flex-col gap-3 relative overflow-hidden shadow-2xs"
-        >
-          {/* Subtle golden accent header */}
-          <div className="flex items-center justify-between gap-2 border-b border-[#D97706]/15 pb-2">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#D97706]" />
-              <h4 className="text-[14px] font-bold text-[#8B4513] tracking-tight flex items-center gap-1.5">
-                <Sparkles size={14} className="text-[#D97706]" />
-                आज का विचार
-              </h4>
-            </div>
-            <span className="text-[11px] font-medium text-[#B45309] bg-[#FEF3C7]/70 px-2 py-0.5 rounded-md border border-[#FDE68A]">
-              दैनिक प्रेरणा
-            </span>
-          </div>
-
-          <blockquote className="text-[16px] text-[#1F2421] font-medium leading-[1.65] my-0.5">
-            “अच्छे विचार तभी सार्थक होते हैं, जब वे हमारे जीवन का हिस्सा बनते हैं।”
-          </blockquote>
-
-          <div className="flex items-center justify-between pt-1 border-t border-[#D97706]/15 mt-auto">
-            <span className="text-[13px] font-semibold text-[#8B4513]">
-              — अहिंसा शिक्षा मिशन
-            </span>
-
-            <ShareButton
-              title="आज का विचार - अहिंसा शिक्षा मिशन"
-              text="“अच्छे विचार तभी सार्थक होते हैं, जब वे हमारे जीवन का हिस्सा बनते हैं।”\n— अहिंसा शिक्षा मिशन"
-            />
-          </div>
+      ) : (
+        <div className="py-2 mb-4">
+          <HomeEmptyState
+            title={t.emptyHomeTitle}
+            description={t.emptyHomeDesc}
+            actionText={t.emptyHomeAction}
+            onAction={() => onNavigateToTab('samagri')}
+          />
         </div>
+      )}
 
-        {/* 16. More Older Content */}
-        {/* Item 9: 29 अगस्त 2026 — Photo Card */}
-        <PhotoCard
-          typeLabel="🖼️ फोटो"
-          title="गांधी अध्ययन केंद्र में विचार गोष्ठी"
-          date="29 अगस्त 2026"
-          caption="युवाओं के साथ अहिंसा, चरित्र निर्माण और सामाजिक सद्भाव पर सामूहिक परिचर्चा।"
-          imageUrl={workshopPhoto}
-          onViewPhoto={() => navigate('/photo/2', 'samagri')}
-        />
-
-        {/* Item 10: 27 अगस्त 2026 — Document Card */}
-        <DocumentCard
-          typeLabel="📄 दस्तावेज"
-          title="नैतिक शिक्षा व जीवन मूल्य मार्गदर्शिका"
-          description="युवा पीढ़ी के लिए मानवीय मूल्यों और सद्भाव पर आधारित अध्ययन सामग्री।"
-          date="27 अगस्त 2026"
-          fileType="PDF"
-          fileSize="२.४ MB"
-          pages="२४"
-          onRead={() => navigate('/document/2', 'samagri')}
-          onDownload={() => navigate('/document/2', 'samagri')}
-        />
-
-        {/* Visual Button: और पुरानी सामग्री देखें → */}
-        <div className="pt-2 pb-1">
-          <button
-            type="button"
-            onClick={() => onNavigateToTab('vichar')}
-            className="w-full py-3 px-4 bg-white hover:bg-[#EEF3FA] text-[#16325C] border border-[#E8E5DF] rounded-xl text-[14px] font-semibold flex items-center justify-center gap-1.5 transition-colors tap-active shadow-2xs"
-          >
-            <span>और पुरानी सामग्री देखें</span>
-            <ArrowRight size={15} />
-          </button>
-        </div>
-      </div>
-
-      {/* 17. Minimal Phase 1 Footer */}
+      {/* Minimal Footer */}
       <Footer />
     </PageContainer>
   );
