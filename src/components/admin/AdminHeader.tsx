@@ -1,6 +1,7 @@
 import React from 'react';
 import { Menu, LogOut, ExternalLink, ShieldCheck } from 'lucide-react';
 import { Logo } from '../brand/Logo';
+import { useAuth } from '../../context/AuthContext';
 
 interface AdminHeaderProps {
   onOpenMenu: () => void;
@@ -13,6 +14,10 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   onLogout,
   onNavigateToPublic,
 }) => {
+  const { user } = useAuth();
+  const initial = user?.email ? user.email.charAt(0).toUpperCase() : 'A';
+  const displayName = user?.email ? user.email.split('@')[0] : 'Admin';
+
   return (
     <header
       id="admin-header"
@@ -63,12 +68,15 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
         </button>
 
         {/* Admin Avatar Badge */}
-        <div className="flex items-center gap-1.5 pl-1 pr-1.5 py-1 rounded-full bg-white border border-[#E8E5DF] shadow-2xs">
+        <div
+          title={user?.email || 'Admin'}
+          className="flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-full bg-white border border-[#E8E5DF] shadow-2xs max-w-[150px]"
+        >
           <div className="w-6 h-6 rounded-full bg-[#16325C] text-white text-[11px] font-bold flex items-center justify-center shrink-0">
-            A
+            {initial}
           </div>
-          <span className="text-[12px] font-semibold text-[#16325C] pr-1 hidden xs:inline">
-            Admin
+          <span className="text-[12px] font-semibold text-[#16325C] truncate hidden xs:inline">
+            {displayName}
           </span>
         </div>
 

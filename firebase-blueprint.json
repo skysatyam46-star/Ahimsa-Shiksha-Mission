@@ -1,0 +1,157 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Administrator and authorized staff user profiles",
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": ["admin", "editor", "user"],
+          "description": "User permission role"
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Account activation status"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "User email address"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Account creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Account last update timestamp"
+        }
+      },
+      "required": ["role", "active", "email"]
+    },
+    "ContentItem": {
+      "title": "ContentItem",
+      "description": "Public content items including Vichar, Videos, Audio, Photos, Documents, and Notices",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["vichar", "video", "audio", "photo", "document", "notice"],
+          "description": "Content category"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Title or headline"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["published", "draft"],
+          "description": "Publishing status"
+        },
+        "author": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Author name"
+        },
+        "authorId": {
+          "type": "string",
+          "description": "Author user ID"
+        },
+        "date": {
+          "type": "string",
+          "description": "Display date"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last update timestamp"
+        }
+      },
+      "required": ["id", "type", "title", "status"]
+    },
+    "LinkItem": {
+      "title": "LinkItem",
+      "description": "Curated external and internal links",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Link title"
+        },
+        "url": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Target URL"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["official", "youtube", "social", "reading", "other"],
+          "description": "Link category"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Brief description"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["published", "draft"],
+          "description": "Publishing status"
+        },
+        "order": {
+          "type": "number",
+          "description": "Display order index"
+        }
+      },
+      "required": ["id", "title", "url", "category", "status"]
+    },
+    "SettingItem": {
+      "title": "SettingItem",
+      "description": "Website informational settings (mission, founder, contact, site general config)",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Setting key identifier"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last update timestamp"
+        }
+      },
+      "required": ["id"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User and Admin authorization documents"
+    },
+    "/content/{contentId}": {
+      "schema": "ContentItem",
+      "description": "CMS published and draft content"
+    },
+    "/links/{linkId}": {
+      "schema": "LinkItem",
+      "description": "Important links list"
+    },
+    "/settings/{settingId}": {
+      "schema": "SettingItem",
+      "description": "Website settings (general, mission, founder, contact)"
+    }
+  }
+}

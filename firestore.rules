@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Hardened Helper functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.active == true
+      );
+    }
+
+    // Users collection: users/{userId}
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin();
+      allow create, update, delete: if isValidId(userId) && isAdmin();
+    }
+
+    // Content collection: content/{contentId}
+    match /content/{contentId} {
+      allow get: if isValidId(contentId) && (resource.data.status == 'published' || isAdmin());
+      allow list: if (resource.data.status == 'published') || isAdmin();
+      allow create, update, delete: if isValidId(contentId) && isAdmin();
+    }
+
+    // Links collection: links/{linkId}
+    match /links/{linkId} {
+      allow get: if isValidId(linkId) && (resource.data.status == 'published' || isAdmin());
+      allow list: if (resource.data.status == 'published') || isAdmin();
+      allow create, update, delete: if isValidId(linkId) && isAdmin();
+    }
+
+    // Settings collection: settings/{settingId}
+    match /settings/{settingId} {
+      allow get, list: if isValidId(settingId);
+      allow create, update, delete: if isValidId(settingId) && isAdmin();
+    }
+  }
+}

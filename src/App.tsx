@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Loader2 } from 'lucide-react';
 import { MobileShell, NavTabId } from './components';
+import { Logo } from './components/brand/Logo';
 import { AppProvider, useApp } from './context/AppContext';
 import { DataProvider } from './context/DataContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 import { HomeScreen } from './screens/HomeScreen';
 import { VicharScreen } from './screens/VicharScreen';
@@ -265,6 +268,7 @@ const getHeaderMeta = (route: AppRoute, t: ReturnType<typeof useApp>['t']): { ti
 function AppContent() {
   const [route, setRoute] = useState<AppRoute>({ screen: 'home' });
   const { t } = useApp();
+  const { user, isAdmin, loading, logout } = useAuth();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -297,6 +301,15 @@ function AppContent() {
     }
   }, [navigateTo]);
 
+  const handleAdminLogout = useCallback(async () => {
+    try {
+      await logout();
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+    navigateTo('/admin/login');
+  }, [logout, navigateTo]);
+
   const handleTabChange = (tab: NavTabId, path: string) => {
     navigateTo(path || tabToPath[tab]);
   };
@@ -305,8 +318,35 @@ function AppContent() {
     navigateTo(tabToPath[tabId]);
   };
 
+  const isAdminRoute = route.screen.startsWith('admin');
+
   // Dedicated Admin screens (NO public bottom navigation)
   if (route.screen === 'admin-login') {
+    if (loading) {
+      return (
+        <div className="min-h-screen bg-[#F0EDE6] sm:py-6 flex justify-center items-start">
+          <div className="w-full max-w-[430px] min-h-screen sm:min-h-[844px] bg-[#FAF8F5] text-[#1F2421] relative flex flex-col justify-center items-center p-6 sm:rounded-[32px] sm:shadow-[0_12px_40px_rgba(22,50,92,0.08)] sm:border sm:border-[#E8E5DF]">
+            <div className="flex flex-col items-center gap-3">
+              <Logo size={56} />
+              <div className="flex items-center gap-2 text-[#16325C] font-semibold text-[14px] mt-2">
+                <Loader2 size={18} className="animate-spin text-[#16325C]" />
+                <span>सुरक्षा सत्यापन हो रहा है…</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (user && isAdmin) {
+      return (
+        <AdminDashboardScreen
+          onNavigate={navigateTo}
+          onLogout={handleAdminLogout}
+        />
+      );
+    }
+
     return (
       <AdminLoginScreen
         onLoginSuccess={() => navigateTo('/admin')}
@@ -316,11 +356,40 @@ function AppContent() {
     );
   }
 
+  // Guard all other /admin/* routes: must be authenticated and have active admin role
+  if (isAdminRoute) {
+    if (loading) {
+      return (
+        <div className="min-h-screen bg-[#F0EDE6] sm:py-6 flex justify-center items-start">
+          <div className="w-full max-w-[430px] min-h-screen sm:min-h-[844px] bg-[#FAF8F5] text-[#1F2421] relative flex flex-col justify-center items-center p-6 sm:rounded-[32px] sm:shadow-[0_12px_40px_rgba(22,50,92,0.08)] sm:border sm:border-[#E8E5DF]">
+            <div className="flex flex-col items-center gap-3">
+              <Logo size={56} />
+              <div className="flex items-center gap-2 text-[#16325C] font-semibold text-[14px] mt-2">
+                <Loader2 size={18} className="animate-spin text-[#16325C]" />
+                <span>Admin सत्र की जांच हो रही है…</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (!user || !isAdmin) {
+      return (
+        <AdminLoginScreen
+          onLoginSuccess={() => navigateTo('/admin')}
+          onBack={() => navigateTo('/settings')}
+          onNavigate={navigateTo}
+        />
+      );
+    }
+  }
+
   if (route.screen === 'admin') {
     return (
       <AdminDashboardScreen
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -330,7 +399,7 @@ function AppContent() {
     return (
       <AdminVicharScreen
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -339,7 +408,7 @@ function AppContent() {
     return (
       <AdminVicharFormScreen
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -349,7 +418,7 @@ function AppContent() {
       <AdminVicharFormScreen
         id={route.id}
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -358,7 +427,7 @@ function AppContent() {
     return (
       <AdminVideoScreen
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -367,7 +436,7 @@ function AppContent() {
     return (
       <AdminVideoFormScreen
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -377,7 +446,7 @@ function AppContent() {
       <AdminVideoFormScreen
         id={route.id}
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -386,7 +455,7 @@ function AppContent() {
     return (
       <AdminAudioScreen
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -395,7 +464,7 @@ function AppContent() {
     return (
       <AdminAudioFormScreen
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -405,7 +474,7 @@ function AppContent() {
       <AdminAudioFormScreen
         id={route.id}
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -414,7 +483,7 @@ function AppContent() {
     return (
       <AdminPhotoScreen
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -423,7 +492,7 @@ function AppContent() {
     return (
       <AdminPhotoFormScreen
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -433,7 +502,7 @@ function AppContent() {
       <AdminPhotoFormScreen
         id={route.id}
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -442,7 +511,7 @@ function AppContent() {
     return (
       <AdminDocumentScreen
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -451,7 +520,7 @@ function AppContent() {
     return (
       <AdminDocumentFormScreen
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -461,7 +530,7 @@ function AppContent() {
       <AdminDocumentFormScreen
         id={route.id}
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -470,7 +539,7 @@ function AppContent() {
     return (
       <AdminNoticeScreen
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -479,7 +548,7 @@ function AppContent() {
     return (
       <AdminNoticeFormScreen
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -489,7 +558,7 @@ function AppContent() {
       <AdminNoticeFormScreen
         id={route.id}
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -498,7 +567,7 @@ function AppContent() {
     return (
       <AdminLinksScreen
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -507,7 +576,7 @@ function AppContent() {
     return (
       <AdminMissionScreen
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -516,7 +585,7 @@ function AppContent() {
     return (
       <AdminFounderScreen
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -525,7 +594,7 @@ function AppContent() {
     return (
       <AdminContactScreen
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -534,7 +603,7 @@ function AppContent() {
     return (
       <AdminSettingsScreen
         onNavigate={navigateTo}
-        onLogout={() => navigateTo('/admin/login')}
+        onLogout={handleAdminLogout}
       />
     );
   }
@@ -687,10 +756,12 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AppProvider>
-      <DataProvider>
-        <AppContent />
-      </DataProvider>
-    </AppProvider>
+    <AuthProvider>
+      <AppProvider>
+        <DataProvider>
+          <AppContent />
+        </DataProvider>
+      </AppProvider>
+    </AuthProvider>
   );
 }

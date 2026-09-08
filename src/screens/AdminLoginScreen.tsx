@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, ShieldCheck, ArrowLeft, AlertCircle, Loader2, KeyRound } from 'lucide-react';
+import { Eye, EyeOff, ShieldCheck, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
 import { Logo } from '../components/brand/Logo';
+import { useAuth } from '../context/AuthContext';
 
 interface AdminLoginScreenProps {
   onLoginSuccess: () => void;
@@ -12,6 +13,8 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
   onLoginSuccess,
   onBack,
 }) => {
+  const { login, isConfigured, missingConfigKeys } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -49,46 +52,54 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
     return isValid;
   };
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
+    if (!isConfigured) {
+      setAuthError(
+        `Firebase environment variables missing: ${missingConfigKeys.join(', ')}. Kripya Secrets panel me configuration set karein.`
+      );
+      return;
+    }
+
     setIsLoading(true);
     setAuthError(null);
 
-    /* ==================================================
-       MOCK AUTHENTICATION (Phase 5B UI/UX only)
-       NOTE: In future backend phases, replace this with:
-       await signInWithEmailAndPassword(auth, email, password);
-       ================================================== */
-    setTimeout(() => {
-      // Mock test check: allow demo credentials or standard admin emails
-      // If user deliberately typed wrong email/password for testing error state:
-      const trimmedEmail = email.trim().toLowerCase();
-      
-      if (
-        (trimmedEmail === 'admin@ahimsa.org' && password === 'admin123') ||
-        trimmedEmail.endsWith('@ahimsa.org') ||
-        password === 'admin123'
-      ) {
-        setIsLoading(false);
-        onLoginSuccess();
-      } else {
-        setIsLoading(false);
-        setAuthError('Email ya password galat hai.');
-      }
-    }, 700);
-  };
+    try {
+      await login(email, password);
+      setIsLoading(false);
+      onLoginSuccess();
+    } catch (err: unknown) {
+      setIsLoading(false);
+      const error = err as { code?: string; message?: string };
+      const code = error?.code || '';
+      const message = error?.message || '';
 
-  const handleFillDemo = () => {
-    setEmail('admin@ahimsa.org');
-    setPassword('admin123');
-    setEmailError(null);
-    setPasswordError(null);
-    setAuthError(null);
+      if (
+        code === 'auth/invalid-credential' ||
+        code === 'auth/user-not-found' ||
+        code === 'auth/wrong-password' ||
+        message.includes('invalid-credential')
+      ) {
+        setAuthError('Email ya password galat hai.');
+      } else if (code === 'auth/invalid-email') {
+        setAuthError('Kripya valid email address darj karein.');
+      } else if (code === 'auth/user-disabled') {
+        setAuthError('Yeh admin account nishkriya (disabled) kar diya gaya hai.');
+      } else if (code === 'auth/too-many-requests') {
+        setAuthError('Bahut saare asafal prayas. Kripya thodi der baad koshish karein.');
+      } else if (code === 'auth/network-request-failed') {
+        setAuthError('Network connection ki samasya hai. Kripya internet check karein.');
+      } else if (message === 'unauthorized-role') {
+        setAuthError('Aapke paas Admin Panel access karne ki anumati (Admin role) nahi hai.');
+      } else {
+        setAuthError(message || 'Login asafal raha. Kripya punah prayas karein.');
+      }
+    }
   };
 
   return (
@@ -241,23 +252,6 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
                 Sirf authorized administrator ke liye
               </span>
             </div>
-          </div>
-
-          {/* Quick Demo Credentials Helper */}
-          <div className="mt-4 p-3 bg-[#EEF3FA]/70 border border-[#16325C]/15 rounded-xl flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <KeyRound size={16} className="text-[#16325C] shrink-0" />
-              <div className="text-[12px] text-[#16325C] truncate">
-                <span className="font-semibold">Demo:</span> admin@ahimsa.org / admin123
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={handleFillDemo}
-              className="text-[11px] font-bold text-[#16325C] hover:underline shrink-0 bg-white px-2 py-1 rounded-md border border-[#16325C]/20 tap-active"
-            >
-              Fill Demo
-            </button>
           </div>
         </div>
 
