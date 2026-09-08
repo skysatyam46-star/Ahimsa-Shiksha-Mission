@@ -9,7 +9,7 @@ import {
   EmptyState,
 } from '../components';
 import { Share2, Check, Quote } from 'lucide-react';
-import { mockMessages } from '../data/mockContent';
+import { useData } from '../context/DataContext';
 
 interface MessageDetailScreenProps {
   id?: string;
@@ -23,8 +23,9 @@ export const MessageDetailScreen: React.FC<MessageDetailScreenProps> = ({
   onNavigateToMessage,
 }) => {
   const [copied, setCopied] = React.useState(false);
+  const { getVicharById, getPublishedVichar } = useData();
 
-  const message = mockMessages[id];
+  const message = getVicharById(id);
 
   if (!message) {
     return (
@@ -42,12 +43,14 @@ export const MessageDetailScreen: React.FC<MessageDetailScreenProps> = ({
     );
   }
 
-  // Related messages (excluding current)
-  const relatedMessages = Object.values(mockMessages).filter((m) => m.id !== id).slice(0, 3);
+  // Related messages (excluding current, only published)
+  const relatedMessages = getPublishedVichar()
+    .filter((m) => m.id !== id)
+    .slice(0, 3);
 
   const handleShare = async () => {
     const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
-    const shareText = `“${message.title}”\n${message.leadParagraph}\n\nअहिंसा शिक्षा मिशन: ${shareUrl}`;
+    const shareText = `“${message.title}”\n${message.leadParagraph || ''}\n\nअहिंसा शिक्षा मिशन: ${shareUrl}`;
 
     if (navigator.share) {
       try {
@@ -85,7 +88,7 @@ export const MessageDetailScreen: React.FC<MessageDetailScreenProps> = ({
         {/* Meta Bar */}
         <div className="flex items-center justify-between gap-2 mb-2.5">
           <span className="text-[12px] font-semibold text-[#16325C] bg-[#EEF3FA] px-2.5 py-0.5 rounded-md">
-            {message.typeLabel}
+            {message.typeLabel || '📝 संदेश'}
           </span>
           <DateLabel date={message.date} />
         </div>
@@ -120,16 +123,26 @@ export const MessageDetailScreen: React.FC<MessageDetailScreenProps> = ({
         {/* Long-form Reading Article Body */}
         <div className="flex flex-col gap-4 text-[#1F2421] text-[16px] leading-[1.75]">
           {/* Lead Paragraph with gentle emphasis */}
-          <p className="text-[17px] font-medium text-[#16325C] leading-[1.7] bg-[#FAF8F5] p-3.5 rounded-xl border-l-3 border-[#16325C]/40">
-            {message.leadParagraph}
-          </p>
+          {message.leadParagraph && (
+            <p className="text-[17px] font-medium text-[#16325C] leading-[1.7] bg-[#FAF8F5] p-3.5 rounded-xl border-l-3 border-[#16325C]/40">
+              {message.leadParagraph}
+            </p>
+          )}
 
           {/* Body Paragraphs */}
-          {message.paragraphs.map((p, idx) => (
-            <p key={idx} className="tracking-normal font-normal">
-              {p}
-            </p>
-          ))}
+          {message.paragraphs && message.paragraphs.length > 0 ? (
+            message.paragraphs.map((p, idx) => (
+              <p key={idx} className="tracking-normal font-normal">
+                {p}
+              </p>
+            ))
+          ) : (
+            !message.leadParagraph && (
+              <p className="tracking-normal font-normal">
+                {message.title}
+              </p>
+            )
+          )}
 
           {/* Key Takeaway / Callout quote */}
           {message.keyTakeaway && (
@@ -169,32 +182,34 @@ export const MessageDetailScreen: React.FC<MessageDetailScreenProps> = ({
       </article>
 
       {/* 4. Related Content: अन्य विचार */}
-      <section className="mt-8 mb-6 flex flex-col gap-3.5">
-        <Divider />
-        <div className="flex items-center justify-between px-0.5 pt-1">
-          <h2 className="text-[17px] font-bold text-[#16325C] tracking-tight">
-            अन्य विचार
-          </h2>
-        </div>
+      {relatedMessages.length > 0 && (
+        <section className="mt-8 mb-6 flex flex-col gap-3.5">
+          <Divider />
+          <div className="flex items-center justify-between px-0.5 pt-1">
+            <h2 className="text-[17px] font-bold text-[#16325C] tracking-tight">
+              अन्य विचार
+            </h2>
+          </div>
 
-        <div className="flex flex-col gap-3">
-          {relatedMessages.map((rel) => (
-            <MessageCard
-              key={rel.id}
-              typeLabel={rel.typeLabel}
-              title={rel.title}
-              date={rel.date}
-              content={rel.leadParagraph.slice(0, 95) + '...'}
-              author={rel.author}
-              topic={rel.topic}
-              onReadMore={() => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                onNavigateToMessage(rel.id);
-              }}
-            />
-          ))}
-        </div>
-      </section>
+          <div className="flex flex-col gap-3">
+            {relatedMessages.map((rel) => (
+              <MessageCard
+                key={rel.id}
+                typeLabel={rel.typeLabel || '📝 संदेश'}
+                title={rel.title}
+                date={rel.date}
+                content={(rel.leadParagraph || rel.title).slice(0, 95) + '...'}
+                author={rel.author}
+                topic={rel.topic}
+                onReadMore={() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  onNavigateToMessage(rel.id);
+                }}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       <Footer />
     </PageContainer>

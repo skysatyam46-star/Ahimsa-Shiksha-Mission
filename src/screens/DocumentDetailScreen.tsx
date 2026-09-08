@@ -17,7 +17,7 @@ import {
   BookOpen,
   FileCheck,
 } from 'lucide-react';
-import { mockDocuments } from '../data/mockContent';
+import { useData } from '../context/DataContext';
 
 interface DocumentDetailScreenProps {
   id?: string;
@@ -32,8 +32,9 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const { getDocumentById, getPublishedDocuments } = useData();
 
-  const doc = mockDocuments[id];
+  const doc = getDocumentById(id);
 
   if (!doc) {
     return (
@@ -51,7 +52,9 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
     );
   }
 
-  const relatedDocuments = Object.values(mockDocuments).filter((d) => d.id !== id).slice(0, 3);
+  const relatedDocuments = getPublishedDocuments()
+    .filter((d) => d.id !== id)
+    .slice(0, 3);
 
   const handleShare = async () => {
     const shareUrl = typeof window !== 'undefined' ? window.location.href : '';

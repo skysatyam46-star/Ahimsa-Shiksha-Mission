@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { MobileShell, NavTabId } from './components';
 import { AppProvider, useApp } from './context/AppContext';
+import { DataProvider } from './context/DataContext';
 
 import { HomeScreen } from './screens/HomeScreen';
 import { VicharScreen } from './screens/VicharScreen';
@@ -28,6 +29,25 @@ import { LinksScreen } from './screens/LinksScreen';
 import { AdminLoginScreen } from './screens/AdminLoginScreen';
 import { AdminDashboardScreen } from './screens/AdminDashboardScreen';
 
+// Admin CMS Screens
+import { AdminVicharScreen } from './screens/admin/AdminVicharScreen';
+import { AdminVicharFormScreen } from './screens/admin/AdminVicharFormScreen';
+import { AdminVideoScreen } from './screens/admin/AdminVideoScreen';
+import { AdminVideoFormScreen } from './screens/admin/AdminVideoFormScreen';
+import { AdminAudioScreen } from './screens/admin/AdminAudioScreen';
+import { AdminAudioFormScreen } from './screens/admin/AdminAudioFormScreen';
+import { AdminPhotoScreen } from './screens/admin/AdminPhotoScreen';
+import { AdminPhotoFormScreen } from './screens/admin/AdminPhotoFormScreen';
+import { AdminDocumentScreen } from './screens/admin/AdminDocumentScreen';
+import { AdminDocumentFormScreen } from './screens/admin/AdminDocumentFormScreen';
+import { AdminNoticeScreen } from './screens/admin/AdminNoticeScreen';
+import { AdminNoticeFormScreen } from './screens/admin/AdminNoticeFormScreen';
+import { AdminLinksScreen } from './screens/admin/AdminLinksScreen';
+import { AdminMissionScreen } from './screens/admin/AdminMissionScreen';
+import { AdminFounderScreen } from './screens/admin/AdminFounderScreen';
+import { AdminContactScreen } from './screens/admin/AdminContactScreen';
+import { AdminSettingsScreen } from './screens/admin/AdminSettingsScreen';
+
 export type AppRoute =
   | { screen: 'home' }
   | { screen: 'vichar' }
@@ -45,6 +65,29 @@ export type AppRoute =
   | { screen: 'links' }
   | { screen: 'admin-login' }
   | { screen: 'admin' }
+  | { screen: 'admin-vichar' }
+  | { screen: 'admin-vichar-new' }
+  | { screen: 'admin-vichar-edit'; id: string }
+  | { screen: 'admin-video' }
+  | { screen: 'admin-video-new' }
+  | { screen: 'admin-video-edit'; id: string }
+  | { screen: 'admin-audio' }
+  | { screen: 'admin-audio-new' }
+  | { screen: 'admin-audio-edit'; id: string }
+  | { screen: 'admin-photo' }
+  | { screen: 'admin-photo-new' }
+  | { screen: 'admin-photo-edit'; id: string }
+  | { screen: 'admin-document' }
+  | { screen: 'admin-document-new' }
+  | { screen: 'admin-document-edit'; id: string }
+  | { screen: 'admin-notice' }
+  | { screen: 'admin-notice-new' }
+  | { screen: 'admin-notice-edit'; id: string }
+  | { screen: 'admin-links' }
+  | { screen: 'admin-mission' }
+  | { screen: 'admin-founder' }
+  | { screen: 'admin-contact' }
+  | { screen: 'admin-settings' }
   | { screen: 'vichar-detail'; id: string }
   | { screen: 'video-detail'; id: string }
   | { screen: 'audio-detail'; id: string }
@@ -59,6 +102,50 @@ const parsePath = (path: string): AppRoute => {
   if (clean === '/admin/login') return { screen: 'admin-login' };
   if (clean === '/admin') return { screen: 'admin' };
 
+  // Admin Vichar
+  if (clean === '/admin/vichar/new') return { screen: 'admin-vichar-new' };
+  const mAdmVicEdit = clean.match(/^\/admin\/vichar\/([^/]+)\/edit$/);
+  if (mAdmVicEdit) return { screen: 'admin-vichar-edit', id: mAdmVicEdit[1] };
+  if (clean === '/admin/vichar') return { screen: 'admin-vichar' };
+
+  // Admin Video
+  if (clean === '/admin/video/new') return { screen: 'admin-video-new' };
+  const mAdmVidEdit = clean.match(/^\/admin\/video\/([^/]+)\/edit$/);
+  if (mAdmVidEdit) return { screen: 'admin-video-edit', id: mAdmVidEdit[1] };
+  if (clean === '/admin/video') return { screen: 'admin-video' };
+
+  // Admin Audio
+  if (clean === '/admin/audio/new') return { screen: 'admin-audio-new' };
+  const mAdmAudEdit = clean.match(/^\/admin\/audio\/([^/]+)\/edit$/);
+  if (mAdmAudEdit) return { screen: 'admin-audio-edit', id: mAdmAudEdit[1] };
+  if (clean === '/admin/audio') return { screen: 'admin-audio' };
+
+  // Admin Photo
+  if (clean === '/admin/photo/new') return { screen: 'admin-photo-new' };
+  const mAdmPhoEdit = clean.match(/^\/admin\/photo\/([^/]+)\/edit$/);
+  if (mAdmPhoEdit) return { screen: 'admin-photo-edit', id: mAdmPhoEdit[1] };
+  if (clean === '/admin/photo') return { screen: 'admin-photo' };
+
+  // Admin Document
+  if (clean === '/admin/document/new') return { screen: 'admin-document-new' };
+  const mAdmDocEdit = clean.match(/^\/admin\/document\/([^/]+)\/edit$/);
+  if (mAdmDocEdit) return { screen: 'admin-document-edit', id: mAdmDocEdit[1] };
+  if (clean === '/admin/document') return { screen: 'admin-document' };
+
+  // Admin Notice
+  if (clean === '/admin/notice/new') return { screen: 'admin-notice-new' };
+  const mAdmNotEdit = clean.match(/^\/admin\/notice\/([^/]+)\/edit$/);
+  if (mAdmNotEdit) return { screen: 'admin-notice-edit', id: mAdmNotEdit[1] };
+  if (clean === '/admin/notice') return { screen: 'admin-notice' };
+
+  // Admin Website Settings
+  if (clean === '/admin/links') return { screen: 'admin-links' };
+  if (clean === '/admin/mission') return { screen: 'admin-mission' };
+  if (clean === '/admin/founder') return { screen: 'admin-founder' };
+  if (clean === '/admin/contact') return { screen: 'admin-contact' };
+  if (clean === '/admin/settings') return { screen: 'admin-settings' };
+
+  // Public Detail Routes
   const mMsg = clean.match(/^\/vichar\/([^/]+)$/);
   if (mMsg) return { screen: 'vichar-detail', id: mMsg[1] };
 
@@ -77,6 +164,7 @@ const parsePath = (path: string): AppRoute => {
   const mNot = clean.match(/^\/notice\/([^/]+)$/);
   if (mNot) return { screen: 'notice-detail', id: mNot[1] };
 
+  // Public Static and List Routes
   if (clean === '/settings') return { screen: 'settings' };
   if (clean === '/mission') return { screen: 'mission' };
   if (clean === '/founder') return { screen: 'founder' };
@@ -118,16 +206,8 @@ const routeToTab = (route: AppRoute): NavTabId | null => {
       return 'samagri';
     case 'khoj':
       return 'khoj';
-    case 'settings':
-    case 'mission':
-    case 'founder':
-    case 'contact':
-    case 'links':
-    case 'admin-login':
-    case 'admin':
-      return null;
     default:
-      return 'home';
+      return null;
   }
 };
 
@@ -157,10 +237,6 @@ const getHeaderMeta = (route: AppRoute, t: ReturnType<typeof useApp>['t']): { ti
       return { title: t.contactHeading, subtitle: t.brandTitle };
     case 'links':
       return { title: t.linksHeading, subtitle: t.brandTitle };
-    case 'admin-login':
-      return { title: 'Admin Login', subtitle: t.brandTitle };
-    case 'admin':
-      return { title: 'Dashboard', subtitle: 'Admin Panel' };
     case 'audio':
       return { title: 'ऑडियो संदेश', subtitle: t.brandTitle };
     case 'photo':
@@ -181,6 +257,8 @@ const getHeaderMeta = (route: AppRoute, t: ReturnType<typeof useApp>['t']): { ti
       return { title: 'दस्तावेज', subtitle: 'अध्ययन एवं विचार सामग्री' };
     case 'notice-detail':
       return { title: 'सूचना', subtitle: 'कार्यक्रम व आवश्यक जानकारी' };
+    default:
+      return { title: t.brandTitle };
   }
 };
 
@@ -227,9 +305,6 @@ function AppContent() {
     navigateTo(tabToPath[tabId]);
   };
 
-  const currentTab = routeToTab(route);
-  const headerMeta = getHeaderMeta(route, t);
-
   // Dedicated Admin screens (NO public bottom navigation)
   if (route.screen === 'admin-login') {
     return (
@@ -249,6 +324,223 @@ function AppContent() {
       />
     );
   }
+
+  // Admin Content Management Screens
+  if (route.screen === 'admin-vichar') {
+    return (
+      <AdminVicharScreen
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-vichar-new') {
+    return (
+      <AdminVicharFormScreen
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-vichar-edit') {
+    return (
+      <AdminVicharFormScreen
+        id={route.id}
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-video') {
+    return (
+      <AdminVideoScreen
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-video-new') {
+    return (
+      <AdminVideoFormScreen
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-video-edit') {
+    return (
+      <AdminVideoFormScreen
+        id={route.id}
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-audio') {
+    return (
+      <AdminAudioScreen
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-audio-new') {
+    return (
+      <AdminAudioFormScreen
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-audio-edit') {
+    return (
+      <AdminAudioFormScreen
+        id={route.id}
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-photo') {
+    return (
+      <AdminPhotoScreen
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-photo-new') {
+    return (
+      <AdminPhotoFormScreen
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-photo-edit') {
+    return (
+      <AdminPhotoFormScreen
+        id={route.id}
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-document') {
+    return (
+      <AdminDocumentScreen
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-document-new') {
+    return (
+      <AdminDocumentFormScreen
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-document-edit') {
+    return (
+      <AdminDocumentFormScreen
+        id={route.id}
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-notice') {
+    return (
+      <AdminNoticeScreen
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-notice-new') {
+    return (
+      <AdminNoticeFormScreen
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-notice-edit') {
+    return (
+      <AdminNoticeFormScreen
+        id={route.id}
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-links') {
+    return (
+      <AdminLinksScreen
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-mission') {
+    return (
+      <AdminMissionScreen
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-founder') {
+    return (
+      <AdminFounderScreen
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-contact') {
+    return (
+      <AdminContactScreen
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-settings') {
+    return (
+      <AdminSettingsScreen
+        onNavigate={navigateTo}
+        onLogout={() => navigateTo('/admin/login')}
+      />
+    );
+  }
+
+  const currentTab = routeToTab(route);
+  const headerMeta = getHeaderMeta(route, t);
 
   return (
     <MobileShell
@@ -396,7 +688,9 @@ function AppContent() {
 export default function App() {
   return (
     <AppProvider>
-      <AppContent />
+      <DataProvider>
+        <AppContent />
+      </DataProvider>
     </AppProvider>
   );
 }

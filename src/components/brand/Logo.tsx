@@ -17,11 +17,11 @@ export const Logo: React.FC<LogoProps> = ({
     <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
       {/* Official Ahimsa Shiksha Mission Logo */}
       <img
-        src="/logo.svg"
+        src="/ahimsa-shiksha-mission-logo.png"
         alt="अहिंसा शिक्षा मिशन Logo"
         width={size}
         height={size}
-        className="rounded-full shrink-0 object-contain shadow-xs"
+        className="shrink-0 object-contain"
         style={{ width: `${size}px`, height: `${size}px` }}
       />
 

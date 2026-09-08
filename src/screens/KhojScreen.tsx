@@ -8,12 +8,13 @@ import {
   EmptyState,
   Footer,
 } from '../components';
+import { useData } from '../context/DataContext';
 
 interface KhojScreenProps {
   onNavigateToDetail?: (path: string) => void;
 }
 
-interface MockSearchResult {
+interface SearchResultItem {
   id: string;
   type: 'vichar' | 'video' | 'audio' | 'photo' | 'document' | 'notice';
   typeLabel: string;
@@ -24,159 +25,135 @@ interface MockSearchResult {
   keywords: string[];
 }
 
-const mockSearchDataset: MockSearchResult[] = [
-  // 1. विचार (Messages)
-  {
-    id: '1',
-    type: 'vichar',
-    typeLabel: '📝 विचार',
-    title: 'अहिंसा हमारे जीवन की शक्ति है',
-    excerpt:
-      'जब विचारों में करुणा आती है, तो व्यवहार में अहिंसा दिखाई देती है। अहिंसा केवल अस्त्र त्यागना नहीं, अंतःकरण की पवित्रता है।',
-    date: '7 सितम्बर 2026',
-    route: '/vichar/1',
-    keywords: ['अहिंसा', 'जीवन', 'शक्ति', 'विचार', 'करुणा', 'सद्भाव'],
-  },
-  {
-    id: '5',
-    type: 'vichar',
-    typeLabel: '📝 विचार',
-    title: 'शिक्षा का वास्तविक उद्देश्य',
-    excerpt:
-      'सच्ची शिक्षा वह है जो मनुष्य को भीतर से स्वतंत्र, विचारशील और संवेदनशील बनाए, केवल सूचनाओं का संचय नहीं।',
-    date: '5 सितम्बर 2026',
-    route: '/vichar/5',
-    keywords: ['शिक्षा', 'उद्देश्य', 'ज्ञान', 'संवेदनशीलता', 'विद्यार्थी'],
-  },
-  {
-    id: '2',
-    type: 'vichar',
-    typeLabel: '📝 विचार',
-    title: 'सत्य और आंतरिक शांति',
-    excerpt:
-      'सत्य की राह में कठिनाइयाँ हो सकती हैं, किंतु वही मार्ग अंतरात्मा को निर्भय और स्थिर बनाता है। जहाँ भय नहीं, वहीं शांति है।',
-    date: '1 सितम्बर 2026',
-    route: '/vichar/2',
-    keywords: ['सत्य', 'शांति', 'आंतरिक', 'गांधी', 'निर्भय'],
-  },
-  {
-    id: '6',
-    type: 'vichar',
-    typeLabel: '📝 विचार',
-    title: 'मानवता सबसे बड़ा धर्म',
-    excerpt:
-      'मानवता से बढ़कर कोई धर्म नहीं और निःस्वार्थ सेवा से बढ़कर कोई पूजा नहीं। जब हम दूसरों के दुःख को अपना समझें, तभी सच्ची शांति संभव है।',
-    date: '2 सितम्बर 2026',
-    route: '/vichar/6',
-    keywords: ['मानवता', 'धर्म', 'सेवा', 'शांति', 'सहानुभूति'],
-  },
-
-  // 2. वीडियो (Videos)
-  {
-    id: '1',
-    type: 'video',
-    typeLabel: '🎥 वीडियो',
-    title: 'अहिंसा और मानवता का संबंध',
-    excerpt:
-      'इस वीडियो में अहिंसा, मानवता और हमारे दैनिक जीवन में सकारात्मक सोच के महत्व पर विशेष व्याख्यान प्रस्तुत किए गए हैं।',
-    date: '6 सितम्बर 2026',
-    route: '/video/1',
-    keywords: ['अहिंसा', 'मानवता', 'संबंध', 'वीडियो', 'व्याख्यान', 'सोच'],
-  },
-  {
-    id: '4',
-    type: 'video',
-    typeLabel: '🎥 वीडियो',
-    title: 'अहिंसा और मूल्य आधारित शिक्षा',
-    excerpt:
-      'शिक्षा प्रणाली में अहिंसक मूल्यों, मानवीय संवेदनाओं और चरित्र निर्माण के समावेश पर विस्तृत परिचर्चा।',
-    date: '3 सितम्बर 2026',
-    route: '/video/4',
-    keywords: ['शिक्षा', 'अहिंसा', 'मूल्य', 'चरित्र', 'स्कूल'],
-  },
-  {
-    id: '2',
-    type: 'video',
-    typeLabel: '🎥 वीडियो',
-    title: 'सत्याग्रह और अहिंसक संघर्ष',
-    excerpt:
-      'महात्मा गांधी के सत्याग्रह और अहिंसक संघर्ष के ऐतिहासिक सिद्धांतों की वर्तमान परिप्रेक्ष्य में समीक्षा।',
-    date: '27 अगस्त 2026',
-    route: '/video/2',
-    keywords: ['सत्य', 'सत्याग्रह', 'गांधी', 'अहिंसा', 'संघर्ष'],
-  },
-
-  // 3. ऑडियो (Audio)
-  {
-    id: '1',
-    type: 'audio',
-    typeLabel: '🎧 ऑडियो',
-    title: 'अहिंसा पर विशेष संदेश',
-    excerpt:
-      'दैनिक जीवन में अहिंसक सोच, वाणी के संयम और मानसिक तनाव से मुक्ति पर शांतिपूर्ण विचारणीय उद्बोधन।',
-    date: '5 सितम्बर 2026',
-    route: '/audio/1',
-    keywords: ['अहिंसा', 'ऑडियो', 'संदेश', 'शांति', 'संयम', 'वाणी'],
-  },
-
-  // 4. दस्तावेज (Document)
-  {
-    id: '1',
-    type: 'document',
-    typeLabel: '📄 दस्तावेज',
-    title: 'अहिंसा शिक्षा — अध्ययन सामग्री',
-    excerpt:
-      'अहिंसक समाज निर्माण एवं विद्यालयों में नैतिक चेतना विकसित करने हेतु आधिकारिक पाठ्य सामग्री व मार्गदर्शिका।',
-    date: '2 सितम्बर 2026',
-    route: '/document/1',
-    keywords: ['अहिंसा', 'शिक्षा', 'दस्तावेज', 'pdf', 'अध्ययन', 'सामग्री'],
-  },
-
-  // 5. सूचना (Notice)
-  {
-    id: '1',
-    type: 'notice',
-    typeLabel: '📢 सूचना',
-    title: 'अहिंसा शिक्षा कार्यक्रम की सूचना',
-    excerpt:
-      'आगामी राष्ट्रीय अहिंसा संगोष्ठी, शिक्षक प्रशिक्षण कार्यशाला एवं सहभागिता के दिशा-निर्देश।',
-    date: '1 सितम्बर 2026',
-    route: '/notice/1',
-    keywords: ['अहिंसा', 'शिक्षा', 'सूचना', 'कार्यक्रम', 'कार्यशाला', 'घोषणा'],
-  },
-
-  // 6. फोटो (Photo)
-  {
-    id: '1',
-    type: 'photo',
-    typeLabel: '🖼️ फोटो',
-    title: 'शिक्षा व सद्भाव कार्यक्रम की पावन झलकियाँ',
-    excerpt:
-      'सत्य और शांति के वातावरण में आयोजित अहिंसा विचार गोष्ठी के प्रेरणादायी दृश्य एवं सहभागिता।',
-    date: '3 सितम्बर 2026',
-    route: '/photo/1',
-    keywords: ['फोटो', 'शिक्षा', 'सद्भाव', 'कार्यक्रम', 'झलकियाँ'],
-  },
-];
-
-const suggestions = ['अहिंसा', 'शिक्षा', 'सत्य', 'मानवता'];
+const suggestions = ['अहिंसा', 'शिक्षा', 'सत्य', 'मानवता', 'शांति', 'विचार'];
 
 export const KhojScreen: React.FC<KhojScreenProps> = ({ onNavigateToDetail }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const {
+    getPublishedVichar,
+    getPublishedVideos,
+    getPublishedAudio,
+    getPublishedPhotos,
+    getPublishedDocuments,
+    getPublishedNotices,
+  } = useData();
 
   const trimmedQuery = searchTerm.trim().toLowerCase();
+
+  const dataset: SearchResultItem[] = useMemo(() => {
+    const items: SearchResultItem[] = [];
+
+    // Vichar
+    getPublishedVichar().forEach((v) => {
+      items.push({
+        id: v.id,
+        type: 'vichar',
+        typeLabel: v.typeLabel || '📝 विचार',
+        title: v.title,
+        excerpt: v.leadParagraph || (v.paragraphs && v.paragraphs[0]) || v.title,
+        date: v.date,
+        route: `/vichar/${v.id}`,
+        keywords: [v.title, v.author, v.topic, ...(v.paragraphs || [])],
+      });
+    });
+
+    // Videos
+    getPublishedVideos().forEach((v) => {
+      items.push({
+        id: v.id,
+        type: 'video',
+        typeLabel: v.typeLabel || '🎥 वीडियो',
+        title: v.title,
+        excerpt: v.description,
+        date: v.date,
+        route: `/video/${v.id}`,
+        keywords: [v.title, v.speaker, ...(v.topics || [])],
+      });
+    });
+
+    // Audios
+    getPublishedAudio().forEach((a) => {
+      items.push({
+        id: a.id,
+        type: 'audio',
+        typeLabel: a.typeLabel || '🎧 ऑडियो',
+        title: a.title,
+        excerpt: a.description,
+        date: a.date,
+        route: `/audio/${a.id}`,
+        keywords: [a.title, a.speaker, a.description, ...(a.topics || [])],
+      });
+    });
+
+    // Photos
+    getPublishedPhotos().forEach((p) => {
+      items.push({
+        id: p.id,
+        type: 'photo',
+        typeLabel: p.typeLabel || '🖼️ फोटो',
+        title: p.title,
+        excerpt: p.caption,
+        date: p.date,
+        route: `/photo/${p.id}`,
+        keywords: [p.title, p.caption, p.description || '', p.location || ''],
+      });
+    });
+
+    // Documents
+    getPublishedDocuments().forEach((d) => {
+      items.push({
+        id: d.id,
+        type: 'document',
+        typeLabel: d.typeLabel || '📄 दस्तावेज',
+        title: d.title,
+        excerpt: d.description,
+        date: d.date,
+        route: `/document/${d.id}`,
+        keywords: [d.title, d.description, d.summary || '', d.fileType || ''],
+      });
+    });
+
+    // Notices
+    getPublishedNotices().forEach((n) => {
+      items.push({
+        id: n.id,
+        type: 'notice',
+        typeLabel: n.typeLabel || '📢 सूचना',
+        title: n.title,
+        excerpt: n.content,
+        date: n.date,
+        route: `/notice/${n.id}`,
+        keywords: [
+          n.title,
+          n.content,
+          n.details?.subject || '',
+          n.details?.venue || '',
+          n.contactInfo || '',
+        ],
+      });
+    });
+
+    return items;
+  }, [
+    getPublishedVichar,
+    getPublishedVideos,
+    getPublishedAudio,
+    getPublishedPhotos,
+    getPublishedDocuments,
+    getPublishedNotices,
+  ]);
 
   // Filter dataset based on query
   const searchResults = useMemo(() => {
     if (!trimmedQuery) return [];
-    return mockSearchDataset.filter(
+    return dataset.filter(
       (item) =>
         item.title.toLowerCase().includes(trimmedQuery) ||
         item.excerpt.toLowerCase().includes(trimmedQuery) ||
         item.typeLabel.toLowerCase().includes(trimmedQuery) ||
-        item.keywords.some((k) => k.toLowerCase().includes(trimmedQuery))
+        item.keywords.some((k) => k && k.toLowerCase().includes(trimmedQuery))
     );
-  }, [trimmedQuery]);
+  }, [trimmedQuery, dataset]);
 
   const hasSearched = trimmedQuery.length > 0;
 

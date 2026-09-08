@@ -8,7 +8,7 @@ import {
   DocumentEmptyState,
   Footer,
 } from '../components';
-import { mockDocuments } from '../data/mockContent';
+import { useData } from '../context/DataContext';
 
 interface DocumentListScreenProps {
   onNavigateToDetail?: (path: string) => void;
@@ -17,8 +17,8 @@ interface DocumentListScreenProps {
 export const DocumentListScreen: React.FC<DocumentListScreenProps> = ({
   onNavigateToDetail,
 }) => {
-  // Ordered document items (newest first)
-  const documentList = Object.values(mockDocuments);
+  const { getPublishedDocuments } = useData();
+  const documentList = getPublishedDocuments();
 
   return (
     <PageContainer>

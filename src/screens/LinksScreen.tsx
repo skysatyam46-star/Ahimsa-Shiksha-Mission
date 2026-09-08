@@ -1,7 +1,8 @@
 import React from 'react';
-import { Globe, Youtube, Users, BookOpen, ExternalLink, Info } from 'lucide-react';
+import { Globe, Youtube, Users, BookOpen, ExternalLink, Link as LinkIcon } from 'lucide-react';
 import { PageContainer, SectionHeading, BackButton, Footer } from '../components';
 import { useApp } from '../context/AppContext';
+import { useData } from '../context/DataContext';
 
 interface LinksScreenProps {
   onNavigate: (path: string) => void;
@@ -13,45 +14,21 @@ export const LinksScreen: React.FC<LinksScreenProps> = ({
   onBack,
 }) => {
   const { t } = useApp();
+  const { getPublishedLinks } = useData();
+  const dynamicLinks = getPublishedLinks();
 
-  const links = [
-    {
-      id: 'website',
-      title: t.officialWebsite,
-      desc: t.officialWebsiteDesc,
-      url: 'https://example.org',
-      icon: Globe,
-      color: 'text-[#16325C]',
-      bg: 'bg-[#EEF3FA]',
-    },
-    {
-      id: 'youtube',
-      title: t.youtubeChannel,
-      desc: t.youtubeChannelDesc,
-      url: 'https://youtube.com',
-      icon: Youtube,
-      color: 'text-[#DC2626]',
-      bg: 'bg-[#FEF2F2]',
-    },
-    {
-      id: 'community',
-      title: t.socialCommunity,
-      desc: t.socialCommunityDesc,
-      url: 'https://example.org/community',
-      icon: Users,
-      color: 'text-[#2E7D32]',
-      bg: 'bg-[#F0FDF4]',
-    },
-    {
-      id: 'resources',
-      title: t.studyResources,
-      desc: t.studyResourcesDesc,
-      url: 'https://example.org/resources',
-      icon: BookOpen,
-      color: 'text-[#D97706]',
-      bg: 'bg-[#FEF8EC]',
-    },
-  ];
+  const getCategoryIcon = (category?: string) => {
+    switch (category) {
+      case 'youtube':
+        return { icon: Youtube, color: 'text-[#DC2626]', bg: 'bg-[#FEF2F2]' };
+      case 'social':
+        return { icon: Users, color: 'text-[#2E7D32]', bg: 'bg-[#F0FDF4]' };
+      case 'resource':
+        return { icon: BookOpen, color: 'text-[#D97706]', bg: 'bg-[#FEF8EC]' };
+      default:
+        return { icon: Globe, color: 'text-[#16325C]', bg: 'bg-[#EEF3FA]' };
+    }
+  };
 
   return (
     <PageContainer>
@@ -68,18 +45,10 @@ export const LinksScreen: React.FC<LinksScreenProps> = ({
         className="mb-4"
       />
 
-      {/* Placeholder note */}
-      <div className="w-full bg-[#FEF8EC] border border-[#D97706]/20 rounded-2xl p-3 mb-5 flex items-start gap-2.5">
-        <Info size={16} className="text-[#D97706] shrink-0 mt-0.5" />
-        <p className="text-[12px] text-[#8C5D07] leading-relaxed">
-          यह स्थानधारक (placeholder) लिंक सूची है। मिशन के आधिकारिक लिंक उपलब्ध होने पर इन्हें जोड़ा जाएगा।
-        </p>
-      </div>
-
       {/* Links List */}
       <div className="flex flex-col gap-3">
-        {links.map((link) => {
-          const Icon = link.icon;
+        {dynamicLinks.map((link) => {
+          const { icon: Icon, color, bg } = getCategoryIcon(link.category);
           return (
             <a
               key={link.id}
@@ -89,7 +58,7 @@ export const LinksScreen: React.FC<LinksScreenProps> = ({
               className="w-full bg-white border border-[#E8E5DF] rounded-2xl p-4 shadow-2xs hover:border-[#16325C]/30 hover:shadow-xs transition-all flex items-center justify-between group tap-active"
             >
               <div className="flex items-center gap-3.5 min-w-0">
-                <div className={`w-11 h-11 rounded-xl ${link.bg} ${link.color} flex items-center justify-center shrink-0`}>
+                <div className={`w-11 h-11 rounded-xl ${bg} ${color} flex items-center justify-center shrink-0`}>
                   <Icon size={22} strokeWidth={1.8} />
                 </div>
                 <div className="min-w-0">
@@ -97,7 +66,7 @@ export const LinksScreen: React.FC<LinksScreenProps> = ({
                     {link.title}
                   </h3>
                   <p className="text-[12px] text-[#5C6773] truncate">
-                    {link.desc}
+                    {link.description || link.url}
                   </p>
                 </div>
               </div>

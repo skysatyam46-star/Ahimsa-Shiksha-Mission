@@ -9,7 +9,7 @@ import {
   EmptyState,
 } from '../components';
 import { Share2, Check, MapPin } from 'lucide-react';
-import { mockPhotos } from '../data/mockContent';
+import { useData } from '../context/DataContext';
 
 interface PhotoDetailScreenProps {
   id?: string;
@@ -23,8 +23,9 @@ export const PhotoDetailScreen: React.FC<PhotoDetailScreenProps> = ({
   onNavigateToPhoto,
 }) => {
   const [copied, setCopied] = useState(false);
+  const { getPhotoById, getPublishedPhotos } = useData();
 
-  const photo = mockPhotos[id];
+  const photo = getPhotoById(id);
 
   if (!photo) {
     return (
@@ -42,7 +43,9 @@ export const PhotoDetailScreen: React.FC<PhotoDetailScreenProps> = ({
     );
   }
 
-  const relatedPhotos = Object.values(mockPhotos).filter((p) => p.id !== id).slice(0, 3);
+  const relatedPhotos = getPublishedPhotos()
+    .filter((p) => p.id !== id)
+    .slice(0, 3);
 
   const handleShare = async () => {
     const shareUrl = typeof window !== 'undefined' ? window.location.href : '';

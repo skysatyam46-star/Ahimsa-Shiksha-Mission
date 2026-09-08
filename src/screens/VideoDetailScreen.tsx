@@ -9,7 +9,7 @@ import {
   EmptyState,
 } from '../components';
 import { Play, Share2, Check } from 'lucide-react';
-import { mockVideos } from '../data/mockContent';
+import { useData } from '../context/DataContext';
 
 interface VideoDetailScreenProps {
   id?: string;
@@ -24,8 +24,9 @@ export const VideoDetailScreen: React.FC<VideoDetailScreenProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const [showSimulatedPlayNotice, setShowSimulatedPlayNotice] = useState(false);
+  const { getVideoById, getPublishedVideos } = useData();
 
-  const video = mockVideos[id];
+  const video = getVideoById(id);
 
   if (!video) {
     return (
@@ -43,7 +44,9 @@ export const VideoDetailScreen: React.FC<VideoDetailScreenProps> = ({
     );
   }
 
-  const relatedVideos = Object.values(mockVideos).filter((v) => v.id !== id).slice(0, 3);
+  const relatedVideos = getPublishedVideos()
+    .filter((v) => v.id !== id)
+    .slice(0, 3);
 
   const handleShare = async () => {
     const shareUrl = typeof window !== 'undefined' ? window.location.href : '';

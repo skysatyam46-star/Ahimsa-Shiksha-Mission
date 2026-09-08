@@ -8,7 +8,7 @@ import {
   AudioEmptyState,
   Footer,
 } from '../components';
-import { mockAudios } from '../data/mockContent';
+import { useData } from '../context/DataContext';
 
 interface AudioListScreenProps {
   onNavigateToDetail?: (path: string) => void;
@@ -17,8 +17,8 @@ interface AudioListScreenProps {
 export const AudioListScreen: React.FC<AudioListScreenProps> = ({
   onNavigateToDetail,
 }) => {
-  // Ordered audio items (newest first)
-  const audioList = Object.values(mockAudios);
+  const { getPublishedAudio } = useData();
+  const audioList = getPublishedAudio();
 
   return (
     <PageContainer>

@@ -8,7 +8,7 @@ import {
   PhotoEmptyState,
   Footer,
 } from '../components';
-import { mockPhotos } from '../data/mockContent';
+import { useData } from '../context/DataContext';
 
 interface PhotoListScreenProps {
   onNavigateToDetail?: (path: string) => void;
@@ -17,8 +17,8 @@ interface PhotoListScreenProps {
 export const PhotoListScreen: React.FC<PhotoListScreenProps> = ({
   onNavigateToDetail,
 }) => {
-  // Ordered photo items (newest first)
-  const photoList = Object.values(mockPhotos);
+  const { getPublishedPhotos } = useData();
+  const photoList = getPublishedPhotos();
 
   return (
     <PageContainer>

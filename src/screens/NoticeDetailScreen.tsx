@@ -18,7 +18,7 @@ import {
   Check,
   Info,
 } from 'lucide-react';
-import { mockNotices } from '../data/mockContent';
+import { useData } from '../context/DataContext';
 
 interface NoticeDetailScreenProps {
   id?: string;
@@ -32,8 +32,9 @@ export const NoticeDetailScreen: React.FC<NoticeDetailScreenProps> = ({
   onNavigateToNotice,
 }) => {
   const [copied, setCopied] = useState(false);
+  const { getNoticeById, getPublishedNotices } = useData();
 
-  const notice = mockNotices[id];
+  const notice = getNoticeById(id);
 
   if (!notice) {
     return (
@@ -51,7 +52,9 @@ export const NoticeDetailScreen: React.FC<NoticeDetailScreenProps> = ({
     );
   }
 
-  const relatedNotices = Object.values(mockNotices).filter((n) => n.id !== id).slice(0, 3);
+  const relatedNotices = getPublishedNotices()
+    .filter((n) => n.id !== id)
+    .slice(0, 3);
 
   const handleShare = async () => {
     const shareUrl = typeof window !== 'undefined' ? window.location.href : '';

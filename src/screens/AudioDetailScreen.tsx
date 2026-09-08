@@ -9,7 +9,7 @@ import {
   EmptyState,
 } from '../components';
 import { Play, Pause, Share2, Check, Headphones, Volume2 } from 'lucide-react';
-import { mockAudios } from '../data/mockContent';
+import { useData } from '../context/DataContext';
 
 interface AudioDetailScreenProps {
   id?: string;
@@ -25,8 +25,9 @@ export const AudioDetailScreen: React.FC<AudioDetailScreenProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(38);
   const [copied, setCopied] = useState(false);
+  const { getAudioById, getPublishedAudio } = useData();
 
-  const audio = mockAudios[id];
+  const audio = getAudioById(id);
 
   if (!audio) {
     return (
@@ -44,7 +45,9 @@ export const AudioDetailScreen: React.FC<AudioDetailScreenProps> = ({
     );
   }
 
-  const relatedAudios = Object.values(mockAudios).filter((a) => a.id !== id).slice(0, 3);
+  const relatedAudios = getPublishedAudio()
+    .filter((a) => a.id !== id)
+    .slice(0, 3);
 
   const handleShare = async () => {
     const shareUrl = typeof window !== 'undefined' ? window.location.href : '';

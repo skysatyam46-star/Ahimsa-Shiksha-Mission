@@ -8,7 +8,7 @@ import {
   NoticeEmptyState,
   Footer,
 } from '../components';
-import { mockNotices } from '../data/mockContent';
+import { useData } from '../context/DataContext';
 
 interface NoticeListScreenProps {
   onNavigateToDetail?: (path: string) => void;
@@ -17,8 +17,8 @@ interface NoticeListScreenProps {
 export const NoticeListScreen: React.FC<NoticeListScreenProps> = ({
   onNavigateToDetail,
 }) => {
-  // Ordered notice items (newest first)
-  const noticeList = Object.values(mockNotices);
+  const { getPublishedNotices } = useData();
+  const noticeList = getPublishedNotices();
 
   return (
     <PageContainer>
@@ -53,7 +53,7 @@ export const NoticeListScreen: React.FC<NoticeListScreenProps> = ({
           {noticeList.map((notice) => (
             <NoticeCard
               key={notice.id}
-              typeLabel={notice.typeLabel}
+              typeLabel="📢 सूचना"
               title={notice.title}
               message={notice.content}
               date={notice.date}
