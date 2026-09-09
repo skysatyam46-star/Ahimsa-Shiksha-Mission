@@ -59,15 +59,25 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
       {/* Right: Public Site link + Admin Avatar + Logout */}
       <div className="flex items-center gap-1 shrink-0">
         
-        {/* Theme Toggle Button */}
+        {/* Single Click Theme Toggle Button on Top */}
         <button
           type="button"
           onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-          aria-label="Toggle Theme"
-          title={theme === 'light' ? 'डार्क मोड' : 'लाइट मोड'}
-          className="w-9 h-9 rounded-xl flex items-center justify-center text-[#5C6773] dark:text-slate-400 hover:bg-[#EEF3FA] dark:hover:bg-slate-800 transition-colors tap-active"
+          aria-label={theme === 'light' ? 'डार्क मोड पर बदलें' : 'लाइट मोड पर बदलें'}
+          title={theme === 'light' ? 'डार्क मोड करें' : 'लाइट मोड करें'}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-[#E8E5DF] dark:border-slate-700 shadow-2xs hover:bg-[#EEF3FA] dark:hover:bg-slate-700 text-[#16325C] dark:text-[#93C5FD] transition-all tap-active shrink-0"
         >
-          {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+          {theme === 'light' ? (
+            <>
+              <Sun size={16} className="text-amber-500 fill-amber-400/30" />
+              <span className="text-[12px] font-semibold text-[#1F2421]">लाइट</span>
+            </>
+          ) : (
+            <>
+              <Moon size={16} className="text-blue-300 fill-blue-300/30" />
+              <span className="text-[12px] font-semibold text-white">डार्क</span>
+            </>
+          )}
         </button>
 
         {/* Public Website Preview Link */}
