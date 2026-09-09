@@ -44,6 +44,7 @@ export const VideoScreen: React.FC<VideoScreenProps> = ({ onNavigateToDetail }) 
           {publishedVideos.map((video) => (
             <VideoCard
               key={video.id}
+              id={video.id}
               typeLabel={video.typeLabel || '🎥 वीडियो'}
               title={video.title}
               duration={video.duration}

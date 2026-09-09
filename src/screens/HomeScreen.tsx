@@ -94,15 +94,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       {/* Welcome Section: Compact peaceful greeting */}
       <section
         id="welcome-section"
-        className="pt-0.5 pb-2.5 flex flex-col gap-0.5 border-b border-[#E8E5DF]/70 mb-3.5"
+        className="pt-0.5 pb-2 flex flex-col gap-0.5 border-b border-[#E8E5DF]/70 mb-3"
       >
-        <h2 className="text-[19px] sm:text-[21px] font-bold text-[#16325C] tracking-tight leading-snug">
+        <h2 className="text-[18px] sm:text-[20px] font-bold text-[#16325C] tracking-tight leading-snug">
           {t.welcomeTitle}
         </h2>
         <p className="text-[12px] font-semibold text-[#2E7D32] tracking-wide">
           {t.brandTagline}
         </p>
-        <p className="text-[13.5px] text-[#5C6773] leading-relaxed mt-0">
+        <p className="text-[13px] text-[#5C6773] leading-relaxed mt-0">
           {t.welcomeSubtitle}
         </p>
       </section>
@@ -114,13 +114,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         tabIndex={0}
         onClick={() => onNavigateToTab('khoj')}
         aria-label="खोजें: विचार, वीडियो और सामग्री"
-        className="w-full h-[44px] bg-white border border-[#E8E5DF] rounded-[12px] px-3.5 flex items-center gap-2.5 text-[#5C6773] text-[14px] cursor-pointer hover:border-[#16325C]/30 hover:bg-[#FAF8F5]/60 transition-colors shadow-2xs tap-active mb-4"
+        className="w-full h-[42px] bg-white border border-[#E8E5DF] rounded-[12px] px-3.5 flex items-center gap-2.5 text-[#5C6773] cursor-pointer hover:border-[#16325C]/30 hover:bg-[#FAF8F5]/60 transition-colors shadow-2xs tap-active mb-3.5"
       >
         <Search size={16} className="text-[#5C6773] shrink-0" />
         <span className="truncate text-[13.5px]">
           {t.searchPlaceholder}
         </span>
       </div>
+
 
       {/* Main Feed Heading */}
       <div className="flex items-center justify-between mb-3 px-0.5">
@@ -147,6 +148,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               return (
                 <MessageCard
                   key={`vichar-${raw.id}`}
+                  id={raw.id}
                   typeLabel={raw.typeLabel || '📝 संदेश'}
                   title={raw.title}
                   date={raw.date}
@@ -162,6 +164,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               return (
                 <VideoCard
                   key={`video-${raw.id}`}
+                  id={raw.id}
                   typeLabel={raw.typeLabel || '🎥 वीडियो'}
                   title={raw.title}
                   date={raw.date}
@@ -177,6 +180,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               return (
                 <AudioCard
                   key={`audio-${raw.id}`}
+                  id={raw.id}
                   typeLabel={raw.typeLabel || '🎧 ऑडियो संदेश'}
                   title={raw.title}
                   date={raw.date}
@@ -193,6 +197,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               return (
                 <PhotoCard
                   key={`photo-${raw.id}`}
+                  id={raw.id}
                   typeLabel={raw.typeLabel || '🖼️ फोटो'}
                   title={raw.title}
                   date={raw.date}
@@ -207,6 +212,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               return (
                 <DocumentCard
                   key={`doc-${raw.id}`}
+                  id={raw.id}
                   typeLabel={raw.typeLabel || '📄 दस्तावेज'}
                   title={raw.title}
                   description={raw.description}
@@ -224,6 +230,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               return (
                 <NoticeCard
                   key={`notice-${raw.id}`}
+                  id={raw.id}
                   typeLabel={raw.typeLabel || '📢 सूचना'}
                   title={raw.title}
                   date={raw.date}

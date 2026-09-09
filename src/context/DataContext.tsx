@@ -12,6 +12,7 @@ import {
   MissionData,
   FounderData,
   ContactData,
+  AdminNotificationItem,
   getInitialSeedData,
   loadStoreFromStorage,
   saveStoreToStorage,
@@ -116,6 +117,15 @@ interface DataContextType {
   getPublishedLinks: () => LinkItem[];
   searchPublishedContent: (query: string) => PublicSearchResult[];
   getRecentAdminContent: (limit?: number) => RecentAdminItem[];
+
+  // Likes & Admin Notifications
+  deviceId: string;
+  isItemLiked: (contentId: string) => boolean;
+  toggleLike: (contentId: string, contentType?: string, contentTitle?: string) => Promise<void>;
+  adminNotifications: AdminNotificationItem[];
+  unreadNotifCount: number;
+  fetchAdminNotifications: () => Promise<void>;
+  markNotificationAsRead: (notificationId?: string, markAll?: boolean) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -243,6 +253,181 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { isAdmin } = useAuth();
   const [loading, setLoading] = useState<boolean>(true);
   const [data, setData] = useState<AppStoreData>(() => loadStoreFromStorage());
+
+  // Anonymous device ID persistence
+  const [deviceId] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      let id = localStorage.getItem('asm_device_id');
+      if (!id) {
+        id = 'dev-' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+        localStorage.setItem('asm_device_id', id);
+      }
+      return id;
+    }
+    return 'dev-anon';
+  });
+
+  // Track liked item IDs for this device
+  const [likedItemIds, setLikedItemIds] = useState<Set<string>>(new Set());
+
+  // Admin Notifications State
+  const [adminNotifications, setAdminNotifications] = useState<AdminNotificationItem[]>([]);
+  const [unreadNotifCount, setUnreadNotifCount] = useState<number>(0);
+
+  // Fetch liked item IDs for this device on mount
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLikedIds = async () => {
+      try {
+        const res = await fetch(`/api/public/liked-ids?deviceId=${encodeURIComponent(deviceId)}`);
+        if (res.ok) {
+          const result = await res.json();
+          if (result && result.success && Array.isArray(result.likedIds) && isMounted) {
+            setLikedItemIds(new Set(result.likedIds));
+          }
+        }
+      } catch (err) {
+        console.error('[DataContext] Error fetching liked IDs:', err);
+      }
+    };
+    fetchLikedIds();
+    return () => {
+      isMounted = false;
+    };
+  }, [deviceId]);
+
+  // Fetch Admin Notifications
+  const fetchAdminNotifications = useCallback(async () => {
+    if (!isAdmin) return;
+    try {
+      const res = await fetch('/api/admin/notifications', {
+        headers: getAdminAuthHeaders(),
+        credentials: 'include',
+      });
+      if (res.ok) {
+        const result = await res.json();
+        if (result && result.success && Array.isArray(result.notifications)) {
+          setAdminNotifications(result.notifications);
+          setUnreadNotifCount(result.unreadCount || 0);
+        }
+      }
+    } catch (err) {
+      console.error('[DataContext] Error fetching admin notifications:', err);
+    }
+  }, [isAdmin]);
+
+  // Mark Admin Notifications as read
+  const markNotificationAsRead = useCallback(async (notificationId?: string, markAll?: boolean) => {
+    if (!isAdmin) return;
+    try {
+      if (markAll) {
+        setAdminNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        setUnreadNotifCount(0);
+      } else if (notificationId) {
+        setAdminNotifications(prev => prev.map(n => (n.id === notificationId ? { ...n, read: true } : n)));
+        setUnreadNotifCount(prev => Math.max(0, prev - 1));
+      }
+
+      await fetch('/api/admin/notifications/mark-read', {
+        method: 'POST',
+        headers: getAdminAuthHeaders(),
+        credentials: 'include',
+        body: JSON.stringify({ notificationId, markAll }),
+      });
+    } catch (err) {
+      console.error('[DataContext] Error marking notifications as read:', err);
+    }
+  }, [isAdmin]);
+
+  // Fetch admin notifications when admin logs in
+  useEffect(() => {
+    if (isAdmin) {
+      fetchAdminNotifications();
+    }
+  }, [isAdmin, fetchAdminNotifications]);
+
+  // Check if an item is liked
+  const isItemLiked = useCallback((contentId: string) => {
+    return likedItemIds.has(contentId);
+  }, [likedItemIds]);
+
+  // Toggle Like Action
+  const toggleLike = useCallback(async (contentId: string, contentType?: string, contentTitle?: string) => {
+    if (!contentId) return;
+
+    const currentlyLiked = likedItemIds.has(contentId);
+    const nextLiked = !currentlyLiked;
+    const action = nextLiked ? 'like' : 'unlike';
+
+    // Optimistic update of local likedItemIds
+    setLikedItemIds(prev => {
+      const next = new Set(prev);
+      if (nextLiked) next.add(contentId);
+      else next.delete(contentId);
+      return next;
+    });
+
+    // Helper to update likes count on content lists
+    const updateLikesInList = (list: any[]) =>
+      list.map(item => {
+        if (item.id === contentId) {
+          const currentCount = typeof item.likesCount === 'number' ? item.likesCount : 0;
+          const newCount = nextLiked ? currentCount + 1 : Math.max(0, currentCount - 1);
+          return { ...item, likesCount: newCount };
+        }
+        return item;
+      });
+
+    // Optimistic update of content items in state
+    setData(prev => ({
+      ...prev,
+      vichar: updateLikesInList(prev.vichar),
+      videos: updateLikesInList(prev.videos),
+      audio: updateLikesInList(prev.audio),
+      photos: updateLikesInList(prev.photos),
+      documents: updateLikesInList(prev.documents),
+      notices: updateLikesInList(prev.notices),
+    }));
+
+    try {
+      const res = await fetch('/api/public/like', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contentId,
+          contentType: contentType || 'vichar',
+          contentTitle: contentTitle || '',
+          action,
+          deviceId,
+        }),
+      });
+
+      if (res.ok) {
+        const result = await res.json();
+        if (result && result.success && typeof result.likesCount === 'number') {
+          const setExactLikesInList = (list: any[]) =>
+            list.map(item => (item.id === contentId ? { ...item, likesCount: result.likesCount } : item));
+
+          setData(prev => ({
+            ...prev,
+            vichar: setExactLikesInList(prev.vichar),
+            videos: setExactLikesInList(prev.videos),
+            audio: setExactLikesInList(prev.audio),
+            photos: setExactLikesInList(prev.photos),
+            documents: setExactLikesInList(prev.documents),
+            notices: setExactLikesInList(prev.notices),
+          }));
+
+          // If admin, refetch notifications after liking
+          if (isAdmin && action === 'like') {
+            setTimeout(() => fetchAdminNotifications(), 500);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[DataContext] Error in toggleLike API call:', err);
+    }
+  }, [deviceId, likedItemIds, isAdmin, fetchAdminNotifications]);
 
   // Automatically keep localStorage cache synchronized with latest state
   useEffect(() => {
@@ -1255,6 +1440,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         getPublishedLinks,
         searchPublishedContent,
         getRecentAdminContent,
+        deviceId,
+        isItemLiked,
+        toggleLike,
+        adminNotifications,
+        unreadNotifCount,
+        fetchAdminNotifications,
+        markNotificationAsRead,
       }}
     >
       {children}

@@ -4,11 +4,12 @@ import {
   BackButton,
   DateLabel,
   PhotoCard,
+  CardActionRow,
   Divider,
-  Footer,
   EmptyState,
+  ImageZoomModal,
 } from '../components';
-import { Share2, Check, MapPin } from 'lucide-react';
+import { Share2, Check, MapPin, ZoomIn } from 'lucide-react';
 import { useData } from '../context/DataContext';
 
 interface PhotoDetailScreenProps {
@@ -23,6 +24,7 @@ export const PhotoDetailScreen: React.FC<PhotoDetailScreenProps> = ({
   onNavigateToPhoto,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
   const { getPhotoById, getPublishedPhotos } = useData();
 
   const photo = getPhotoById(id);
@@ -92,12 +94,31 @@ export const PhotoDetailScreen: React.FC<PhotoDetailScreenProps> = ({
         </div>
 
         {/* Large Immersive Photo View */}
-        <div className="relative w-full aspect-16/11 rounded-2xl overflow-hidden bg-[#FAF8F5] border border-[#E8E5DF] shadow-sm">
+        <div
+          onClick={() => setIsZoomOpen(true)}
+          className="relative w-full aspect-16/11 rounded-2xl overflow-hidden bg-[#FAF8F5] border border-[#E8E5DF] shadow-sm cursor-pointer group"
+          title="फ़ुल-स्क्रीन ज़ूम करने के लिए क्लिक करें"
+        >
           <img
             src={photo.imageUrl}
             alt={photo.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-103"
           />
+          <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white font-semibold text-[13.5px] backdrop-blur-[2px]">
+            <ZoomIn size={20} />
+            <span>बड़ा करके देखें (ज़ूम)</span>
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsZoomOpen(true);
+            }}
+            className="absolute bottom-3 right-3 bg-slate-900/80 hover:bg-slate-900 text-white text-[12px] font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 backdrop-blur-md shadow-md transition-all tap-active"
+          >
+            <ZoomIn size={14} />
+            <span>ज़ूम करें</span>
+          </button>
         </div>
 
         {/* Title & Date */}
@@ -125,33 +146,20 @@ export const PhotoDetailScreen: React.FC<PhotoDetailScreenProps> = ({
           </p>
         </div>
 
-        {/* Share Action */}
-        <div className="pt-3 pb-2 border-t border-[#E8E5DF] mt-2 flex items-center justify-between">
-          <span className="text-[14px] text-[#5C6773]">
-            यह फोटो साझा करें
-          </span>
-
-          <button
-            type="button"
-            onClick={handleShare}
-            aria-label="साझा करें"
-            className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[14px] font-medium transition-colors tap-active min-h-[44px] shadow-2xs ${
-              copied
-                ? 'bg-[#F0FDF4] text-[#2E7D32] border border-[#2E7D32]/20'
-                : 'bg-white text-[#16325C] hover:bg-[#FAF8F5] border border-[#E8E5DF]'
-            }`}
-          >
-            {copied ? <Check size={16} className="text-[#2E7D32]" /> : <Share2 size={15} />}
-            <span>{copied ? 'कॉपी हो गया' : '↗ साझा करें'}</span>
-          </button>
+        {/* Share & Like Action Row */}
+        <div className="pt-3 border-t border-[#E8E5DF] mt-1">
+          <CardActionRow
+            title={photo.title}
+            text={`🖼️ ${photo.title}\n${photo.caption || ''}`}
+          />
         </div>
       </div>
 
       {/* 3. Related Photos: अन्य फोटो */}
-      <section className="mt-6 mb-6 flex flex-col gap-3.5">
+      <section className="mt-6 mb-6 flex flex-col gap-3">
         <Divider />
         <div className="flex items-center justify-between px-0.5 pt-1">
-          <h2 className="text-[17px] font-bold text-[#16325C] tracking-tight">
+          <h2 className="text-[16px] font-bold text-[#16325C] tracking-tight">
             अन्य फोटो
           </h2>
         </div>
@@ -166,7 +174,7 @@ export const PhotoDetailScreen: React.FC<PhotoDetailScreenProps> = ({
               caption={rel.caption}
               imageUrl={rel.imageUrl}
               onViewPhoto={() => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                window.scrollTo(0, 0);
                 onNavigateToPhoto(rel.id);
               }}
             />
@@ -174,7 +182,14 @@ export const PhotoDetailScreen: React.FC<PhotoDetailScreenProps> = ({
         </div>
       </section>
 
-      <Footer />
+      <ImageZoomModal
+        isOpen={isZoomOpen}
+        imageUrl={photo.imageUrl}
+        title={photo.title}
+        caption={photo.caption || photo.description}
+        onClose={() => setIsZoomOpen(false)}
+      />
     </PageContainer>
   );
 };
+

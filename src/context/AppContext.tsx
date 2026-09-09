@@ -96,6 +96,7 @@ export interface Translations {
   founderHeading: string;
   founderSubheading: string;
   founderName: string;
+  founderRole: string;
   founderBioTitle: string;
   founderBioPlaceholder: string;
   founderMessageTitle: string;
@@ -234,7 +235,8 @@ const TRANSLATIONS: Record<Language, Translations> = {
 
     founderHeading: 'संस्थापक',
     founderSubheading: 'संस्थापक का परिचय एवं दिशा-निर्देश',
-    founderName: 'संस्थापक का नाम',
+    founderName: 'अमर लाल चौधरी',
+    founderRole: 'संस्थापक • अहिंसा शिक्षा मिशन',
     founderBioTitle: 'परिचय',
     founderBioPlaceholder: 'संस्थापक के बारे में संक्षिप्त परिचय यहाँ प्रदर्शित होगा।',
     founderMessageTitle: 'संस्थापक का संदेश',
@@ -369,7 +371,8 @@ const TRANSLATIONS: Record<Language, Translations> = {
 
     founderHeading: 'Founder',
     founderSubheading: 'Founder introduction and guidance',
-    founderName: "Founder's Name",
+    founderName: 'Amar Lal Choudhari',
+    founderRole: 'Founder • Ahimsa Shiksha Mission',
     founderBioTitle: 'Introduction',
     founderBioPlaceholder: 'A brief introduction of the founder will appear here.',
     founderMessageTitle: "Founder's Message",

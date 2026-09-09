@@ -306,12 +306,34 @@ app.get("/api/get-public-data", async (req, res) => {
     notices.sort(sortByDateDesc);
 
     const links: any[] = [];
+    let hasFacebook = false;
     linksDocs.forEach(doc => {
       const item = doc.data();
+      if (item.title === "Facebook" || item.url === "https://www.facebook.com/share/1MRf7TAZsH/" || doc.id === "link-facebook") {
+        hasFacebook = true;
+      }
       if (item.status === "published") {
         links.push(item);
       }
     });
+
+    if (!hasFacebook) {
+      const fbItem = {
+        id: "link-facebook",
+        title: "Facebook",
+        url: "https://www.facebook.com/share/1MRf7TAZsH/",
+        description: "",
+        status: "published",
+        order: 1,
+        category: "facebook",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      adminDb.collection("links").doc("link-facebook").set(fbItem).catch((err: any) => {
+        console.error("[ServerCMS] Error seeding Facebook link in Firestore:", err);
+      });
+      links.push(fbItem);
+    }
 
     // Ensure links are in order
     links.sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -327,6 +349,42 @@ app.get("/api/get-public-data", async (req, res) => {
       else if (doc.id === "contact") contact = doc.data();
       else if (doc.id === "website") website = doc.data();
     });
+
+    const defaultFounderData = {
+      name: "अमर लाल चौधरी",
+      role: "संस्थापक • अहिंसा शिक्षा मिशन",
+      nameEn: "Amar Lal Choudhari",
+      roleEn: "Founder • Ahimsa Shiksha Mission",
+      bio: "संस्थापक के बारे में संक्षिप्त परिचय यहाँ प्रदर्शित होगा।",
+      message: "“अहिंसा और सत्य ही वह आधारशिला हैं जिस पर एक न्यायपूर्ण और दयालु समाज की रचना हो सकती है। हमारा संकल्प है कि शिक्षा हर हृदय में करुणा का दीप प्रज्वलित करे।”",
+      updatedAt: new Date().toISOString()
+    };
+
+    if (!founder || !founder.name || founder.name === "संस्थापक का नाम" || founder.name.trim() === "") {
+      founder = { ...defaultFounderData, ...(founder || {}) };
+      if (!founder.name || founder.name === "संस्थापक का नाम" || founder.name.trim() === "") {
+        founder.name = "अमर लाल चौधरी";
+      }
+      if (!founder.role || founder.role.trim() === "") {
+        founder.role = "संस्थापक • अहिंसा शिक्षा मिशन";
+      }
+      adminDb.collection("settings").doc("founder").set(founder).catch((err: any) => {
+        console.error("[ServerCMS] Error initializing founder doc in Firestore:", err);
+      });
+    }
+
+    if (!contact || !contact.email || contact.email === "contact@ahimsashiksha.org" || contact.email.trim() === "" || contact.address !== "नरहट, सिवान, बिहार") {
+      contact = {
+        ...(contact || {}),
+        email: "amarsiwan1975@gmail.com",
+        phone: "",
+        address: "नरहट, सिवान, बिहार",
+        updatedAt: new Date().toISOString()
+      };
+      adminDb.collection("settings").doc("contact").set(contact).catch((err: any) => {
+        console.error("[ServerCMS] Error initializing contact doc in Firestore:", err);
+      });
+    }
 
     const resultStore = {
       version: "2.0.0",
@@ -392,9 +450,33 @@ app.get("/api/admin/get-data", requireAdmin, async (req, res) => {
     notices.sort(sortByDateDesc);
 
     const links: any[] = [];
+    let hasFacebookAdmin = false;
     linksDocs.forEach(doc => {
-      links.push(doc.data());
+      const item = doc.data();
+      if (item.title === "Facebook" || item.url === "https://www.facebook.com/share/1MRf7TAZsH/" || doc.id === "link-facebook") {
+        hasFacebookAdmin = true;
+      }
+      links.push(item);
     });
+
+    if (!hasFacebookAdmin) {
+      const fbItem = {
+        id: "link-facebook",
+        title: "Facebook",
+        url: "https://www.facebook.com/share/1MRf7TAZsH/",
+        description: "",
+        status: "published",
+        order: 1,
+        category: "facebook",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      adminDb.collection("links").doc("link-facebook").set(fbItem).catch((err: any) => {
+        console.error("[ServerCMS] Error seeding Facebook link in Firestore:", err);
+      });
+      links.push(fbItem);
+    }
+
     links.sort((a, b) => (a.order || 0) - (b.order || 0));
 
     let mission: any = null;
@@ -408,6 +490,29 @@ app.get("/api/admin/get-data", requireAdmin, async (req, res) => {
       else if (doc.id === "contact") contact = doc.data();
       else if (doc.id === "website") website = doc.data();
     });
+
+    if (!founder || !founder.name || founder.name === "संस्थापक का नाम" || founder.name.trim() === "") {
+      founder = {
+        name: "अमर लाल चौधरी",
+        role: "संस्थापक • अहिंसा शिक्षा मिशन",
+        nameEn: "Amar Lal Choudhari",
+        roleEn: "Founder • Ahimsa Shiksha Mission",
+        bio: "संस्थापक के बारे में संक्षिप्त परिचय यहाँ प्रदर्शित होगा।",
+        message: "“अहिंसा और सत्य ही वह आधारशिला हैं जिस पर एक न्यायपूर्ण और दयालु समाज की रचना हो सकती है। हमारा संकल्प है कि शिक्षा हर हृदय में करुणा का दीप प्रज्वलित करे।”",
+        updatedAt: new Date().toISOString(),
+        ...(founder || {})
+      };
+    }
+
+    if (!contact || !contact.email || contact.email === "contact@ahimsashiksha.org" || contact.email.trim() === "" || contact.address !== "नरहट, सिवान, बिहार") {
+      contact = {
+        ...(contact || {}),
+        email: "amarsiwan1975@gmail.com",
+        phone: "",
+        address: "नरहट, सिवान, बिहार",
+        updatedAt: new Date().toISOString()
+      };
+    }
 
     const resultStore = {
       version: "2.0.0",
@@ -830,6 +935,212 @@ app.post("/api/admin/save-data", requireAdmin, async (req, res) => {
   } catch (error: any) {
     console.error("[ServerCMS] Error synchronizing CMS data to Firestore:", error);
     return res.status(500).json({ success: false, error: "Failed to persist CMS changes to Firestore." });
+  }
+});
+
+/* ---------------- LIKES & NOTIFICATIONS APIS ---------------- */
+
+// Simple in-memory rate limiting map for like operations
+const likeRateLimitMap = new Map<string, number[]>();
+
+function checkLikeRateLimit(deviceId: string): boolean {
+  const now = Date.now();
+  const windowMs = 60 * 1000; // 1 minute
+  const maxRequests = 30; // max 30 like operations per minute per device
+
+  const timestamps = (likeRateLimitMap.get(deviceId) || []).filter(ts => now - ts < windowMs);
+  if (timestamps.length >= maxRequests) {
+    return false;
+  }
+  timestamps.push(now);
+  likeRateLimitMap.set(deviceId, timestamps);
+  return true;
+}
+
+// 1. Public Like / Unlike Endpoint
+app.post("/api/public/like", async (req, res) => {
+  try {
+    const { contentId, contentType, contentTitle, action, deviceId } = req.body || {};
+
+    if (!contentId || typeof contentId !== "string" || !deviceId || typeof deviceId !== "string") {
+      return res.status(400).json({ success: false, error: "invalid_params" });
+    }
+
+    const validTypes = ["vichar", "video", "audio", "photo", "document", "notice"];
+    if (contentType && !validTypes.includes(contentType)) {
+      return res.status(400).json({ success: false, error: "invalid_content_type" });
+    }
+
+    if (!checkLikeRateLimit(deviceId)) {
+      return res.status(429).json({ success: false, error: "too_many_requests" });
+    }
+
+    const contentRef = adminDb.collection("content").doc(contentId);
+    const contentDoc = await contentRef.get();
+
+    if (!contentDoc.exists) {
+      return res.status(404).json({ success: false, error: "content_not_found" });
+    }
+
+    const contentData = contentDoc.data() || {};
+    const currentLikes = typeof contentData.likesCount === "number" ? contentData.likesCount : 0;
+
+    const sanitizedDeviceId = deviceId.replace(/[^a-zA-Z0-9_\-]/g, "").slice(0, 64) || "anon";
+    const likeDocId = `${contentId}_${sanitizedDeviceId}`;
+    const likeRef = adminDb.collection("likes").doc(likeDocId);
+    const likeDoc = await likeRef.get();
+
+    let newLikesCount = currentLikes;
+    let isLiked = false;
+
+    if (action === "like") {
+      if (!likeDoc.exists) {
+        // Create like document
+        await likeRef.set({
+          contentId,
+          contentType: contentType || contentData.type || "vichar",
+          deviceId,
+          createdAt: new Date().toISOString()
+        });
+
+        // Increment likes count on content document
+        newLikesCount = currentLikes + 1;
+        await contentRef.update({
+          likesCount: newLikesCount,
+          updatedAt: new Date().toISOString()
+        });
+
+        // Create Admin Notification document in Firestore
+        const notifRef = adminDb.collection("notifications").doc();
+        await notifRef.set({
+          id: notifRef.id,
+          type: "like",
+          event: "👍 पसंद मिला",
+          contentType: contentType || contentData.type || "vichar",
+          contentId: contentId,
+          contentTitle: contentTitle || contentData.title || contentData.leadParagraph || "अनाम सामग्री",
+          totalLikes: newLikesCount,
+          createdAt: new Date().toISOString(),
+          read: false
+        });
+      }
+      isLiked = true;
+    } else if (action === "unlike") {
+      if (likeDoc.exists) {
+        // Delete like document
+        await likeRef.delete();
+
+        // Decrement likes count
+        newLikesCount = Math.max(0, currentLikes - 1);
+        await contentRef.update({
+          likesCount: newLikesCount,
+          updatedAt: new Date().toISOString()
+        });
+      }
+      isLiked = false;
+    } else {
+      return res.status(400).json({ success: false, error: "invalid_action" });
+    }
+
+    return res.json({
+      success: true,
+      contentId,
+      likesCount: newLikesCount,
+      isLiked
+    });
+  } catch (error: any) {
+    console.error("[ServerCMS] Error processing like action:", error);
+    return res.status(500).json({ success: false, error: "server_error" });
+  }
+});
+
+// 2. Query Liked Item IDs for a device
+app.get("/api/public/liked-ids", async (req, res) => {
+  try {
+    const deviceId = req.query.deviceId;
+    if (!deviceId || typeof deviceId !== "string") {
+      return res.json({ success: true, likedIds: [] });
+    }
+
+    const snapshot = await adminDb
+      .collection("likes")
+      .where("deviceId", "==", deviceId)
+      .get();
+
+    const likedIds: string[] = [];
+    snapshot.forEach((doc: any) => {
+      const data = doc.data();
+      if (data && data.contentId) {
+        likedIds.push(data.contentId);
+      }
+    });
+
+    return res.json({ success: true, likedIds });
+  } catch (error: any) {
+    console.error("[ServerCMS] Error fetching liked IDs for device:", error);
+    return res.json({ success: true, likedIds: [] });
+  }
+});
+
+// 3. Admin Notifications API - Get Latest Notifications
+app.get("/api/admin/notifications", requireAdmin, async (req, res) => {
+  try {
+    const snapshot = await adminDb
+      .collection("notifications")
+      .get();
+
+    const notifications: any[] = [];
+    let unreadCount = 0;
+
+    snapshot.forEach((doc: any) => {
+      const data = doc.data();
+      notifications.push(data);
+      if (!data.read) {
+        unreadCount++;
+      }
+    });
+
+    // Sort newest first
+    notifications.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+
+    return res.json({
+      success: true,
+      notifications: notifications.slice(0, 50),
+      unreadCount
+    });
+  } catch (error: any) {
+    console.error("[ServerCMS] Error fetching admin notifications:", error);
+    return res.status(500).json({ success: false, error: "Failed to fetch notifications." });
+  }
+});
+
+// 4. Admin Notifications API - Mark as Read
+app.post("/api/admin/notifications/mark-read", requireAdmin, async (req, res) => {
+  try {
+    const { notificationId, markAll } = req.body || {};
+
+    if (markAll) {
+      const snapshot = await adminDb
+        .collection("notifications")
+        .where("read", "==", false)
+        .get();
+
+      const batch = adminDb.batch();
+      snapshot.forEach((doc: any) => {
+        batch.update(doc.ref, { read: true });
+      });
+      await batch.commit();
+    } else if (notificationId) {
+      await adminDb
+        .collection("notifications")
+        .doc(notificationId)
+        .update({ read: true });
+    }
+
+    return res.json({ success: true });
+  } catch (error: any) {
+    console.error("[ServerCMS] Error marking notifications read:", error);
+    return res.status(500).json({ success: false, error: "Failed to update notification status." });
   }
 });
 

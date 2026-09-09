@@ -1,10 +1,11 @@
 import React from 'react';
-import { Quote, ArrowRight } from 'lucide-react';
+import { Quote } from 'lucide-react';
 import { ContentCard } from './ContentCard';
 import { DateLabel } from '../ui/DateLabel';
-import { ShareButton } from '../ui/Buttons';
+import { CardActionRow } from './CardActionRow';
 
 interface MessageCardProps {
+  id?: string;
   content: string;
   title?: string;
   typeLabel?: string;
@@ -19,6 +20,7 @@ interface MessageCardProps {
 }
 
 export const MessageCard: React.FC<MessageCardProps> = ({
+  id,
   content,
   title,
   typeLabel,
@@ -31,7 +33,7 @@ export const MessageCard: React.FC<MessageCardProps> = ({
   className = '',
 }) => {
   return (
-    <ContentCard radius="md" className={`flex flex-col gap-3 relative overflow-hidden p-4 ${className}`}>
+    <ContentCard radius="md" className={`flex flex-col gap-3 relative overflow-hidden p-3.5 ${className}`}>
       {/* Top Meta Bar */}
       <div className="flex items-center justify-between gap-2 border-b border-[#E8E5DF]/60 pb-2">
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -55,18 +57,25 @@ export const MessageCard: React.FC<MessageCardProps> = ({
         {date && <DateLabel date={date} />}
       </div>
 
-      {/* Main Content Area (Optional right image for editorial touch) */}
+      {/* Main Content Area */}
       <div className="flex items-start gap-3 justify-between">
         <div className="flex-1 min-w-0">
           {title && (
-            <h3 className="text-[17px] font-bold text-[#16325C] leading-snug tracking-tight mb-1.5">
+            <h3 className="text-[16px] font-bold text-[#16325C] leading-snug tracking-tight mb-1 line-clamp-2">
               {title}
             </h3>
           )}
 
-          <p className="text-[15px] text-[#1F2421] font-normal leading-[1.65] tracking-normal">
+          <p className="text-[14.5px] text-[#1F2421] font-normal leading-[1.6] tracking-normal line-clamp-4">
             “{content}”
           </p>
+
+          {!onReadMore && author && (
+            <div className="mt-2 text-[12px] font-medium text-[#5C6773]">
+              — <span className="font-semibold text-[#16325C]">{author}</span>
+              {source && <span className="italic"> ({source})</span>}
+            </div>
+          )}
         </div>
 
         {imageUrl && (
@@ -76,37 +85,17 @@ export const MessageCard: React.FC<MessageCardProps> = ({
         )}
       </div>
 
-      {/* Footer / Attribution, Read More & Share */}
-      <div className="flex items-center justify-between pt-2 mt-auto border-t border-[#E8E5DF]/50">
-        <div className="flex items-center gap-2">
-          {onReadMore ? (
-            <button
-              type="button"
-              onClick={onReadMore}
-              className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#16325C] hover:text-[#0F2342] transition-colors py-1 tap-active"
-            >
-              <span>पूरा पढ़ें</span>
-              <ArrowRight size={14} />
-            </button>
-          ) : (
-            <div className="flex flex-col">
-              <span className="text-[13px] font-semibold text-[#16325C] tracking-tight">
-                {author}
-              </span>
-              {source && (
-                <span className="text-[11px] text-[#5C6773] leading-none mt-0.5">
-                  {source}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-
-        <ShareButton
-          title={title || 'अहिंसा संदेश'}
-          text={`“${content}”\n— ${author}`}
-        />
-      </div>
+      {/* Bottom Action Row: 👍 पसंद | ↗ साझा करें | (optional पूरा पढ़ें →) */}
+      <CardActionRow
+        contentId={id}
+        contentType="vichar"
+        contentTitle={title || content}
+        title={title || 'अहिंसा संदेश'}
+        text={`“${content}”\n— ${author}`}
+        onReadMore={onReadMore}
+        readMoreText="पूरा पढ़ें →"
+      />
     </ContentCard>
   );
 };
+

@@ -153,8 +153,7 @@ export const MissionScreen: React.FC<MissionScreenProps> = ({
           </p>
         </div>
       </div>
-
-      <Footer className="mt-10" />
     </PageContainer>
   );
 };
+

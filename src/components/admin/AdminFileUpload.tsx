@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { Upload, File, Image as ImageIcon, Headphones, FileText, CheckCircle, X } from 'lucide-react';
+import { Upload, File, Image as ImageIcon, Headphones, FileText, CheckCircle, X, ZoomIn } from 'lucide-react';
+import { ImageZoomModal } from '../ui/ImageZoomModal';
 
 interface AdminFileUploadProps {
   id?: string;
@@ -33,6 +34,7 @@ export const AdminFileUpload: React.FC<AdminFileUploadProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
   const [selectedMeta, setSelectedMeta] = useState<{
     fileName: string;
     fileSize: string;
@@ -214,13 +216,35 @@ export const AdminFileUpload: React.FC<AdminFileUploadProps> = ({
 
           {/* Visual Previews */}
           {type === 'image' && selectedMeta.previewUrl && (
-            <div className="relative w-full h-36 rounded-xl overflow-hidden bg-black/5 dark:bg-black/30 border border-[#E8E5DF] dark:border-[#334155]">
-              <img
-                src={selectedMeta.previewUrl}
-                alt="Selected preview"
-                className="w-full h-full object-cover"
+            <>
+              <div
+                onClick={() => setIsZoomOpen(true)}
+                className="relative w-full h-40 rounded-xl overflow-hidden bg-black/5 dark:bg-black/30 border border-[#E8E5DF] dark:border-[#334155] cursor-pointer group"
+                title="फोटो को बड़ा करके देखने के लिए क्लिक करें"
+              >
+                <img
+                  src={selectedMeta.previewUrl}
+                  alt="Selected preview"
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-103"
+                />
+                <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white font-semibold text-[12.5px] backdrop-blur-[2px]">
+                  <ZoomIn size={18} />
+                  <span>ज़ूम करके देखें</span>
+                </div>
+                <div className="absolute bottom-2 right-2 bg-black/60 text-white text-[10.5px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 backdrop-blur-xs">
+                  <ZoomIn size={12} />
+                  <span>ज़ूम</span>
+                </div>
+              </div>
+
+              <ImageZoomModal
+                isOpen={isZoomOpen}
+                imageUrl={selectedMeta.previewUrl}
+                title={selectedMeta.fileName}
+                caption="अपलोड की गई फ़ाइल का पूर्वावलोकन"
+                onClose={() => setIsZoomOpen(false)}
               />
-            </div>
+            </>
           )}
 
           {type === 'audio' && selectedMeta.previewUrl && (

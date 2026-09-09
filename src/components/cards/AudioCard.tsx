@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Play, Pause } from 'lucide-react';
 import { ContentCard } from './ContentCard';
 import { DateLabel } from '../ui/DateLabel';
-import { ShareButton } from '../ui/Buttons';
+import { CardActionRow } from './CardActionRow';
 
 interface AudioCardProps {
+  id?: string;
   title: string;
   speaker?: string;
   duration: string;
@@ -19,6 +20,7 @@ interface AudioCardProps {
 }
 
 export const AudioCard: React.FC<AudioCardProps> = ({
+  id,
   title,
   speaker,
   duration = '02:35',
@@ -38,8 +40,10 @@ export const AudioCard: React.FC<AudioCardProps> = ({
     setIsPlaying(!isPlaying);
   };
 
+  const handleCardOpen = onOpen || onClick;
+
   return (
-    <ContentCard radius="md" className={`flex flex-col gap-3 p-4 ${className}`}>
+    <ContentCard radius="md" className={`flex flex-col gap-2.5 p-3.5 ${className}`}>
       {/* Category and Date Header */}
       <div className="flex items-center justify-between gap-2 border-b border-[#E8E5DF]/60 pb-2">
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -58,41 +62,39 @@ export const AudioCard: React.FC<AudioCardProps> = ({
       {/* Main Title & Speaker */}
       <div>
         <h3
-          onClick={onOpen || onClick}
-          className={`text-[16px] font-semibold text-[#16325C] leading-snug ${
-            onOpen || onClick ? 'cursor-pointer hover:underline' : ''
+          onClick={handleCardOpen}
+          className={`text-[15.5px] font-bold text-[#16325C] leading-snug line-clamp-2 ${
+            handleCardOpen ? 'cursor-pointer hover:underline' : ''
           }`}
         >
           {title}
         </h3>
         {speaker && (
-          <p className="text-[13px] text-[#5C6773] mt-0.5">
-            वक्ता: <span className="font-medium text-[#1F2421]">{speaker}</span>
+          <p className="text-[12.5px] text-[#5C6773] mt-0.5 line-clamp-1">
+            वक्ता: <span className="font-semibold text-[#1F2421]">{speaker}</span>
           </p>
         )}
       </div>
 
       {/* Audio Player UI: Play button + Progress line + Time */}
-      <div className="flex flex-col gap-2 bg-[#F8FAF8] border border-[#E0E7DE] rounded-xl p-3">
-        <div className="flex items-center gap-3">
-          {/* Play/Pause Button with calm subtle green accent */}
+      <div className="flex flex-col gap-1.5 bg-[#F8FAF8] border border-[#E0E7DE] rounded-xl p-2.5">
+        <div className="flex items-center gap-2.5">
           <button
             type="button"
             onClick={togglePlay}
             aria-label={isPlaying ? 'रोकें' : 'सुनें'}
-            className="w-10 h-10 rounded-full bg-[#2E7D32] text-white flex items-center justify-center shrink-0 tap-active shadow-xs hover:bg-[#256829] transition-colors"
+            className="w-9 h-9 rounded-full bg-[#2E7D32] text-white flex items-center justify-center shrink-0 tap-active shadow-2xs hover:bg-[#256829] transition-colors"
           >
             {isPlaying ? (
-              <Pause size={18} fill="currentColor" />
+              <Pause size={16} fill="currentColor" />
             ) : (
-              <Play size={18} fill="currentColor" className="ml-0.5" />
+              <Play size={16} fill="currentColor" className="ml-0.5" />
             )}
           </button>
 
-          {/* Progress Bar with Draggable/Scrub Mock Knob */}
           <div className="flex-1 flex flex-col justify-center">
             <div
-              className="relative w-full h-2 bg-[#E2E8DF] rounded-full cursor-pointer py-1"
+              className="relative w-full h-1.5 bg-[#E2E8DF] rounded-full cursor-pointer py-1"
               onClick={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect();
                 const clickX = e.clientX - rect.left;
@@ -101,16 +103,14 @@ export const AudioCard: React.FC<AudioCardProps> = ({
               }}
             >
               <div
-                className="h-2 bg-[#2E7D32] rounded-full relative transition-all"
+                className="h-1.5 bg-[#2E7D32] rounded-full relative transition-all"
                 style={{ width: `${progress}%` }}
               >
-                {/* Progress Knob */}
-                <span className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3.5 h-3.5 bg-white border-2 border-[#2E7D32] rounded-full shadow-xs" />
+                <span className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3 h-3 bg-white border-2 border-[#2E7D32] rounded-full shadow-2xs" />
               </div>
             </div>
 
-            {/* Time Indicators */}
-            <div className="flex items-center justify-between text-[11px] font-mono font-medium text-[#5C6773] mt-1.5">
+            <div className="flex items-center justify-between text-[10.5px] font-mono font-medium text-[#5C6773] mt-1">
               <span>{isPlaying ? currentTime : '00:00'}</span>
               <span>{duration}</span>
             </div>
@@ -118,23 +118,17 @@ export const AudioCard: React.FC<AudioCardProps> = ({
         </div>
       </div>
 
-      {/* Footer Share Action */}
-      <div className="flex items-center justify-between pt-1 border-t border-[#E8E5DF]/50 mt-auto">
-        {onOpen ? (
-          <button
-            type="button"
-            onClick={onOpen}
-            className="text-[13px] font-semibold text-[#16325C] hover:text-[#0F2342] transition-colors py-1 tap-active"
-          >
-            पूरा संदेश सुनें →
-          </button>
-        ) : (
-          <span className="text-[12px] text-[#5C6773]">
-            {isPlaying ? 'ध्वनि बज रही है...' : 'सुनने के लिए प्ले बटन दबाएँ'}
-          </span>
-        )}
-        <ShareButton title={title} />
-      </div>
+      {/* Action Row: 👍 पसंद | ↗ साझा करें | सुनो → */}
+      <CardActionRow
+        contentId={id}
+        contentType="audio"
+        contentTitle={title}
+        title={title}
+        text={title}
+        onReadMore={handleCardOpen}
+        readMoreText="सुनें →"
+      />
     </ContentCard>
   );
 };
+

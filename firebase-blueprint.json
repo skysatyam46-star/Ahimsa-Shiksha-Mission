@@ -134,6 +134,74 @@
         }
       },
       "required": ["id"]
+    },
+    "LikeItem": {
+      "title": "LikeItem",
+      "description": "Anonymous content item like record per device",
+      "type": "object",
+      "properties": {
+        "contentId": {
+          "type": "string",
+          "description": "Liked content identifier"
+        },
+        "contentType": {
+          "type": "string",
+          "description": "Content category"
+        },
+        "deviceId": {
+          "type": "string",
+          "description": "Anonymous device ID"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp of like action"
+        }
+      },
+      "required": ["contentId", "deviceId"]
+    },
+    "NotificationItem": {
+      "title": "NotificationItem",
+      "description": "In-app admin notification for content activity",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique notification ID"
+        },
+        "type": {
+          "type": "string",
+          "description": "Notification event type"
+        },
+        "event": {
+          "type": "string",
+          "description": "Display event label"
+        },
+        "contentType": {
+          "type": "string",
+          "description": "Content category"
+        },
+        "contentId": {
+          "type": "string",
+          "description": "Content ID"
+        },
+        "contentTitle": {
+          "type": "string",
+          "description": "Title of content item"
+        },
+        "totalLikes": {
+          "type": "number",
+          "description": "Total likes count at time of notification"
+        },
+        "read": {
+          "type": "boolean",
+          "description": "Read status"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Notification timestamp"
+        }
+      },
+      "required": ["id", "type", "event", "contentId", "read"]
     }
   },
   "firestore": {
@@ -152,6 +220,14 @@
     "/settings/{settingId}": {
       "schema": "SettingItem",
       "description": "Website settings (general, mission, founder, contact)"
+    },
+    "/likes/{likeId}": {
+      "schema": "LikeItem",
+      "description": "Content likes mapping"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "NotificationItem",
+      "description": "Admin in-app notifications"
     }
   }
 }

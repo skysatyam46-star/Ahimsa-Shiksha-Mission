@@ -4,8 +4,8 @@ import {
   BackButton,
   DateLabel,
   MessageCard,
+  CardActionRow,
   Divider,
-  Footer,
   EmptyState,
 } from '../components';
 import { Share2, Check, Quote } from 'lucide-react';
@@ -157,36 +157,24 @@ export const MessageDetailScreen: React.FC<MessageDetailScreenProps> = ({
           )}
         </div>
 
-        {/* 3. Bottom Share Section */}
-        <div className="mt-8 pt-4 border-t border-[#E8E5DF] flex flex-col gap-3">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-[15px] font-medium text-[#16325C]">
-              यह विचार साझा करें
-            </span>
-
-            <button
-              type="button"
-              onClick={handleShare}
-              aria-label="साझा करें"
-              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[14px] font-medium transition-colors tap-active min-h-[44px] shadow-2xs ${
-                copied
-                  ? 'bg-[#F0FDF4] text-[#2E7D32] border border-[#2E7D32]/20'
-                  : 'bg-white text-[#16325C] hover:bg-[#FAF8F5] border border-[#E8E5DF]'
-              }`}
-            >
-              {copied ? <Check size={16} className="text-[#2E7D32]" /> : <Share2 size={15} />}
-              <span>{copied ? 'कॉपी हो गया' : '↗ साझा करें'}</span>
-            </button>
-          </div>
+        {/* 3. Bottom Share & Like Action Row */}
+        <div className="mt-6 pt-3 border-t border-[#E8E5DF]">
+          <CardActionRow
+            contentId={message.id}
+            contentType="vichar"
+            contentTitle={message.title}
+            title={message.title}
+            text={`“${message.title}”\n${message.leadParagraph || ''}`}
+          />
         </div>
       </article>
 
       {/* 4. Related Content: अन्य विचार */}
       {relatedMessages.length > 0 && (
-        <section className="mt-8 mb-6 flex flex-col gap-3.5">
+        <section className="mt-6 mb-6 flex flex-col gap-3">
           <Divider />
           <div className="flex items-center justify-between px-0.5 pt-1">
-            <h2 className="text-[17px] font-bold text-[#16325C] tracking-tight">
+            <h2 className="text-[16px] font-bold text-[#16325C] tracking-tight">
               अन्य विचार
             </h2>
           </div>
@@ -198,11 +186,11 @@ export const MessageDetailScreen: React.FC<MessageDetailScreenProps> = ({
                 typeLabel={rel.typeLabel || '📝 संदेश'}
                 title={rel.title}
                 date={rel.date}
-                content={(rel.leadParagraph || rel.title).slice(0, 95) + '...'}
+                content={rel.leadParagraph || rel.title}
                 author={rel.author}
                 topic={rel.topic}
                 onReadMore={() => {
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  window.scrollTo(0, 0);
                   onNavigateToMessage(rel.id);
                 }}
               />
@@ -210,8 +198,7 @@ export const MessageDetailScreen: React.FC<MessageDetailScreenProps> = ({
           </div>
         </section>
       )}
-
-      <Footer />
     </PageContainer>
   );
 };
+

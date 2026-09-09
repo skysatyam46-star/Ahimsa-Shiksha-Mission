@@ -53,5 +53,16 @@ service cloud.firestore {
       allow get, list: if isValidId(settingId);
       allow create, update, delete: if isValidId(settingId) && isAdmin();
     }
+
+    // Likes collection: likes/{likeId}
+    match /likes/{likeId} {
+      allow get, list: if isValidId(likeId);
+      allow create, delete: if isValidId(likeId);
+    }
+
+    // Notifications collection: notifications/{notificationId}
+    match /notifications/{notificationId} {
+      allow read, write: if isAdmin();
+    }
   }
 }

@@ -71,6 +71,7 @@ export const VicharScreen: React.FC<VicharScreenProps> = ({ onNavigateToDetail }
           {filteredMessages.map((item) => (
             <MessageCard
               key={item.id}
+              id={item.id}
               typeLabel={item.typeLabel || '📝 संदेश'}
               title={item.title || (item as any).titleHindi}
               date={item.date}

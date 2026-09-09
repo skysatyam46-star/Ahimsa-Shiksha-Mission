@@ -11,12 +11,12 @@ interface AdminFounderScreenProps {
 
 export const AdminFounderScreen: React.FC<AdminFounderScreenProps> = ({ onNavigate }) => {
   const { data, updateFounder } = useData();
-  const [name, setName] = useState(data.founder.name);
-  const [title, setTitle] = useState(data.founder.title);
-  const [photoUrl, setPhotoUrl] = useState(data.founder.photoUrl);
-  const [quote, setQuote] = useState(data.founder.quote || '');
-  const [bio, setBio] = useState(data.founder.bio);
-  const [message, setMessage] = useState(data.founder.message);
+  const [name, setName] = useState(data.founder?.name || 'अमर लाल चौधरी');
+  const [title, setTitle] = useState(data.founder?.role || data.founder?.title || 'संस्थापक • अहिंसा शिक्षा मिशन');
+  const [photoUrl, setPhotoUrl] = useState(data.founder?.photoUrl || '');
+  const [quote, setQuote] = useState(data.founder?.quote || '');
+  const [bio, setBio] = useState(data.founder?.bio || 'संस्थापक के बारे में संक्षिप्त परिचय यहाँ प्रदर्शित होगा।');
+  const [message, setMessage] = useState(data.founder?.message || '“अहिंसा और सत्य ही वह आधारशिला हैं जिस पर एक न्यायपूर्ण और दयालु समाज की रचना हो सकती है। हमारा संकल्प है कि शिक्षा हर हृदय में करुणा का दीप प्रज्वलित करे।”');
 
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +30,7 @@ export const AdminFounderScreen: React.FC<AdminFounderScreenProps> = ({ onNaviga
     try {
       await updateFounder({
         name: name.trim(),
+        role: title.trim(),
         title: title.trim(),
         photoUrl,
         quote: quote.trim(),

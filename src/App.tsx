@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback } from 'react';
 import { Loader2 } from 'lucide-react';
 import { MobileShell, NavTabId } from './components';
 import { Logo } from './components/brand/Logo';
@@ -273,11 +273,17 @@ function AppContent() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'manual';
+      }
       const initialRoute = parsePath(window.location.pathname);
       setRoute(initialRoute);
 
       const handlePopState = () => {
         setRoute(parsePath(window.location.pathname));
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
       };
 
       window.addEventListener('popstate', handlePopState);
@@ -285,12 +291,22 @@ function AppContent() {
     }
   }, []);
 
+  useLayoutEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+  }, [route]);
+
   const navigateTo = useCallback((path: string) => {
     const newRoute = parsePath(path);
     setRoute(newRoute);
     if (typeof window !== 'undefined') {
       window.history.pushState(null, '', path);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
     }
   }, []);
 
@@ -583,6 +599,7 @@ function AppContent() {
       onTabChange={handleTabChange}
       title={headerMeta.title}
       subtitle={headerMeta.subtitle}
+      onOpenAdmin={() => navigateTo('/admin')}
       onOpenSettings={() => {
         if (route.screen === 'settings') {
           handleBack();

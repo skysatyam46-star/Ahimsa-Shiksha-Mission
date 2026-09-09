@@ -10,20 +10,20 @@ interface AdminContactScreenProps {
 
 export const AdminContactScreen: React.FC<AdminContactScreenProps> = ({ onNavigate }) => {
   const { data, updateContact } = useData();
-  const [email, setEmail] = useState(data.contact.email);
-  const [phone, setPhone] = useState(data.contact.phone);
-  const [address, setAddress] = useState(data.contact.address);
-  const [officeHours, setOfficeHours] = useState(data.contact.officeHours);
-  const [guidance, setGuidance] = useState(data.contact.guidance);
-  const [note, setNote] = useState(data.contact.note || '');
-  const [mapEmbedUrl, setMapEmbedUrl] = useState(data.contact.mapEmbedUrl || '');
+  const [email, setEmail] = useState(data.contact?.email || 'amarsiwan1975@gmail.com');
+  const [phone, setPhone] = useState(data.contact?.phone || '');
+  const [address, setAddress] = useState(data.contact?.address || 'नरहट, सिवान, बिहार');
+  const [officeHours, setOfficeHours] = useState(data.contact?.officeHours || '');
+  const [guidance, setGuidance] = useState(data.contact?.guidance || '');
+  const [note, setNote] = useState(data.contact?.note || '');
+  const [mapEmbedUrl, setMapEmbedUrl] = useState(data.contact?.mapEmbedUrl || '');
 
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSave = async () => {
-    if (!email.trim() || !phone.trim()) {
-      setError('कृपया ईमेल और फोन नंबर अवश्य दर्ज करें।');
+    if (!email.trim()) {
+      setError('कृपया ईमेल अवश्य दर्ज करें।');
       return;
     }
 
@@ -87,7 +87,7 @@ export const AdminContactScreen: React.FC<AdminContactScreenProps> = ({ onNaviga
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="contact@ahimsashiksha.org"
+                placeholder="amarsiwan1975@gmail.com"
                 className="w-full pl-9 pr-3.5 py-2 text-[14px] bg-[#FAF8F5] dark:bg-[#0F172A] border border-[#E8E5DF] dark:border-[#334155] rounded-xl text-[#1F2421] dark:text-white"
               />
             </div>

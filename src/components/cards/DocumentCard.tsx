@@ -1,9 +1,11 @@
 import React from 'react';
-import { FileText, Download, Eye } from 'lucide-react';
+import { FileText, Download } from 'lucide-react';
 import { ContentCard } from './ContentCard';
 import { DateLabel } from '../ui/DateLabel';
+import { CardActionRow } from './CardActionRow';
 
 interface DocumentCardProps {
+  id?: string;
   title: string;
   description?: string;
   fileType?: string;
@@ -17,6 +19,7 @@ interface DocumentCardProps {
 }
 
 export const DocumentCard: React.FC<DocumentCardProps> = ({
+  id,
   title,
   description,
   fileType = 'PDF',
@@ -28,8 +31,10 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
   onRead,
   className = '',
 }) => {
+  const handleRead = onRead || onDownload;
+
   return (
-    <ContentCard radius="md" className={`flex flex-col gap-3 p-4 ${className}`}>
+    <ContentCard radius="md" className={`flex flex-col gap-2.5 p-3.5 ${className}`}>
       {/* Top Meta Bar */}
       <div className="flex items-center justify-between gap-2 border-b border-[#E8E5DF]/60 pb-2">
         <span className="text-[12px] font-semibold text-[#16325C] bg-[#EEF3FA] px-2 py-0.5 rounded-md">
@@ -38,22 +43,27 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
         {date && <DateLabel date={date} />}
       </div>
 
-      <div className="flex items-start gap-3.5">
+      <div className="flex items-start gap-3">
         {/* Document Format Icon */}
-        <div className="w-11 h-12 rounded-xl bg-[#EEF3FA] border border-[#16325C]/15 flex flex-col items-center justify-center shrink-0 text-[#16325C]">
-          <FileText size={20} strokeWidth={2} />
-          <span className="text-[10px] font-bold tracking-tight mt-0.5 uppercase">
+        <div className="w-10 h-11 rounded-xl bg-[#EEF3FA] border border-[#16325C]/15 flex flex-col items-center justify-center shrink-0 text-[#16325C]">
+          <FileText size={18} strokeWidth={2} />
+          <span className="text-[9.5px] font-bold tracking-tight uppercase">
             {fileType}
           </span>
         </div>
 
         {/* Content Info */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-[16px] font-semibold text-[#16325C] leading-snug">
+          <h3
+            onClick={handleRead}
+            className={`text-[15.5px] font-bold text-[#16325C] leading-snug line-clamp-2 ${
+              handleRead ? 'cursor-pointer hover:underline' : ''
+            }`}
+          >
             {title}
           </h3>
 
-          <div className="flex items-center gap-2 text-[12px] text-[#5C6773] mt-1 flex-wrap">
+          <div className="flex items-center gap-2 text-[12px] text-[#5C6773] mt-0.5 flex-wrap">
             <span>{fileSize}</span>
             {pages && (
               <>
@@ -66,31 +76,22 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
       </div>
 
       {description && (
-        <p className="text-[14px] text-[#5C6773] leading-relaxed">
+        <p className="text-[13.5px] text-[#5C6773] leading-normal line-clamp-2 px-0.5">
           {description}
         </p>
       )}
 
-      {/* Actions: देखें & डाउनलोड ↓ */}
-      <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#E8E5DF]/60 mt-auto">
-        <button
-          type="button"
-          onClick={onRead}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-[#16325C] bg-[#FAF8F5] hover:bg-[#EEF3FA] border border-[#E8E5DF] rounded-lg transition-colors tap-active"
-        >
-          <Eye size={15} />
-          <span>देखें</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={onDownload}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[13px] font-medium bg-[#16325C] text-white hover:bg-[#0F2342] rounded-lg transition-colors tap-active shadow-2xs"
-        >
-          <Download size={14} />
-          <span>डाउनलोड ↓</span>
-        </button>
-      </div>
+      {/* Action Row: 👍 पसंद | ↗ साझा करें | विवरण → */}
+      <CardActionRow
+        contentId={id}
+        contentType="document"
+        contentTitle={title}
+        title={title}
+        text={description || title}
+        onReadMore={handleRead}
+        readMoreText="देखें →"
+      />
     </ContentCard>
   );
 };
+

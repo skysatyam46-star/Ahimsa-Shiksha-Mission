@@ -4,8 +4,8 @@ import {
   PageContainer,
   SectionHeading,
   ContentCategoryCard,
-  Footer,
 } from '../components';
+
 import { useData } from '../context/DataContext';
 
 interface SamagriScreenProps {

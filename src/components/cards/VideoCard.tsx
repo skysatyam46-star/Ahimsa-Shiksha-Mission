@@ -1,10 +1,11 @@
 import React from 'react';
-import { Play, ArrowRight } from 'lucide-react';
+import { Play } from 'lucide-react';
 import { ContentCard } from './ContentCard';
 import { DateLabel } from '../ui/DateLabel';
-import { ShareButton } from '../ui/Buttons';
+import { CardActionRow } from './CardActionRow';
 
 interface VideoCardProps {
+  id?: string;
   title: string;
   duration: string;
   thumbnailUrl?: string;
@@ -19,6 +20,7 @@ interface VideoCardProps {
 }
 
 export const VideoCard: React.FC<VideoCardProps> = ({
+  id,
   title,
   duration,
   thumbnailUrl,
@@ -47,18 +49,17 @@ export const VideoCard: React.FC<VideoCardProps> = ({
           loading="lazy"
         />
       ) : (
-        /* Subtle Peaceful Placeholder Graphic */
         <div className="w-full h-full bg-linear-to-br from-[#EEF3FA] via-[#FAF8F5] to-[#E9F0F8] flex flex-col items-center justify-center p-4 text-center">
-          <div className="w-12 h-12 rounded-full bg-[#16325C] text-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-            <Play size={20} fill="currentColor" className="ml-0.5" />
+          <div className="w-11 h-11 rounded-full bg-[#16325C] text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+            <Play size={18} fill="currentColor" className="ml-0.5" />
           </div>
         </div>
       )}
 
       {/* Persistent Central Play Button Overlay */}
-      <div className="absolute inset-0 bg-black/20 flex items-center justify-center transition-colors group-hover:bg-black/30">
-        <div className="w-12 h-12 rounded-full bg-[#16325C]/90 text-white flex items-center justify-center shadow-md backdrop-blur-xs group-hover:scale-105 transition-transform">
-          <Play size={20} fill="currentColor" className="ml-0.5" />
+      <div className="absolute inset-0 bg-black/15 flex items-center justify-center transition-colors group-hover:bg-black/25">
+        <div className="w-11 h-11 rounded-full bg-[#16325C]/90 text-white flex items-center justify-center shadow-xs backdrop-blur-xs group-hover:scale-105 transition-transform">
+          <Play size={18} fill="currentColor" className="ml-0.5" />
         </div>
       </div>
 
@@ -87,8 +88,7 @@ export const VideoCard: React.FC<VideoCardProps> = ({
   );
 
   return (
-    <ContentCard radius="md" className={`flex flex-col gap-3 p-3.5 ${className}`}>
-      {/* If thumbnailFirst is true, show thumbnail first */}
+    <ContentCard radius="md" className={`flex flex-col gap-2.5 p-3.5 ${className}`}>
       {thumbnailFirst ? (
         <>
           {renderThumbnail()}
@@ -102,40 +102,38 @@ export const VideoCard: React.FC<VideoCardProps> = ({
       )}
 
       {/* Title & Details */}
-      <div className="flex flex-col gap-1 px-0.5">
+      <div className="flex flex-col gap-0.5 px-0.5">
         <h3
           onClick={onClick}
-          className="text-[16px] font-semibold text-[#16325C] leading-snug line-clamp-2 cursor-pointer hover:underline decoration-[#16325C]/40"
+          className="text-[15.5px] font-bold text-[#16325C] leading-snug line-clamp-2 cursor-pointer hover:underline"
         >
           {title}
         </h3>
 
         {description && (
-          <p className="text-[14px] text-[#5C6773] leading-relaxed line-clamp-2 mt-0.5">
+          <p className="text-[13.5px] text-[#5C6773] leading-normal line-clamp-2 mt-0.5">
             {description}
           </p>
         )}
 
         {speaker && !description && (
-          <p className="text-[13px] text-[#5C6773] mt-0.5">
-            वक्ता: <span className="font-medium text-[#1F2421]">{speaker}</span>
+          <p className="text-[12.5px] text-[#5C6773] mt-0.5">
+            वक्ता: <span className="font-semibold text-[#1F2421]">{speaker}</span>
           </p>
         )}
       </div>
 
-      {/* Actions: वीडियो देखें → & ↗ साझा करें */}
-      <div className="flex items-center justify-between pt-2 border-t border-[#E8E5DF]/50 mt-auto">
-        <button
-          type="button"
-          onClick={onClick}
-          className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#16325C] hover:text-[#0F2342] transition-colors py-1 tap-active"
-        >
-          <span>वीडियो देखें</span>
-          <ArrowRight size={14} />
-        </button>
-
-        <ShareButton title={title} />
-      </div>
+      {/* Actions: 👍 पसंद | ↗ साझा करें | वीडियो देखें → */}
+      <CardActionRow
+        contentId={id}
+        contentType="video"
+        contentTitle={title}
+        title={title}
+        text={description || title}
+        onReadMore={onClick}
+        readMoreText="वीडियो देखें →"
+      />
     </ContentCard>
   );
 };
+

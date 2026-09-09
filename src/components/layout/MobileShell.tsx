@@ -9,6 +9,7 @@ interface MobileShellProps {
   subtitle?: string;
   rightAction?: React.ReactNode;
   onOpenSettings?: () => void;
+  onOpenAdmin?: () => void;
   isSettingsActive?: boolean;
   children: React.ReactNode;
 }
@@ -20,6 +21,7 @@ export const MobileShell: React.FC<MobileShellProps> = ({
   subtitle,
   rightAction,
   onOpenSettings,
+  onOpenAdmin,
   isSettingsActive = false,
   children,
 }) => {
@@ -36,6 +38,7 @@ export const MobileShell: React.FC<MobileShellProps> = ({
           subtitle={subtitle}
           rightAction={rightAction}
           onOpenSettings={onOpenSettings}
+          onOpenAdmin={onOpenAdmin}
           isSettingsActive={isSettingsActive}
         />
 

@@ -14,6 +14,7 @@ export * from './ui/DateLabel';
 export * from './ui/Divider';
 export * from './ui/SearchField';
 export * from './ui/States';
+export * from './ui/ImageZoomModal';
 
 // Card Foundation Components
 export * from './cards/ContentCard';
@@ -28,3 +29,4 @@ export * from './cards/DocumentListItemCard';
 export * from './cards/NoticeCard';
 export * from './cards/ContentCategoryCard';
 export * from './cards/SearchResultCard';
+export * from './cards/CardActionRow';

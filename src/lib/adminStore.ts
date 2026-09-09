@@ -12,6 +12,19 @@ export interface BaseContentItem {
   updatedAt: string;
   publishedAt?: string;
   language?: ContentLanguage;
+  likesCount?: number;
+}
+
+export interface AdminNotificationItem {
+  id: string;
+  type: 'like' | string;
+  event: string;
+  contentType: 'vichar' | 'video' | 'audio' | 'photo' | 'document' | 'notice' | string;
+  contentId: string;
+  contentTitle: string;
+  totalLikes: number;
+  createdAt: string;
+  read: boolean;
 }
 
 export interface VicharItem extends BaseContentItem {
@@ -205,10 +218,33 @@ export function getInitialSeedData(): AppStoreData {
     photos: [],
     documents: [],
     notices: [],
-    links: [],
+    links: [
+      {
+        id: 'link-facebook',
+        title: 'Facebook',
+        url: 'https://www.facebook.com/share/1MRf7TAZsH/',
+        description: '',
+        status: 'published',
+        order: 1,
+        category: 'facebook',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ],
     mission: { title: "", subtitle: "", updatedAt: "" },
-    founder: { name: "", role: "", updatedAt: "" },
-    contact: { email: "", phone: "", address: "", updatedAt: "" }
+    founder: {
+      name: "अमर लाल चौधरी",
+      role: "संस्थापक • अहिंसा शिक्षा मिशन",
+      bio: "संस्थापक के बारे में संक्षिप्त परिचय यहाँ प्रदर्शित होगा।",
+      message: "“अहिंसा और सत्य ही वह आधारशिला हैं जिस पर एक न्यायपूर्ण और दयालु समाज की रचना हो सकती है। हमारा संकल्प है कि शिक्षा हर हृदय में करुणा का दीप प्रज्वलित करे।”",
+      updatedAt: new Date().toISOString(),
+    },
+    contact: {
+      email: "amarsiwan1975@gmail.com",
+      phone: "",
+      address: "नरहट, सिवान, बिहार",
+      updatedAt: new Date().toISOString(),
+    }
   };
 }
 
