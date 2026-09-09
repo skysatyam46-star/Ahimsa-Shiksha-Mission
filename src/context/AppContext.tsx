@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export type Language = 'hinglish' | 'hi' | 'en';
+export type Language = 'hi' | 'en';
 export type Theme = 'light' | 'dark';
 
 export interface Translations {
@@ -51,6 +51,10 @@ export interface Translations {
   contactDesc: string;
   linksTitle: string;
   linksDesc: string;
+
+  adminSection: string;
+  adminTitle: string;
+  adminDesc: string;
 
   // Home Screen UI
   welcomeTitle: string;
@@ -149,137 +153,6 @@ export interface Translations {
 }
 
 const TRANSLATIONS: Record<Language, Translations> = {
-  hinglish: {
-    navHome: 'Home',
-    navVichar: 'Vichar',
-    navVideo: 'Video',
-    navSamagri: 'Samagri',
-    navKhoj: 'Khoj',
-
-    brandTitle: 'Ahimsa Shiksha Mission',
-    brandTagline: 'Satya • Ahimsa • Shiksha • Manavta',
-    settingsHeaderTitle: 'Settings',
-    settingsSubtitle: 'App preferences aur mission ki jaankari',
-
-    back: 'Peeche',
-    viewAll: 'Sabhi dekhein',
-    viewMore: 'Aur dekhein',
-    readMore: 'Pura padhein',
-    listen: 'Sunein',
-    pause: 'Rokein',
-    download: 'Download',
-    share: 'Share karein',
-    copied: 'Link copy ho gaya',
-    searchPlaceholder: 'Khoj karein... (e.g. ahimsa, satya, shiksha)',
-    totalCount: 'Kul',
-    newestFirst: 'Naye pehle',
-    seeAllContent: 'Sabhi samagri dekhein',
-
-    appearanceSection: 'Appearance',
-    themeLabel: 'Theme',
-    themeLight: '☀️ Light',
-    themeDark: '🌙 Dark',
-
-    languageSection: 'Bhasha',
-    languageLabel: 'Language',
-    languageNote: 'Prakashit samagri mool bhasha mein hi rahegi.',
-
-    infoSection: 'Jaankari',
-    missionTitle: 'Mission',
-    missionDesc: 'Uddeshya aur vichar',
-    founderTitle: 'About / Founder',
-    founderDesc: 'Sansthapaka parichay aur sandesh',
-    contactTitle: 'Contact',
-    contactDesc: 'Sampark madhyam aur jaankari',
-    linksTitle: 'Important Links',
-    linksDesc: 'Zaroori links aur srot',
-
-    welcomeTitle: 'Ahimsa Shiksha Mission mein aapka swagat hai',
-    welcomeSubtitle: 'Satya, ahimsa aur shanti ke vichaar',
-    quoteOfDayTitle: 'Aaj Ka Vichar',
-    latestVideosTitle: 'Naye Video',
-    audioMessagesTitle: 'Audio Sandesh',
-    quickCategoriesTitle: 'Samagri Categories',
-
-    vicharTitle: 'Vichar aur Sandesh',
-    vicharSubtitle: 'Naye vichar aur sandesh dekhein',
-    allFilter: 'Sabhi',
-
-    videoTitle: 'Video Darshan',
-    videoSubtitle: 'Prerak video vyakhyan dekhein',
-
-    samagriTitle: 'Samagri Library',
-    samagriSubtitle: 'Audio, photo, dastavez aur soochanaayein',
-
-    khojTitle: 'Khoj',
-    khojSubtitle: 'Vichar, video, audio aur dastavez khojein',
-
-    missionHeading: 'Mission',
-    missionSubheading: 'Ahimsa Shiksha Mission ka uddeshya aur mulyabodh',
-    ourObjectiveTitle: 'Hamara Uddeshya',
-    ourObjectiveText: 'Ahimsa Shiksha Mission ka uddeshya ahimsa, satya, shiksha aur manavta se jude sakaratmak vicharon ko logon tak pahunchana hai. Samaj mein shanti, karuna aur naitik shiksha ke mulyon ko badhava dena.',
-    ourPhilosophyTitle: 'Hamare Vichar',
-    ourPhilosophyText: 'Ahimsa keval sharirik hinsa ka abhav nahi hai, balki man, vachan aur karm mein karuna aur sadbhav ki upasthiti hai. Shiksha aatmbodh aur samajik dayitva ka marg hai.',
-    ourEffortTitle: 'Hamara Prayas',
-    ourEffortText: 'Dainik jeevan mein sakaratmak vicharon, prerak sandeshon, naitik paathon aur vichar-vimarsh ke madhyam se samaj mein shanti ka vatavaran nirmit karna.',
-    corePillarsTitle: 'Mool Siddhant',
-
-    founderHeading: 'Founder',
-    founderSubheading: 'Sansthapaka parichay aur disha-nirdesh',
-    founderName: 'Sansthapaka ka Naam',
-    founderBioTitle: 'Parichay',
-    founderBioPlaceholder: 'Sansthapaka ke baare mein sankshipt parichay yahan pradarshit hoga.',
-    founderMessageTitle: 'Sansthapaka ka Sandesh',
-    founderMessagePlaceholder: '“Ahimsa aur satya hi vah aadharshila hain jis par ek nyaypurna aur dayalu samaj ka nirman ho sakta hai. Hamara sankalp hai ki shiksha har hriday mein karuna ka deep jalaye.”',
-    placeholderNotice: 'Yeh placeholder jaankari hai. Aadhikarik vivaran aane par update kiya jayega.',
-
-    contactHeading: 'Contact',
-    contactSubheading: 'Mission se sampark karein',
-    phoneLabel: 'Phone',
-    emailLabel: 'Email',
-    addressLabel: 'Pata',
-    callButton: 'Call karein',
-    emailButton: 'Email bhejein',
-    mockContactNotice: 'Yeh placeholder sampark vivaran hai. Agle phase mein aadhikarik sampark joda jayega.',
-
-    linksHeading: 'Important Links',
-    linksSubheading: 'Aadhikarik aur upyogi links',
-    officialWebsite: 'Official Website',
-    officialWebsiteDesc: 'Mission ki mukhya website aur ghoshnayein',
-    youtubeChannel: 'YouTube Channel',
-    youtubeChannelDesc: 'Sabhi video pravachan aur karyakram prasaran',
-    socialCommunity: 'Social Link',
-    socialCommunityDesc: 'Vicharon aur dainik sandeshon se jude rahein',
-    studyResources: 'Anye Mahatvapurna Srot',
-    studyResourcesDesc: 'Ahimsa aur naitik shiksha par adhyayan samagri',
-    openLink: 'Kholein',
-
-    emptyHomeTitle: 'Abhi koi published samagri uplabdh nahi hai.',
-    emptyHomeDesc: 'Nayi samagri jald yahan dikhayi degi.',
-    emptyHomeAction: 'Samagri Categories Dekhein',
-    emptyVicharTitle: 'Abhi koi vichar uplabdh nahi hai',
-    emptyVicharDesc: 'Naye vichar aur sandesh jald yahan prakashit kiye jayenge.',
-    emptyVideoTitle: 'Abhi koi video uplabdh nahi hai',
-    emptyVideoDesc: 'Naye video vyakhyan jald yahan prakashit kiye jayenge.',
-    emptyAudioTitle: 'Abhi koi audio uplabdh nahi hai',
-    emptyAudioDesc: 'Naye audio sandesh yahan dikhayi denge.',
-    emptyPhotoTitle: 'Abhi koi photo uplabdh nahi hai',
-    emptyPhotoDesc: 'Mission ki nayi tasveerein yahan dikhayi dengi.',
-    emptyDocTitle: 'Abhi koi dastavez uplabdh nahi hai',
-    emptyDocDesc: 'Naye dastavez aur adhyayan samagri yahan dikhayi denge.',
-    emptyNoticeTitle: 'Abhi koi soochana uplabdh nahi hai',
-    emptyNoticeDesc: 'Mission ki nayi soochanaayein aur update yahan dikhayi denge.',
-    emptySearchTitle: 'Koi parinam nahi mila',
-    emptySearchDesc: 'Kisi doosre shabd se khojne ka prayas karein.',
-    emptyRecentTitle: 'Abhi koi haal ki samagri uplabdh nahi hai.',
-    emptyLinksTitle: 'Abhi koi mahatvapoorna link nahi hai',
-    emptyLinksDesc: 'Mahatvapoorna links jald jode jayenge.',
-    emptyFounderTitle: 'Sansthapak parichay ki jaankari jald uplabdh hogi.',
-    emptyFounderDesc: 'Yeh jaankari abhi uplabdh nahi hai.',
-    emptyContactTitle: 'Sampark vivaran jald uplabdh hoga.',
-    emptyContactDesc: 'Yeh jaankari abhi uplabdh nahi hai.',
-  },
-
   hi: {
     navHome: 'होम',
     navVichar: 'विचार',
@@ -301,7 +174,7 @@ const TRANSLATIONS: Record<Language, Translations> = {
     download: 'डाउनलोड',
     share: 'साझा करें',
     copied: 'लिंक कॉपी हो गया',
-    searchPlaceholder: 'खोज करें... (उदा. अहिंसा, सत्य, शिक्षा)',
+    searchPlaceholder: 'खोज करें... (अहिंसा, सत्य, शिक्षा)',
     totalCount: 'कुल',
     newestFirst: 'नवीनतम पहले',
     seeAllContent: 'सभी सामग्री देखें',
@@ -324,6 +197,10 @@ const TRANSLATIONS: Record<Language, Translations> = {
     contactDesc: 'संपर्क माध्यम और विवरण',
     linksTitle: 'महत्वपूर्ण लिंक',
     linksDesc: 'उपयोगी लिंक और स्रोत',
+
+    adminSection: 'प्रशासन',
+    adminTitle: 'एडमिन पैनल',
+    adminDesc: 'मिशन वेबसाइट प्रबंधित करने के लिए',
 
     welcomeTitle: 'अहिंसा शिक्षा मिशन में आपका स्वागत है',
     welcomeSubtitle: 'सत्य, अहिंसा और शांति के विचार',
@@ -456,6 +333,10 @@ const TRANSLATIONS: Record<Language, Translations> = {
     linksTitle: 'Important Links',
     linksDesc: 'Useful links and resources',
 
+    adminSection: 'Administration',
+    adminTitle: 'Admin Panel',
+    adminDesc: 'Manage the mission website',
+
     welcomeTitle: 'Welcome to Ahimsa Shiksha Mission',
     welcomeSubtitle: 'Spreading values of truth, non-violence and peace',
     quoteOfDayTitle: 'Thought of the Day',
@@ -557,15 +438,15 @@ const LANGUAGE_STORAGE_KEY = 'asm_language';
 const THEME_STORAGE_KEY = 'asm_theme';
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // 1. Language State (DEFAULT = 'hinglish')
+  // 1. Language State (DEFAULT = 'hi')
   const [language, setLanguageState] = useState<Language>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-      if (stored === 'hinglish' || stored === 'hi' || stored === 'en') {
+      if (stored === 'hi' || stored === 'en') {
         return stored;
       }
     }
-    return 'hinglish';
+    return 'hi';
   });
 
   // 2. Theme State (DEFAULT = 'light')
@@ -607,7 +488,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const t = TRANSLATIONS[language] || TRANSLATIONS.hinglish;
+  const t = TRANSLATIONS[language] || TRANSLATIONS.hi;
 
   return (
     <AppContext.Provider

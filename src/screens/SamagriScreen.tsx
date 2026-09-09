@@ -175,9 +175,6 @@ export const SamagriScreen: React.FC<SamagriScreenProps> = ({ onNavigateToDetail
           </div>
         </div>
       )}
-
-      {/* 4. Minimal Footer */}
-      <Footer />
     </PageContainer>
   );
 };

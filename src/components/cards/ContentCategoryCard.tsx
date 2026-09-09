@@ -31,7 +31,7 @@ export const ContentCategoryCard: React.FC<ContentCategoryCardProps> = ({
           onClick();
         }
       }}
-      className={`w-full bg-white border border-[#E8E5DF] rounded-2xl p-4 flex flex-col gap-2.5 transition-all hover:border-[#16325C]/30 hover:shadow-2xs tap-active cursor-pointer group ${className}`}
+      className={`w-full bg-white border border-[#E8E5DF] rounded-2xl py-3 px-4 flex flex-col gap-2 transition-all hover:border-[#16325C]/30 hover:shadow-2xs tap-active cursor-pointer group ${className}`}
     >
       {/* Top row: Icon and Action link */}
       <div className="flex items-center justify-between">
@@ -55,11 +55,10 @@ export const ContentCategoryCard: React.FC<ContentCategoryCardProps> = ({
       </div>
 
       {/* Bottom meta row */}
-      <div className="pt-2 border-t border-[#E8E5DF]/60 flex items-center justify-between text-[12px] text-[#5C6773]">
+      <div className="pt-1.5 border-t border-[#E8E5DF]/60 flex items-center text-[12px] text-[#5C6773]">
         <span className="font-medium bg-[#FAF8F5] border border-[#E8E5DF] px-2 py-0.5 rounded-md">
           {count}
         </span>
-        <span className="text-[#8C96A3]">संग्रह</span>
       </div>
     </div>
   );

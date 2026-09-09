@@ -58,25 +58,32 @@ export const AdminFileUpload: React.FC<AdminFileUploadProps> = ({
   };
 
   const processFile = (file: File) => {
+    // Validation for image uploads
+    if (type === 'image') {
+      if (!file.type.startsWith('image/')) {
+        alert('कृपया वैध फोटो फ़ाइल (JPG, PNG, WebP या GIF) ही चुनें।');
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        alert('इमेज साइज़ 10MB से कम होना चाहिए।');
+        return;
+      }
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
       const previewUrl = e.target?.result as string;
       const meta = {
         fileName: file.name,
         fileSize: formatBytes(file.size),
-        fileType: file.type || type,
+        fileType: file.type || (type === 'image' ? 'image/jpeg' : type === 'audio' ? 'audio/mpeg' : 'application/pdf'),
         previewUrl,
       };
       setSelectedMeta(meta);
       onFileSelect(meta);
     };
 
-    if (type === 'image' || type === 'audio') {
-      reader.readAsDataURL(file);
-    } else {
-      // For PDF/docs, read data URL or create preview url
-      reader.readAsDataURL(file);
-    }
+    reader.readAsDataURL(file);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -217,15 +224,23 @@ export const AdminFileUpload: React.FC<AdminFileUploadProps> = ({
           )}
 
           {type === 'audio' && selectedMeta.previewUrl && (
-            <div className="p-2 bg-[#FAF8F5] dark:bg-[#0F172A] rounded-xl border border-[#E8E5DF] dark:border-[#334155]">
+            <div className="p-2.5 bg-[#FAF8F5] dark:bg-[#0F172A] rounded-xl border border-[#E8E5DF] dark:border-[#334155] space-y-1.5">
               <audio controls src={selectedMeta.previewUrl} className="w-full h-8" />
+              <p className="text-[11px] text-[#8C5D07] dark:text-amber-400 font-medium">
+                नोट: यह स्थानीय ऑडियो फ़ाइल का पूर्वावलोकन है। स्थायी क्लाउड ऑडियो स्टोरेज इंटीग्रेशन आगामी चरण में उपलब्ध होगा।
+              </p>
             </div>
           )}
 
           {type === 'document' && (
-            <div className="flex items-center gap-2 p-2 bg-[#FAF8F5] dark:bg-[#0F172A] rounded-xl border border-[#E8E5DF] dark:border-[#334155] text-[12px] text-[#5C6773] dark:text-gray-300">
-              <FileText size={16} className="text-[#DC2626]" />
-              <span>PDF Ready to Save • Local storage reference</span>
+            <div className="p-2.5 bg-[#FAF8F5] dark:bg-[#0F172A] rounded-xl border border-[#E8E5DF] dark:border-[#334155] space-y-1">
+              <div className="flex items-center gap-2 text-[12px] font-semibold text-[#1F2421] dark:text-gray-200">
+                <FileText size={16} className="text-[#DC2626]" />
+                <span>PDF दस्तावेज तैयार है ({selectedMeta.fileSize})</span>
+              </div>
+              <p className="text-[11px] text-[#8C5D07] dark:text-amber-400 font-medium">
+                नोट: यह स्थानीय PDF फ़ाइल का पूर्वावलोकन है। स्थायी क्लाउड PDF स्टोरेज इंटीग्रेशन आगामी चरण में उपलब्ध होगा।
+              </p>
             </div>
           )}
         </div>

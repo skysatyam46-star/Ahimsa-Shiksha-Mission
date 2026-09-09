@@ -9,21 +9,16 @@ export const Footer: React.FC<FooterProps> = ({ className = '' }) => {
   return (
     <footer
       id="global-footer"
-      className={`w-full py-8 px-4 flex flex-col items-center justify-center text-center border-t border-[#E8E5DF]/70 mt-10 mb-6 ${className}`}
+      className={`w-full pt-6 pb-8 px-4 flex flex-col items-center justify-center text-center border-t border-[#E8E5DF]/70 mt-6 mb-2 ${className}`}
     >
-      <Logo size={40} className="mb-2.5" />
+      <Logo size={36} className="mb-2.5" />
 
-      <p className="text-[16px] font-semibold text-[#16325C] tracking-tight mb-1">
+      <p className="text-[15px] font-semibold text-[#16325C] tracking-tight">
         अहिंसा शिक्षा मिशन
       </p>
 
-      <p className="text-[13px] text-[#5C6773] tracking-wide font-normal mb-3">
-        सत्य • अहिंसा • शिक्षा • मानवता
-      </p>
-
-      <p className="text-[11px] text-[#8C96A3] tracking-tight">
-        शांत • सरल • मानवीय • विश्वसनीय • ज्ञानपूर्ण
-      </p>
+      {/* Safe Area bottom spacing */}
+      <div className="h-[env(safe-area-inset-bottom,12px)] w-full mt-2" />
     </footer>
   );
 };

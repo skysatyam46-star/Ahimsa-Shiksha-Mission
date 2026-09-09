@@ -1,37 +1,21 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import {
-  type User,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut,
-} from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import {
-  auth,
-  db,
-  isFirebaseConfigured,
-  getMissingFirebaseConfigKeys,
-  OperationType,
-  handleFirestoreError,
-} from '../lib/firebase';
 
 export interface AdminUserProfile {
-  role: 'admin' | 'editor' | 'user';
+  role: 'admin';
   active: boolean;
-  email?: string;
-  name?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  email: string;
+  name: string;
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: any; // Kept for backward compatibility with existing components
   adminProfile: AdminUserProfile | null;
   isAdmin: boolean;
   loading: boolean;
   isConfigured: boolean;
   missingConfigKeys: string[];
-  login: (email: string, password: string) => Promise<void>;
+  login: (password: string) => Promise<void>;
+  loginWithGoogle?: () => Promise<void>; // Dummy for backward compatibility
   logout: () => Promise<void>;
   refreshAdminStatus: () => Promise<boolean>;
 }
@@ -39,125 +23,93 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [adminProfile, setAdminProfile] = useState<AdminUserProfile | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [adminProfile, setAdminProfile] = useState<AdminUserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const configured = isFirebaseConfigured();
-  const missingKeys = getMissingFirebaseConfigKeys();
-
-  // Helper to verify user admin privileges in Firestore `users/{uid}`
-  const checkAdminPrivileges = useCallback(async (firebaseUser: User): Promise<boolean> => {
-    if (!db) {
-      console.warn('Firestore database instance is not available.');
-      return false;
-    }
-
+  const checkSession = useCallback(async (): Promise<boolean> => {
     try {
-      const userDocRef = doc(db, 'users', firebaseUser.uid);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (userDocSnap.exists()) {
-        const data = userDocSnap.data() as AdminUserProfile;
-        if (data.role === 'admin' && data.active === true) {
-          setAdminProfile(data);
+      const response = await fetch('/api/admin/check-session');
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.isAdmin) {
           setIsAdmin(true);
+          setAdminProfile({
+            role: 'admin',
+            active: true,
+            email: 'admin@ahimsa.org',
+            name: 'Ahimsa Admin',
+          });
           return true;
-        } else {
-          console.warn(`User ${firebaseUser.email} is not an active admin:`, data);
-          setAdminProfile(data);
-          setIsAdmin(false);
-          return false;
         }
-      } else {
-        // Document does not exist in `users/{uid}`
-        console.warn(`No authorization profile found in users/${firebaseUser.uid}. Admin access restricted.`);
-        setAdminProfile(null);
-        setIsAdmin(false);
-        return false;
       }
     } catch (err) {
-      console.error('Error verifying admin authorization in Firestore:', err);
-      try {
-        handleFirestoreError(err, OperationType.GET, `users/${firebaseUser.uid}`);
-      } catch {
-        // Ignored after logging
-      }
-      setAdminProfile(null);
-      setIsAdmin(false);
-      return false;
+      console.error('[AuthContext] Failed to check session:', err);
     }
+    setIsAdmin(false);
+    setAdminProfile(null);
+    return false;
   }, []);
 
-  // Listen to Firebase Auth state
   useEffect(() => {
-    if (!configured || !auth) {
+    const init = async () => {
+      await checkSession();
       setLoading(false);
-      return;
+    };
+    init();
+  }, [checkSession]);
+
+  const login = useCallback(async (password: string): Promise<void> => {
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password }),
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Incorrect password');
+      }
+
+      setIsAdmin(true);
+      setAdminProfile({
+        role: 'admin',
+        active: true,
+        email: 'admin@ahimsa.org',
+        name: 'Ahimsa Admin',
+      });
+    } catch (err: any) {
+      console.error('[AuthContext] Login error:', err);
+      throw err;
     }
-
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        await checkAdminPrivileges(currentUser);
-      } else {
-        setAdminProfile(null);
-        setIsAdmin(false);
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [configured, checkAdminPrivileges]);
-
-  const refreshAdminStatus = useCallback(async (): Promise<boolean> => {
-    if (!user) return false;
-    return await checkAdminPrivileges(user);
-  }, [user, checkAdminPrivileges]);
-
-  const login = useCallback(
-    async (email: string, password: string): Promise<void> => {
-      if (!configured || !auth) {
-        throw new Error(
-          `Firebase is not configured. Please set the following environment variables: ${missingKeys.join(', ')}`
-        );
-      }
-
-      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
-      const hasAdmin = await checkAdminPrivileges(userCredential.user);
-      
-      if (!hasAdmin) {
-        // User authenticated but not authorized in users/{uid}
-        // Sign out to prevent dangling unauthorized session
-        await signOut(auth);
-        setUser(null);
-        setIsAdmin(false);
-        setAdminProfile(null);
-        throw new Error('unauthorized-role');
-      }
-    },
-    [configured, missingKeys, checkAdminPrivileges]
-  );
+  }, []);
 
   const logout = useCallback(async (): Promise<void> => {
-    if (auth) {
-      await signOut(auth);
+    try {
+      await fetch('/api/admin/logout', { method: 'POST' });
+    } catch (err) {
+      console.error('[AuthContext] Logout failed on server:', err);
     }
-    setUser(null);
-    setAdminProfile(null);
     setIsAdmin(false);
+    setAdminProfile(null);
   }, []);
+
+  const refreshAdminStatus = useCallback(async (): Promise<boolean> => {
+    return await checkSession();
+  }, [checkSession]);
 
   return (
     <AuthContext.Provider
       value={{
-        user,
+        user: isAdmin ? { email: 'admin@ahimsa.org', uid: 'admin' } : null,
         adminProfile,
         isAdmin,
         loading,
-        isConfigured: configured,
-        missingConfigKeys: missingKeys,
+        isConfigured: true,
+        missingConfigKeys: [],
         login,
         logout,
         refreshAdminStatus,

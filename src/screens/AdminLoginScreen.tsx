@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, ShieldCheck, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
 import { Logo } from '../components/brand/Logo';
 import { useAuth } from '../context/AuthContext';
+import { useApp } from '../context/AppContext';
 
 interface AdminLoginScreenProps {
   onLoginSuccess: () => void;
@@ -13,39 +14,25 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
   onLoginSuccess,
   onBack,
 }) => {
-  const { login, isConfigured, missingConfigKeys } = useAuth();
+  const { login } = useAuth();
+  const { setTheme } = useApp();
 
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Validation error states
-  const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
 
   const validateForm = (): boolean => {
     let isValid = true;
-    setEmailError(null);
     setPasswordError(null);
     setAuthError(null);
 
-    // 1. Email validation
-    if (!email.trim()) {
-      setEmailError('Email required');
-      isValid = false;
-    } else {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email.trim())) {
-        setEmailError('Valid email enter karein');
-        isValid = false;
-      }
-    }
-
-    // 2. Password validation
+    // Password validation
     if (!password) {
-      setPasswordError('Password required');
+      setPasswordError('Password is required');
       isValid = false;
     }
 
@@ -59,46 +46,18 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
       return;
     }
 
-    if (!isConfigured) {
-      setAuthError(
-        `Firebase environment variables missing: ${missingConfigKeys.join(', ')}. Kripya Secrets panel me configuration set karein.`
-      );
-      return;
-    }
-
     setIsLoading(true);
     setAuthError(null);
 
     try {
-      await login(email, password);
+      await login(password);
+      setTheme('light'); // Switch to light mode when logging in
       setIsLoading(false);
       onLoginSuccess();
     } catch (err: unknown) {
       setIsLoading(false);
-      const error = err as { code?: string; message?: string };
-      const code = error?.code || '';
-      const message = error?.message || '';
-
-      if (
-        code === 'auth/invalid-credential' ||
-        code === 'auth/user-not-found' ||
-        code === 'auth/wrong-password' ||
-        message.includes('invalid-credential')
-      ) {
-        setAuthError('Email ya password galat hai.');
-      } else if (code === 'auth/invalid-email') {
-        setAuthError('Kripya valid email address darj karein.');
-      } else if (code === 'auth/user-disabled') {
-        setAuthError('Yeh admin account nishkriya (disabled) kar diya gaya hai.');
-      } else if (code === 'auth/too-many-requests') {
-        setAuthError('Bahut saare asafal prayas. Kripya thodi der baad koshish karein.');
-      } else if (code === 'auth/network-request-failed') {
-        setAuthError('Network connection ki samasya hai. Kripya internet check karein.');
-      } else if (message === 'unauthorized-role') {
-        setAuthError('Aapke paas Admin Panel access karne ki anumati (Admin role) nahi hai.');
-      } else {
-        setAuthError(message || 'Login asafal raha. Kripya punah prayas karein.');
-      }
+      const error = err as Error;
+      setAuthError(error.message || 'Access denied. Incorrect password.');
     }
   };
 
@@ -111,11 +70,11 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
           <button
             type="button"
             onClick={onBack}
-            aria-label="Wapas jayein"
+            aria-label="Go Back"
             className="inline-flex items-center gap-1.5 py-1.5 pr-3 text-[14px] font-semibold text-[#16325C] hover:text-[#0F2342] transition-colors tap-active min-h-[44px]"
           >
             <ArrowLeft size={18} strokeWidth={2.2} />
-            <span>Wapas</span>
+            <span>Back</span>
           </button>
 
           <span className="text-[11px] font-semibold text-[#5C6773] bg-[#EEF3FA] px-2.5 py-1 rounded-full border border-[#16325C]/10 flex items-center gap-1">
@@ -136,7 +95,7 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
               Admin Login
             </h1>
             <p className="text-[13px] text-[#5C6773] mt-1 max-w-[280px] leading-relaxed">
-              Mission website ko manage karne ke liye login karein.
+              Enter the password to manage the mission website.
             </p>
           </div>
 
@@ -153,40 +112,9 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
               </div>
             )}
 
+            {/* Password-Only Form */}
             <form onSubmit={handleLoginSubmit} noValidate className="space-y-4">
-              {/* 1. Email Field */}
-              <div className="flex flex-col gap-1.5">
-                <label
-                  htmlFor="admin-email"
-                  className="text-[13px] font-semibold text-[#1F2421]"
-                >
-                  Email
-                </label>
-                <input
-                  id="admin-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (emailError) setEmailError(null);
-                    if (authError) setAuthError(null);
-                  }}
-                  placeholder="Admin email"
-                  autoComplete="email"
-                  className={`w-full min-h-[46px] px-3.5 rounded-xl border text-[14px] bg-[#FAF8F5] focus:bg-white transition-all outline-hidden ${
-                    emailError
-                      ? 'border-red-500 focus:ring-2 focus:ring-red-400/20'
-                      : 'border-[#E8E5DF] focus:border-[#16325C] focus:ring-2 focus:ring-[#16325C]/15'
-                  }`}
-                />
-                {emailError && (
-                  <span className="text-[12px] font-medium text-red-600 pl-1">
-                    {emailError}
-                  </span>
-                )}
-              </div>
-
-              {/* 2. Password Field */}
+              {/* Password Field */}
               <div className="flex flex-col gap-1.5">
                 <label
                   htmlFor="admin-password"
@@ -204,7 +132,7 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
                       if (passwordError) setPasswordError(null);
                       if (authError) setAuthError(null);
                     }}
-                    placeholder="Password"
+                    placeholder="Enter Admin Password"
                     autoComplete="current-password"
                     className={`w-full min-h-[46px] pl-3.5 pr-11 rounded-xl border text-[14px] bg-[#FAF8F5] focus:bg-white transition-all outline-hidden ${
                       passwordError
@@ -215,7 +143,7 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    aria-label={showPassword ? 'Password chupayein' : 'Password dikhayein'}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                     className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-[#5C6773] hover:text-[#16325C] transition-colors"
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -228,7 +156,7 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
                 )}
               </div>
 
-              {/* 3. Submit Button */}
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={isLoading}
@@ -237,7 +165,7 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
                 {isLoading ? (
                   <>
                     <Loader2 size={18} className="animate-spin" />
-                    <span>Login ho raha hai…</span>
+                    <span>Verifying...</span>
                   </>
                 ) : (
                   <span>Login</span>
@@ -249,7 +177,7 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
             <div className="mt-4 pt-3.5 border-t border-[#E8E5DF] text-center">
               <span className="text-[12px] text-[#5C6773] flex items-center justify-center gap-1.5">
                 <ShieldCheck size={14} className="text-[#2E7D32]" />
-                Sirf authorized administrator ke liye
+                For authorized administrators only
               </span>
             </div>
           </div>
@@ -257,7 +185,7 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
 
         {/* Bottom Disclaimer */}
         <div className="text-center pb-2 text-[11px] text-[#8C96A3]">
-          अहिंसा शिक्षा मिशन • प्रशासनिक सुरक्षा प्रणाली
+          Ahimsa Shiksha Mission • Administrative Security System
         </div>
       </div>
     </div>

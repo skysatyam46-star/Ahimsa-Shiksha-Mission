@@ -13,6 +13,7 @@ import {
   FileUp,
   Megaphone,
   Calendar,
+  Globe,
 } from 'lucide-react';
 import {
   AdminLayout,
@@ -145,156 +146,103 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
       activePath="/admin"
       onNavigate={onNavigate}
       onLogout={onLogout}
+      onShowPlaceholderNotice={() => {}}
     >
       <div className="space-y-6">
         {/* 1. Dashboard Title & Greeting */}
-        <section className="flex flex-col gap-1 border-b border-[#E8E5DF] dark:border-[#334155] pb-3.5">
+        <section className="flex flex-col gap-1 pb-1">
           <div className="flex items-center justify-between gap-2">
-            <h1 className="text-[22px] font-bold text-[#16325C] dark:text-[#93C5FD] tracking-tight">
-              Dashboard
-            </h1>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EEF3FA] dark:bg-slate-800 text-[#16325C] dark:text-[#93C5FD] text-[11px] font-semibold border border-[#16325C]/10 dark:border-slate-700">
-              <Calendar size={12} />
-              <span>Phase 5C CMS Active</span>
+            <div>
+              <h1 className="text-[24px] font-bold text-[#16325C] dark:text-[#93C5FD] tracking-tight">
+                नमस्ते 👋
+              </h1>
+              <p className="text-[15px] font-medium text-[#5C6773] dark:text-gray-300 mt-0.5">
+                आज क्या जोड़ना है?
+              </p>
             </div>
-          </div>
-          <p className="text-[13px] text-[#5C6773] dark:text-gray-400 leading-relaxed">
-            सामग्री प्रबंधन व वेबसाइट स्थिति का समग्र दृश्य (Local CMS Prototype)
-          </p>
-        </section>
-
-        {/* 2. Website Status Section */}
-        <section>
-          <div className="flex items-center justify-between mb-2 px-0.5">
-            <h2 className="text-[14px] font-bold text-[#1F2421] dark:text-white tracking-tight">
-              Website Status
-            </h2>
-          </div>
-          <WebsiteStatusCard onViewPublicSite={() => onNavigate('/')} />
-        </section>
-
-        {/* 3. Overview Statistics Grid */}
-        <section>
-          <div className="flex items-center justify-between mb-2.5 px-0.5">
-            <h2 className="text-[14px] font-bold text-[#1F2421] dark:text-white tracking-tight">
-              Content Overview
-            </h2>
-            <span className="text-[11px] text-[#5C6773] dark:text-gray-400 font-medium">
-              कुल {totalContentCount} आइटम
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-            <AdminStatCard
-              icon={<FileText size={18} />}
-              label="Vichar"
-              hindiLabel="विचार"
-              count={data.vichar.length}
-              accentColor="blue"
-              onClick={() => onNavigate('/admin/vichar')}
-            />
-            <AdminStatCard
-              icon={<Video size={18} />}
-              label="Videos"
-              hindiLabel="वीडियो"
-              count={data.videos.length}
-              accentColor="red"
-              onClick={() => onNavigate('/admin/video')}
-            />
-            <AdminStatCard
-              icon={<Headphones size={18} />}
-              label="Audio"
-              hindiLabel="ऑडियो"
-              count={data.audio.length}
-              accentColor="purple"
-              onClick={() => onNavigate('/admin/audio')}
-            />
-            <AdminStatCard
-              icon={<ImageIcon size={18} />}
-              label="Photos"
-              hindiLabel="फोटो"
-              count={data.photos.length}
-              accentColor="green"
-              onClick={() => onNavigate('/admin/photo')}
-            />
-            <AdminStatCard
-              icon={<Files size={18} />}
-              label="Documents"
-              hindiLabel="दस्तावेज"
-              count={data.documents.length}
-              accentColor="amber"
-              onClick={() => onNavigate('/admin/document')}
-            />
-            <AdminStatCard
-              icon={<Bell size={18} />}
-              label="Notices"
-              hindiLabel="सूचनाएँ"
-              count={data.notices.length}
-              accentColor="gold"
-              onClick={() => onNavigate('/admin/notice')}
-            />
+            <button
+              onClick={() => onNavigate('/')}
+              className="px-3.5 py-1.5 bg-[#FAF8F5] dark:bg-slate-800 border border-[#E8E5DF] dark:border-slate-700 rounded-xl text-[12.5px] font-semibold text-[#16325C] dark:text-[#93C5FD] hover:bg-[#EEF3FA] transition-all tap-active shrink-0 flex items-center gap-1.5"
+            >
+              <Globe size={14} />
+              <span>वेबसाइट देखें</span>
+            </button>
           </div>
         </section>
 
-        {/* 4. Quick Actions Section */}
+        {/* 2. 6 Large, Clear Action Cards */}
         <section>
-          <div className="flex items-center justify-between mb-2.5 px-0.5">
-            <h2 className="text-[14px] font-bold text-[#1F2421] dark:text-white tracking-tight">
-              Quick Actions
-            </h2>
-            <span className="text-[11px] text-[#5C6773] dark:text-gray-400">
-              सीधे नई सामग्री जोड़ें
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <QuickActionCard
-              icon={<PlusCircle size={18} />}
-              title="➕ नया विचार जोड़ें"
-              description="दैनिक प्रेरणादायक विचार लिखें"
+          <div className="grid grid-cols-2 gap-3.5">
+            <button
               onClick={() => onNavigate('/admin/vichar/new')}
-            />
-            <QuickActionCard
-              icon={<VideoIcon size={18} />}
-              title="🎥 वीडियो जोड़ें"
-              description="YouTube व्याख्यान प्रकाशित करें"
+              className="flex flex-col items-center justify-center p-5 bg-white dark:bg-slate-800 border border-[#E8E5DF] dark:border-slate-700 rounded-2xl shadow-2xs hover:border-[#16325C]/30 hover:bg-[#FAF8F5] transition-all group tap-active min-h-[110px]"
+            >
+              <span className="text-[28px] mb-2 group-hover:scale-110 transition-transform">✍️</span>
+              <span className="text-[14.5px] font-bold text-[#1F2421] dark:text-white text-center">
+                विचार जोड़ें
+              </span>
+            </button>
+
+            <button
               onClick={() => onNavigate('/admin/video/new')}
-            />
-            <QuickActionCard
-              icon={<AudioIcon size={18} />}
-              title="🎧 ऑडियो जोड़ें"
-              description="MP3 प्रवचन या संदेश जोड़ें"
+              className="flex flex-col items-center justify-center p-5 bg-white dark:bg-slate-800 border border-[#E8E5DF] dark:border-slate-700 rounded-2xl shadow-2xs hover:border-[#16325C]/30 hover:bg-[#FAF8F5] transition-all group tap-active min-h-[110px]"
+            >
+              <span className="text-[28px] mb-2 group-hover:scale-110 transition-transform">🎥</span>
+              <span className="text-[14.5px] font-bold text-[#1F2421] dark:text-white text-center">
+                वीडियो जोड़ें
+              </span>
+            </button>
+
+            <button
               onClick={() => onNavigate('/admin/audio/new')}
-            />
-            <QuickActionCard
-              icon={<ImagePlus size={18} />}
-              title="🖼️ फोटो जोड़ें"
-              description="आश्रम व कार्यक्रम तस्वीर जोड़ें"
+              className="flex flex-col items-center justify-center p-5 bg-white dark:bg-slate-800 border border-[#E8E5DF] dark:border-slate-700 rounded-2xl shadow-2xs hover:border-[#16325C]/30 hover:bg-[#FAF8F5] transition-all group tap-active min-h-[110px]"
+            >
+              <span className="text-[28px] mb-2 group-hover:scale-110 transition-transform">🎧</span>
+              <span className="text-[14.5px] font-bold text-[#1F2421] dark:text-white text-center">
+                ऑडियो जोड़ें
+              </span>
+            </button>
+
+            <button
               onClick={() => onNavigate('/admin/photo/new')}
-            />
-            <QuickActionCard
-              icon={<FileUp size={18} />}
-              title="📄 दस्तावेज जोड़ें"
-              description="PDF पत्रिका व लेख जोड़ें"
+              className="flex flex-col items-center justify-center p-5 bg-white dark:bg-slate-800 border border-[#E8E5DF] dark:border-slate-700 rounded-2xl shadow-2xs hover:border-[#16325C]/30 hover:bg-[#FAF8F5] transition-all group tap-active min-h-[110px]"
+            >
+              <span className="text-[28px] mb-2 group-hover:scale-110 transition-transform">📷</span>
+              <span className="text-[14.5px] font-bold text-[#1F2421] dark:text-white text-center">
+                फोटो जोड़ें
+              </span>
+            </button>
+
+            <button
               onClick={() => onNavigate('/admin/document/new')}
-            />
-            <QuickActionCard
-              icon={<Megaphone size={18} />}
-              title="📢 सूचना जारी करें"
-              description="महत्वपूर्ण घोषणा जारी करें"
+              className="flex flex-col items-center justify-center p-5 bg-white dark:bg-slate-800 border border-[#E8E5DF] dark:border-slate-700 rounded-2xl shadow-2xs hover:border-[#16325C]/30 hover:bg-[#FAF8F5] transition-all group tap-active min-h-[110px]"
+            >
+              <span className="text-[28px] mb-2 group-hover:scale-110 transition-transform">📄</span>
+              <span className="text-[14.5px] font-bold text-[#1F2421] dark:text-white text-center">
+                दस्तावेज जोड़ें
+              </span>
+            </button>
+
+            <button
               onClick={() => onNavigate('/admin/notice/new')}
-            />
+              className="flex flex-col items-center justify-center p-5 bg-white dark:bg-slate-800 border border-[#E8E5DF] dark:border-slate-700 rounded-2xl shadow-2xs hover:border-[#16325C]/30 hover:bg-[#FAF8F5] transition-all group tap-active min-h-[110px]"
+            >
+              <span className="text-[28px] mb-2 group-hover:scale-110 transition-transform">📢</span>
+              <span className="text-[14.5px] font-bold text-[#1F2421] dark:text-white text-center">
+                सूचना जोड़ें
+              </span>
+            </button>
           </div>
         </section>
 
-        {/* 5. Recent Content Section */}
-        <section>
-          <div className="flex items-center justify-between mb-2.5 px-0.5">
-            <h2 className="text-[14px] font-bold text-[#1F2421] dark:text-white tracking-tight">
-              Recent Content
+        {/* 3. Recent Content Section */}
+        <section className="pt-2">
+          <div className="flex items-center justify-between mb-3 px-0.5">
+            <h2 className="text-[15px] font-bold text-[#1F2421] dark:text-white tracking-tight">
+              हाल की सामग्री
             </h2>
-            <span className="text-[11px] text-[#5C6773] dark:text-gray-400">
-              हाल की सामग्री (क्लिक कर संपादित करें)
+            <span className="text-[12px] text-[#5C6773] dark:text-gray-400 font-medium bg-[#EEF3FA] dark:bg-slate-800 px-2.5 py-0.5 rounded-full border border-[#16325C]/10 dark:border-slate-700">
+              कुल {totalContentCount} आइटम
             </span>
           </div>
 
@@ -313,20 +261,20 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                   अभी कोई हालिया सामग्री नहीं है
                 </p>
                 <p className="text-[12px] text-[#5C6773] dark:text-gray-400">
-                  ऊपर दिए गए Quick Actions से नई सामग्री जोड़ें।
+                  ऊपर दिए गए विकल्पों से नई सामग्री जोड़ें।
                 </p>
               </div>
             )}
           </div>
         </section>
 
-        {/* Footer Note */}
+        {/* Simple Parent Footer Note */}
         <div className="pt-4 border-t border-[#E8E5DF] dark:border-[#334155] text-center">
-          <p className="text-[12px] text-[#8C96A3]">
-            अहिंसा शिक्षा मिशन • Admin Panel Local CMS Prototype (Phase 5C)
+          <p className="text-[11.5px] text-[#8C96A3]">
+            अहिंसा शिक्षा मिशन • वेबसाइट सामग्री प्रबंधक
           </p>
           <p className="text-[11px] text-[#8C96A3] mt-0.5">
-            सभी बदलाव आपके ब्राउज़र में लाइव सुरक्षित हो रहे हैं और तुरंत सार्वजनिक पृष्ठों पर परिलक्षित होते हैं।
+            सभी बदलाव तुरंत सार्वजनिक वेबसाइट पर दिखाई देते हैं।
           </p>
         </div>
       </div>

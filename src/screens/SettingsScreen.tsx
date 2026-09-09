@@ -98,59 +98,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <span className="text-[13px] font-semibold text-[#5C6773] uppercase tracking-wider">
               {t.languageSection}
             </span>
-            <span className="text-[11px] font-mono text-[#16325C] font-semibold bg-[#EEF3FA] px-2 py-0.5 rounded-full border border-[#16325C]/10">
-              {language === 'hinglish' ? 'Hinglish (Default)' : language === 'hi' ? 'हिन्दी' : 'English'}
+            <span className="text-[11px] font-mono text-[#16325C] font-semibold bg-[#EEF3FA] px-2.5 py-0.5 rounded-full border border-[#16325C]/10">
+              {language === 'hi' ? 'हिन्दी' : 'English'}
             </span>
           </div>
 
           <div className="w-full bg-white border border-[#E8E5DF] rounded-2xl p-3 shadow-2xs divide-y divide-[#E8E5DF]/60">
-            {/* Hinglish Option */}
-            <button
-              type="button"
-              onClick={() => setLanguage('hinglish')}
-              className={`w-full min-h-[50px] px-2 py-2 flex items-center justify-between rounded-xl transition-colors tap-active ${
-                language === 'hinglish' ? 'bg-[#FAF8F5]' : 'hover:bg-[#FAF8F5]/60'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-[13px] font-bold ${
-                    language === 'hinglish'
-                      ? 'bg-[#16325C] text-white'
-                      : 'bg-[#EEF3FA] text-[#16325C]'
-                  }`}
-                >
-                  Aa
-                </div>
-                <div className="text-left">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[15px] font-semibold text-[#1F2421]">
-                      Hinglish
-                    </span>
-                    <span className="text-[10px] uppercase font-bold tracking-tight bg-[#2E7D32]/10 text-[#2E7D32] px-1.5 py-0.5 rounded">
-                      Default
-                    </span>
-                  </div>
-                  <span className="text-[12px] text-[#5C6773]">
-                    Natural Roman Hindi
-                  </span>
-                </div>
-              </div>
-
-              <div
-                className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                  language === 'hinglish'
-                    ? 'border-[#16325C] bg-[#16325C]'
-                    : 'border-[#CBD5E1]'
-                }`}
-              >
-                {language === 'hinglish' && (
-                  <span className="w-2 h-2 rounded-full bg-white" />
-                )}
-              </div>
-            </button>
-
-            {/* Hindi Option */}
+            {/* Hindi Option (Default) */}
             <button
               type="button"
               onClick={() => setLanguage('hi')}
@@ -169,9 +123,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   अ
                 </div>
                 <div className="text-left">
-                  <span className="text-[15px] font-semibold text-[#1F2421] block">
-                    हिन्दी
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[15px] font-semibold text-[#1F2421]">
+                      हिन्दी
+                    </span>
+                  </div>
                   <span className="text-[12px] text-[#5C6773]">
                     देवनागरी लिपि
                   </span>
@@ -253,7 +209,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <button
               type="button"
               onClick={() => onNavigate('/mission')}
-              className="w-full min-h-[52px] p-3.5 flex items-center justify-between text-left hover:bg-[#FAF8F5] transition-colors group tap-active"
+              className="w-full min-h-[46px] py-2.5 px-3.5 flex items-center justify-between text-left hover:bg-[#FAF8F5] transition-colors group tap-active"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-9 h-9 rounded-xl bg-[#EEF3FA] text-[#16325C] flex items-center justify-center shrink-0 border border-[#16325C]/10">
@@ -278,7 +234,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <button
               type="button"
               onClick={() => onNavigate('/founder')}
-              className="w-full min-h-[52px] p-3.5 flex items-center justify-between text-left hover:bg-[#FAF8F5] transition-colors group tap-active"
+              className="w-full min-h-[46px] py-2.5 px-3.5 flex items-center justify-between text-left hover:bg-[#FAF8F5] transition-colors group tap-active"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-9 h-9 rounded-xl bg-[#EEF3FA] text-[#16325C] flex items-center justify-center shrink-0 border border-[#16325C]/10">
@@ -303,7 +259,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <button
               type="button"
               onClick={() => onNavigate('/contact')}
-              className="w-full min-h-[52px] p-3.5 flex items-center justify-between text-left hover:bg-[#FAF8F5] transition-colors group tap-active"
+              className="w-full min-h-[46px] py-2.5 px-3.5 flex items-center justify-between text-left hover:bg-[#FAF8F5] transition-colors group tap-active"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-9 h-9 rounded-xl bg-[#EEF3FA] text-[#16325C] flex items-center justify-center shrink-0 border border-[#16325C]/10">
@@ -328,7 +284,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <button
               type="button"
               onClick={() => onNavigate('/links')}
-              className="w-full min-h-[52px] p-3.5 flex items-center justify-between text-left hover:bg-[#FAF8F5] transition-colors group tap-active"
+              className="w-full min-h-[46px] py-2.5 px-3.5 flex items-center justify-between text-left hover:bg-[#FAF8F5] transition-colors group tap-active"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-9 h-9 rounded-xl bg-[#EEF3FA] text-[#16325C] flex items-center justify-center shrink-0 border border-[#16325C]/10">
@@ -356,14 +312,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             ================================================== */}
         <div className="flex flex-col gap-2.5">
           <span className="text-[13px] font-semibold text-[#5C6773] uppercase tracking-wider px-1">
-            प्रशासन (Administration)
+            {t.adminSection}
           </span>
 
           <div className="w-full bg-white border border-[#E8E5DF] rounded-2xl overflow-hidden shadow-2xs">
             <button
               type="button"
               onClick={() => onNavigate('/admin/login')}
-              className="w-full min-h-[52px] p-3.5 flex items-center justify-between text-left hover:bg-[#FAF8F5] transition-colors group tap-active"
+              className="w-full min-h-[46px] py-2.5 px-3.5 flex items-center justify-between text-left hover:bg-[#FAF8F5] transition-colors group tap-active"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-9 h-9 rounded-xl bg-[#EEF3FA] text-[#16325C] flex items-center justify-center shrink-0 border border-[#16325C]/10">
@@ -371,15 +327,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 </div>
                 <div className="min-w-0">
                   <h4 className="text-[15px] font-semibold text-[#1F2421] group-hover:text-[#16325C] transition-colors">
-                    Admin Login
+                    {t.adminTitle}
                   </h4>
                   <p className="text-[12px] text-[#5C6773] truncate">
-                    Mission website manage karne ke liye
+                    {t.adminDesc}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-1.5 text-[#16325C]">
-                <span className="text-[13px] font-semibold hidden xs:inline">Login →</span>
+                <span className="text-[13px] font-semibold hidden xs:inline">{language === 'hi' ? 'लॉगिन' : 'Login'} →</span>
                 <ChevronRight
                   size={18}
                   className="text-[#8C96A3] group-hover:text-[#16325C] shrink-0 transition-transform group-hover:translate-x-0.5"
@@ -389,9 +345,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <Footer className="mt-10" />
     </PageContainer>
   );
 };

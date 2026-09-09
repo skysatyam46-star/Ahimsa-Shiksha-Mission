@@ -24,6 +24,7 @@ interface EmptyStateProps {
   actionText?: string;
   onAction?: () => void;
   className?: string;
+  compact?: boolean;
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
@@ -33,20 +34,27 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   actionText,
   onAction,
   className = '',
+  compact = false,
 }) => {
   return (
     <div
-      className={`w-full py-12 px-6 flex flex-col items-center justify-center text-center bg-white border border-[#E8E5DF] rounded-2xl ${className}`}
+      className={`w-full ${
+        compact ? 'py-5 px-4' : 'py-12 px-6'
+      } flex flex-col items-center justify-center text-center bg-white border border-[#E8E5DF] rounded-2xl ${className}`}
     >
-      <div className="w-14 h-14 rounded-full bg-[#EEF3FA] text-[#16325C] flex items-center justify-center mb-4">
-        {icon || <Sparkles size={24} strokeWidth={1.8} />}
+      <div
+        className={`rounded-full bg-[#EEF3FA] text-[#16325C] flex items-center justify-center ${
+          compact ? 'w-10 h-10 mb-2.5' : 'w-14 h-14 mb-4'
+        }`}
+      >
+        {icon || <Sparkles size={compact ? 18 : 24} strokeWidth={1.8} />}
       </div>
 
-      <h3 className="text-[17px] font-semibold text-[#16325C] mb-1.5 leading-snug">
+      <h3 className={`${compact ? 'text-[15px]' : 'text-[17px]'} font-semibold text-[#16325C] mb-1 leading-snug`}>
         {title}
       </h3>
 
-      <p className="text-[14px] text-[#5C6773] max-w-[320px] leading-relaxed mb-5">
+      <p className={`${compact ? 'text-[13px] mb-3.5' : 'text-[14px] mb-5'} text-[#5C6773] max-w-[320px] leading-relaxed`}>
         {description}
       </p>
 
@@ -68,20 +76,23 @@ export const HomeEmptyState: React.FC<{
   actionText?: string;
   onAction?: () => void;
   className?: string;
+  compact?: boolean;
 }> = ({
   title = 'अभी कोई प्रकाशित सामग्री उपलब्ध नहीं है।',
   description = 'नई सामग्री जल्द यहाँ दिखाई देगी।',
   actionText,
   onAction,
   className = '',
+  compact = false,
 }) => (
   <EmptyState
-    icon={<Sparkles size={24} strokeWidth={1.8} />}
+    icon={<Sparkles size={compact ? 18 : 24} strokeWidth={1.8} />}
     title={title}
     description={description}
     actionText={actionText}
     onAction={onAction}
     className={className}
+    compact={compact}
   />
 );
 
@@ -91,20 +102,23 @@ export const VicharEmptyState: React.FC<{
   actionText?: string;
   onAction?: () => void;
   className?: string;
+  compact?: boolean;
 }> = ({
   title = 'अभी कोई विचार उपलब्ध नहीं है',
   description = 'नए विचार और संदेश जल्द यहाँ प्रकाशित किए जाएँगे।',
   actionText,
   onAction,
   className = '',
+  compact = true,
 }) => (
   <EmptyState
-    icon={<BookOpen size={24} strokeWidth={1.8} />}
+    icon={<BookOpen size={compact ? 18 : 24} strokeWidth={1.8} />}
     title={title}
     description={description}
     actionText={actionText}
     onAction={onAction}
     className={className}
+    compact={compact}
   />
 );
 
@@ -114,20 +128,23 @@ export const VideoEmptyState: React.FC<{
   actionText?: string;
   onAction?: () => void;
   className?: string;
+  compact?: boolean;
 }> = ({
   title = 'अभी कोई वीडियो उपलब्ध नहीं है',
   description = 'नए वीडियो व्याख्यान जल्द यहाँ प्रकाशित किए जाएँगे।',
   actionText,
   onAction,
   className = '',
+  compact = true,
 }) => (
   <EmptyState
-    icon={<Video size={24} strokeWidth={1.8} />}
+    icon={<Video size={compact ? 18 : 24} strokeWidth={1.8} />}
     title={title}
     description={description}
     actionText={actionText}
     onAction={onAction}
     className={className}
+    compact={compact}
   />
 );
 
@@ -137,20 +154,23 @@ export const AudioEmptyState: React.FC<{
   actionText?: string;
   onAction?: () => void;
   className?: string;
+  compact?: boolean;
 }> = ({
   title = 'अभी कोई ऑडियो उपलब्ध नहीं है',
   description = 'नए ऑडियो संदेश यहाँ दिखाई देंगे।',
   actionText,
   onAction,
   className = '',
+  compact = true,
 }) => (
   <EmptyState
-    icon={<Headphones size={24} strokeWidth={1.8} />}
+    icon={<Headphones size={compact ? 18 : 24} strokeWidth={1.8} />}
     title={title}
     description={description}
     actionText={actionText}
     onAction={onAction}
     className={className}
+    compact={compact}
   />
 );
 
@@ -160,20 +180,23 @@ export const PhotoEmptyState: React.FC<{
   actionText?: string;
   onAction?: () => void;
   className?: string;
+  compact?: boolean;
 }> = ({
   title = 'अभी कोई फोटो उपलब्ध नहीं है',
   description = 'मिशन की गतिविधियों की नई तस्वीरें यहाँ दिखाई देंगी।',
   actionText,
   onAction,
   className = '',
+  compact = true,
 }) => (
   <EmptyState
-    icon={<ImageIcon size={24} strokeWidth={1.8} />}
+    icon={<ImageIcon size={compact ? 18 : 24} strokeWidth={1.8} />}
     title={title}
     description={description}
     actionText={actionText}
     onAction={onAction}
     className={className}
+    compact={compact}
   />
 );
 
@@ -183,20 +206,23 @@ export const DocumentEmptyState: React.FC<{
   actionText?: string;
   onAction?: () => void;
   className?: string;
+  compact?: boolean;
 }> = ({
   title = 'अभी कोई दस्तावेज उपलब्ध नहीं है',
   description = 'नए दस्तावेज और अध्ययन सामग्री यहाँ दिखाई देंगे।',
   actionText,
   onAction,
   className = '',
+  compact = true,
 }) => (
   <EmptyState
-    icon={<FileText size={24} strokeWidth={1.8} />}
+    icon={<FileText size={compact ? 18 : 24} strokeWidth={1.8} />}
     title={title}
     description={description}
     actionText={actionText}
     onAction={onAction}
     className={className}
+    compact={compact}
   />
 );
 
@@ -206,20 +232,23 @@ export const NoticeEmptyState: React.FC<{
   actionText?: string;
   onAction?: () => void;
   className?: string;
+  compact?: boolean;
 }> = ({
   title = 'अभी कोई सूचना उपलब्ध नहीं है',
   description = 'मिशन की नई सूचनाएँ और अपडेट यहाँ दिखाई देंगे।',
   actionText,
   onAction,
   className = '',
+  compact = true,
 }) => (
   <EmptyState
-    icon={<Bell size={24} strokeWidth={1.8} />}
+    icon={<Bell size={compact ? 18 : 24} strokeWidth={1.8} />}
     title={title}
     description={description}
     actionText={actionText}
     onAction={onAction}
     className={className}
+    compact={compact}
   />
 );
 
@@ -229,20 +258,23 @@ export const SearchEmptyState: React.FC<{
   actionText?: string;
   onAction?: () => void;
   className?: string;
+  compact?: boolean;
 }> = ({
   title = 'कोई परिणाम नहीं मिला',
   description = 'किसी दूसरे शब्द से खोजने का प्रयास करें।',
   actionText,
   onAction,
   className = '',
+  compact = true,
 }) => (
   <EmptyState
-    icon={<Search size={24} strokeWidth={1.8} />}
+    icon={<Search size={compact ? 18 : 24} strokeWidth={1.8} />}
     title={title}
     description={description}
     actionText={actionText}
     onAction={onAction}
     className={className}
+    compact={compact}
   />
 );
 
@@ -252,20 +284,23 @@ export const LinksEmptyState: React.FC<{
   actionText?: string;
   onAction?: () => void;
   className?: string;
+  compact?: boolean;
 }> = ({
   title = 'अभी कोई महत्वपूर्ण लिंक नहीं है',
   description = 'महत्वपूर्ण लिंक जल्द जोड़े जाएँगे।',
   actionText,
   onAction,
   className = '',
+  compact = true,
 }) => (
   <EmptyState
-    icon={<ExternalLink size={24} strokeWidth={1.8} />}
+    icon={<ExternalLink size={compact ? 18 : 24} strokeWidth={1.8} />}
     title={title}
     description={description}
     actionText={actionText}
     onAction={onAction}
     className={className}
+    compact={compact}
   />
 );
 

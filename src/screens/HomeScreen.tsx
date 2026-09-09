@@ -90,15 +90,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       {/* Welcome Section: Compact peaceful greeting */}
       <section
         id="welcome-section"
-        className="pt-1 pb-3 flex flex-col gap-1 border-b border-[#E8E5DF]/70 mb-4"
+        className="pt-0.5 pb-2.5 flex flex-col gap-0.5 border-b border-[#E8E5DF]/70 mb-3.5"
       >
-        <h2 className="text-[20px] sm:text-[22px] font-bold text-[#16325C] tracking-tight leading-snug">
+        <h2 className="text-[19px] sm:text-[21px] font-bold text-[#16325C] tracking-tight leading-snug">
           {t.welcomeTitle}
         </h2>
-        <p className="text-[13px] font-medium text-[#2E7D32] tracking-wide">
+        <p className="text-[12px] font-semibold text-[#2E7D32] tracking-wide">
           {t.brandTagline}
         </p>
-        <p className="text-[14px] text-[#5C6773] leading-relaxed mt-0.5">
+        <p className="text-[13.5px] text-[#5C6773] leading-relaxed mt-0">
           {t.welcomeSubtitle}
         </p>
       </section>
@@ -110,17 +110,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         tabIndex={0}
         onClick={() => onNavigateToTab('khoj')}
         aria-label="खोजें: विचार, वीडियो और सामग्री"
-        className="w-full h-[48px] bg-white border border-[#E8E5DF] rounded-[12px] px-3.5 flex items-center gap-2.5 text-[#5C6773] text-[14px] cursor-pointer hover:border-[#16325C]/30 hover:bg-[#FAF8F5]/60 transition-colors shadow-2xs tap-active mb-5"
+        className="w-full h-[44px] bg-white border border-[#E8E5DF] rounded-[12px] px-3.5 flex items-center gap-2.5 text-[#5C6773] text-[14px] cursor-pointer hover:border-[#16325C]/30 hover:bg-[#FAF8F5]/60 transition-colors shadow-2xs tap-active mb-4"
       >
-        <Search size={18} className="text-[#5C6773] shrink-0" />
-        <span className="truncate text-[14px]">
+        <Search size={16} className="text-[#5C6773] shrink-0" />
+        <span className="truncate text-[13.5px]">
           {t.searchPlaceholder}
         </span>
       </div>
 
       {/* Main Feed Heading */}
-      <div className="flex items-center justify-between mb-3.5 px-0.5">
-        <h3 className="text-[17px] font-bold text-[#16325C] tracking-tight">
+      <div className="flex items-center justify-between mb-3 px-0.5">
+        <h3 className="text-[16px] font-bold text-[#16325C] tracking-tight">
           {t.newestFirst}
         </h3>
         <button
@@ -235,12 +235,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           })}
         </div>
       ) : (
-        <div className="py-2 mb-4">
+        <div className="py-1 mb-3.5">
           <HomeEmptyState
             title={t.emptyHomeTitle}
             description={t.emptyHomeDesc}
             actionText={t.emptyHomeAction}
             onAction={() => onNavigateToTab('samagri')}
+            compact={true}
           />
         </div>
       )}

@@ -2,6 +2,7 @@ import React from 'react';
 import { Heart, Sparkles, BookOpen, Users, Compass, ShieldCheck } from 'lucide-react';
 import { PageContainer, SectionHeading, BackButton, Footer } from '../components';
 import { useApp } from '../context/AppContext';
+import { useData } from '../context/DataContext';
 
 interface MissionScreenProps {
   onNavigate: (path: string) => void;
@@ -13,6 +14,12 @@ export const MissionScreen: React.FC<MissionScreenProps> = ({
   onBack,
 }) => {
   const { t } = useApp();
+  const { data } = useData();
+
+  const mission = data?.mission;
+  const objectiveText = mission?.objective || mission?.objectiveText || t.ourObjectiveText;
+  const philosophyText = mission?.philosophy || mission?.philosophyText || t.ourPhilosophyText;
+  const effortText = mission?.effort || mission?.effortText || t.ourEffortText;
 
   const pillars = [
     {
@@ -111,8 +118,8 @@ export const MissionScreen: React.FC<MissionScreenProps> = ({
               {t.ourObjectiveTitle}
             </h2>
           </div>
-          <p className="text-[14px] text-[#1F2421] leading-relaxed">
-            {t.ourObjectiveText}
+          <p className="text-[14px] text-[#1F2421] leading-relaxed whitespace-pre-line">
+            {objectiveText}
           </p>
         </div>
 
@@ -126,8 +133,8 @@ export const MissionScreen: React.FC<MissionScreenProps> = ({
               {t.ourPhilosophyTitle}
             </h2>
           </div>
-          <p className="text-[14px] text-[#1F2421] leading-relaxed">
-            {t.ourPhilosophyText}
+          <p className="text-[14px] text-[#1F2421] leading-relaxed whitespace-pre-line">
+            {philosophyText}
           </p>
         </div>
 
@@ -141,8 +148,8 @@ export const MissionScreen: React.FC<MissionScreenProps> = ({
               {t.ourEffortTitle}
             </h2>
           </div>
-          <p className="text-[14px] text-[#1F2421] leading-relaxed">
-            {t.ourEffortText}
+          <p className="text-[14px] text-[#1F2421] leading-relaxed whitespace-pre-line">
+            {effortText}
           </p>
         </div>
       </div>

@@ -47,18 +47,14 @@ export const AdminVicharScreen: React.FC<AdminVicharScreenProps> = ({ onNavigate
   return (
     <PageContainer>
       <AdminPageHeader
-        title="विचार प्रबंधन (Vichar / Messages)"
-        subtitle="दैनिक विचार, संदेश एवं प्रेरणादायक उद्धरण प्रबंधित करें"
-        badge={`${data.vichar.length} Total`}
+        title="विचार सूची"
+        subtitle="वेबसाइट पर दिखने वाले विचारों को बदलें या नया जोड़ें"
+        badge={`कुल ${data.vichar.length}`}
         onBack={() => onNavigate('/admin')}
-        backLabel="Admin Dashboard"
+        backLabel="Dashboard"
         primaryAction={{
-          label: 'नया विचार जोड़ें',
+          label: '✍️ नया विचार जोड़ें',
           onClick: () => onNavigate('/admin/vichar/new'),
-        }}
-        secondaryAction={{
-          label: 'Public View',
-          onClick: () => onNavigate('/vichar'),
         }}
       />
 
@@ -95,7 +91,7 @@ export const AdminVicharScreen: React.FC<AdminVicharScreenProps> = ({ onNavigate
                   : 'text-[#5C6773] dark:text-gray-400 hover:text-[#1F2421]'
               }`}
             >
-              {st === 'all' ? 'All' : st === 'published' ? 'Published' : 'Drafts'}
+              {st === 'all' ? 'सभी (All)' : st === 'published' ? 'प्रकाशित (Published)' : 'ड्राफ्ट (Drafts)'}
             </button>
           ))}
         </div>
@@ -135,11 +131,11 @@ export const AdminVicharScreen: React.FC<AdminVicharScreenProps> = ({ onNavigate
                     }`}
                   >
                     {item.status === 'published' ? <CheckCircle2 size={11} /> : <Clock size={11} />}
-                    {item.status === 'published' ? 'Published' : 'Draft'}
+                    {item.status === 'published' ? 'प्रकाशित' : 'ड्राफ्ट'}
                   </span>
                   <span className="text-[11.5px] font-medium text-[#8C96A3]">{item.date}</span>
                   <span className="text-[11px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase">
-                    {item.language || 'hi'}
+                    {item.language === 'en' ? 'English' : 'हिंदी'}
                   </span>
                 </div>
 
@@ -150,7 +146,7 @@ export const AdminVicharScreen: React.FC<AdminVicharScreenProps> = ({ onNavigate
                   {item.leadParagraph || item.paragraphs[0] || 'विवरण उपलब्ध नहीं'}
                 </p>
                 <span className="text-[11.5px] text-[#8C96A3] mt-1 block">
-                  Author: {item.author || 'अहिंसा शिक्षा मिशन'}
+                  लेखक: {item.author || 'अहिंसा शिक्षा मिशन'}
                 </span>
               </div>
 
@@ -161,7 +157,7 @@ export const AdminVicharScreen: React.FC<AdminVicharScreenProps> = ({ onNavigate
                     type="button"
                     onClick={() => onNavigate(`/vichar/${item.id}`)}
                     className="p-2 text-[#5C6773] dark:text-gray-300 hover:text-[#16325C] dark:hover:text-[#93C5FD] hover:bg-[#EEF3FA] dark:hover:bg-slate-800 rounded-xl transition-colors"
-                    title="Public View"
+                    title="वेबसाइट पर देखें"
                   >
                     <Eye size={16} />
                   </button>
@@ -172,13 +168,13 @@ export const AdminVicharScreen: React.FC<AdminVicharScreenProps> = ({ onNavigate
                   className="inline-flex items-center gap-1 px-3 py-1.5 text-[12px] font-semibold text-[#16325C] dark:text-[#93C5FD] bg-[#EEF3FA] dark:bg-slate-800 hover:bg-[#E2ECF8] rounded-xl transition-colors tap-active"
                 >
                   <Edit3 size={14} />
-                  <span>Edit</span>
+                  <span>बदलाव करें</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setItemToDelete(item)}
                   className="p-2 text-[#DC2626] hover:bg-red-50 dark:hover:bg-red-950/40 rounded-xl transition-colors"
-                  title="Delete"
+                  title="हटाएं"
                 >
                   <Trash2 size={16} />
                 </button>

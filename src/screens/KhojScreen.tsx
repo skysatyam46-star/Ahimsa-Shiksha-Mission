@@ -5,7 +5,6 @@ import {
   SearchField,
   SearchResultCard,
   SearchEmptyState,
-  Footer,
 } from '../components';
 import { useData } from '../context/DataContext';
 import { useApp } from '../context/AppContext';
@@ -174,28 +173,28 @@ export const KhojScreen: React.FC<KhojScreenProps> = ({ onNavigateToDetail }) =>
         onChange={setSearchTerm}
         placeholder={t.searchPlaceholder}
         onClear={() => setSearchTerm('')}
-        className="mb-4"
+        className="mb-3"
       />
 
       {/* 3. Initial Search State */}
       {!hasSearched && (
-        <div className="bg-white border border-[#E8E5DF] rounded-2xl p-4 my-1 flex flex-col gap-3">
+        <div className="bg-white border border-[#E8E5DF] rounded-2xl py-3 px-3.5 my-0.5 flex flex-col gap-2.5">
           <div>
-            <h3 className="text-[15px] font-semibold text-[#16325C]">
+            <h3 className="text-[14.5px] font-semibold text-[#16325C]">
               सुझाए गए विषय
             </h3>
-            <p className="text-[13px] text-[#5C6773] mt-0.5 leading-normal">
+            <p className="text-[12px] text-[#5C6773] mt-0.5 leading-normal">
               सामग्री खोजने हेतु नीचे दिए गए विषयों पर टैप करें:
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2 pt-1">
+          <div className="flex flex-wrap gap-1.5 pt-0.5">
             {suggestions.map((suggestion) => (
               <button
                 key={suggestion}
                 type="button"
                 onClick={() => setSearchTerm(suggestion)}
-                className="px-3.5 py-2 bg-[#FAF8F5] border border-[#E8E5DF] rounded-xl text-[14px] font-medium text-[#16325C] hover:bg-[#EEF3FA] hover:border-[#16325C]/30 tap-active transition-all"
+                className="px-3 py-1.5 bg-[#FAF8F5] border border-[#E8E5DF] rounded-xl text-[13.5px] font-medium text-[#16325C] hover:bg-[#EEF3FA] hover:border-[#16325C]/30 tap-active transition-all"
               >
                 {suggestion}
               </button>
@@ -238,9 +237,6 @@ export const KhojScreen: React.FC<KhojScreenProps> = ({ onNavigateToDetail }) =>
           )}
         </div>
       )}
-
-      {/* 5. Clean Minimal Footer */}
-      <Footer />
     </PageContainer>
   );
 };

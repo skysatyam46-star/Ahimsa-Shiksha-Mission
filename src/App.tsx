@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { MobileShell, NavTabId } from './components';
 import { Logo } from './components/brand/Logo';
 import { AppProvider, useApp } from './context/AppContext';
-import { DataProvider } from './context/DataContext';
+import { DataProvider, useData } from './context/DataContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 import { HomeScreen } from './screens/HomeScreen';
@@ -267,8 +267,9 @@ const getHeaderMeta = (route: AppRoute, t: ReturnType<typeof useApp>['t']): { ti
 
 function AppContent() {
   const [route, setRoute] = useState<AppRoute>({ screen: 'home' });
-  const { t } = useApp();
-  const { user, isAdmin, loading, logout } = useAuth();
+  const { t, language } = useApp();
+  const { user, isAdmin, loading: authLoading, logout } = useAuth();
+  const { loading: dataLoading } = useData();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -320,25 +321,26 @@ function AppContent() {
 
   const isAdminRoute = route.screen.startsWith('admin');
 
-  // Dedicated Admin screens (NO public bottom navigation)
-  if (route.screen === 'admin-login') {
-    if (loading) {
-      return (
-        <div className="min-h-screen bg-[#F0EDE6] sm:py-6 flex justify-center items-start">
-          <div className="w-full max-w-[430px] min-h-screen sm:min-h-[844px] bg-[#FAF8F5] text-[#1F2421] relative flex flex-col justify-center items-center p-6 sm:rounded-[32px] sm:shadow-[0_12px_40px_rgba(22,50,92,0.08)] sm:border sm:border-[#E8E5DF]">
-            <div className="flex flex-col items-center gap-3">
-              <Logo size={56} />
-              <div className="flex items-center gap-2 text-[#16325C] font-semibold text-[14px] mt-2">
-                <Loader2 size={18} className="animate-spin text-[#16325C]" />
-                <span>सुरक्षा सत्यापन हो रहा है…</span>
-              </div>
+  // Unified loading screen for initial fast authentication check
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#F0EDE6] sm:py-6 flex justify-center items-start">
+        <div className="w-full max-w-[430px] min-h-screen sm:min-h-[844px] bg-[#FAF8F5] text-[#1F2421] relative flex flex-col justify-center items-center p-6 sm:rounded-[32px] sm:shadow-[0_12px_40px_rgba(22,50,92,0.08)] sm:border sm:border-[#E8E5DF]">
+          <div className="flex flex-col items-center gap-3">
+            <Logo size={56} className="animate-pulse" />
+            <div className="flex items-center gap-2 text-[#16325C] font-semibold text-[14px] mt-2">
+              <Loader2 size={18} className="animate-spin text-[#16325C]" />
+              <span>{language === 'hi' ? 'लोड हो रहा है...' : 'Loading...'}</span>
             </div>
           </div>
         </div>
-      );
-    }
+      </div>
+    );
+  }
 
-    if (user && isAdmin) {
+  // Dedicated Admin login screen
+  if (route.screen === 'admin-login') {
+    if (isAdmin) {
       return (
         <AdminDashboardScreen
           onNavigate={navigateTo}
@@ -356,33 +358,15 @@ function AppContent() {
     );
   }
 
-  // Guard all other /admin/* routes: must be authenticated and have active admin role
-  if (isAdminRoute) {
-    if (loading) {
-      return (
-        <div className="min-h-screen bg-[#F0EDE6] sm:py-6 flex justify-center items-start">
-          <div className="w-full max-w-[430px] min-h-screen sm:min-h-[844px] bg-[#FAF8F5] text-[#1F2421] relative flex flex-col justify-center items-center p-6 sm:rounded-[32px] sm:shadow-[0_12px_40px_rgba(22,50,92,0.08)] sm:border sm:border-[#E8E5DF]">
-            <div className="flex flex-col items-center gap-3">
-              <Logo size={56} />
-              <div className="flex items-center gap-2 text-[#16325C] font-semibold text-[14px] mt-2">
-                <Loader2 size={18} className="animate-spin text-[#16325C]" />
-                <span>Admin सत्र की जांच हो रही है…</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    if (!user || !isAdmin) {
-      return (
-        <AdminLoginScreen
-          onLoginSuccess={() => navigateTo('/admin')}
-          onBack={() => navigateTo('/settings')}
-          onNavigate={navigateTo}
-        />
-      );
-    }
+  // Guard all other /admin/* routes: must be authenticated as admin
+  if (isAdminRoute && !isAdmin) {
+    return (
+      <AdminLoginScreen
+        onLoginSuccess={() => navigateTo('/admin')}
+        onBack={() => navigateTo('/settings')}
+        onNavigate={navigateTo}
+      />
+    );
   }
 
   if (route.screen === 'admin') {
@@ -406,8 +390,7 @@ function AppContent() {
 
   if (route.screen === 'admin-vichar-new') {
     return (
-      <AdminVicharFormScreen
-        onNavigate={navigateTo}
+      <AdminVicharFormScreen key="new" onNavigate={navigateTo}
         onLogout={handleAdminLogout}
       />
     );
@@ -415,9 +398,7 @@ function AppContent() {
 
   if (route.screen === 'admin-vichar-edit') {
     return (
-      <AdminVicharFormScreen
-        id={route.id}
-        onNavigate={navigateTo}
+      <AdminVicharFormScreen key={`edit-${route.id}`} id={route.id} onNavigate={navigateTo}
         onLogout={handleAdminLogout}
       />
     );
@@ -434,8 +415,7 @@ function AppContent() {
 
   if (route.screen === 'admin-video-new') {
     return (
-      <AdminVideoFormScreen
-        onNavigate={navigateTo}
+      <AdminVideoFormScreen key="new" onNavigate={navigateTo}
         onLogout={handleAdminLogout}
       />
     );
@@ -443,9 +423,7 @@ function AppContent() {
 
   if (route.screen === 'admin-video-edit') {
     return (
-      <AdminVideoFormScreen
-        id={route.id}
-        onNavigate={navigateTo}
+      <AdminVideoFormScreen key={`edit-${route.id}`} id={route.id} onNavigate={navigateTo}
         onLogout={handleAdminLogout}
       />
     );
@@ -462,8 +440,7 @@ function AppContent() {
 
   if (route.screen === 'admin-audio-new') {
     return (
-      <AdminAudioFormScreen
-        onNavigate={navigateTo}
+      <AdminAudioFormScreen key="new" onNavigate={navigateTo}
         onLogout={handleAdminLogout}
       />
     );
@@ -471,9 +448,7 @@ function AppContent() {
 
   if (route.screen === 'admin-audio-edit') {
     return (
-      <AdminAudioFormScreen
-        id={route.id}
-        onNavigate={navigateTo}
+      <AdminAudioFormScreen key={`edit-${route.id}`} id={route.id} onNavigate={navigateTo}
         onLogout={handleAdminLogout}
       />
     );
@@ -490,8 +465,7 @@ function AppContent() {
 
   if (route.screen === 'admin-photo-new') {
     return (
-      <AdminPhotoFormScreen
-        onNavigate={navigateTo}
+      <AdminPhotoFormScreen key="new" onNavigate={navigateTo}
         onLogout={handleAdminLogout}
       />
     );
@@ -499,9 +473,7 @@ function AppContent() {
 
   if (route.screen === 'admin-photo-edit') {
     return (
-      <AdminPhotoFormScreen
-        id={route.id}
-        onNavigate={navigateTo}
+      <AdminPhotoFormScreen key={`edit-${route.id}`} id={route.id} onNavigate={navigateTo}
         onLogout={handleAdminLogout}
       />
     );
@@ -518,8 +490,7 @@ function AppContent() {
 
   if (route.screen === 'admin-document-new') {
     return (
-      <AdminDocumentFormScreen
-        onNavigate={navigateTo}
+      <AdminDocumentFormScreen key="new" onNavigate={navigateTo}
         onLogout={handleAdminLogout}
       />
     );
@@ -527,9 +498,7 @@ function AppContent() {
 
   if (route.screen === 'admin-document-edit') {
     return (
-      <AdminDocumentFormScreen
-        id={route.id}
-        onNavigate={navigateTo}
+      <AdminDocumentFormScreen key={`edit-${route.id}`} id={route.id} onNavigate={navigateTo}
         onLogout={handleAdminLogout}
       />
     );
@@ -546,8 +515,7 @@ function AppContent() {
 
   if (route.screen === 'admin-notice-new') {
     return (
-      <AdminNoticeFormScreen
-        onNavigate={navigateTo}
+      <AdminNoticeFormScreen key="new" onNavigate={navigateTo}
         onLogout={handleAdminLogout}
       />
     );
@@ -555,9 +523,7 @@ function AppContent() {
 
   if (route.screen === 'admin-notice-edit') {
     return (
-      <AdminNoticeFormScreen
-        id={route.id}
-        onNavigate={navigateTo}
+      <AdminNoticeFormScreen key={`edit-${route.id}`} id={route.id} onNavigate={navigateTo}
         onLogout={handleAdminLogout}
       />
     );
@@ -626,129 +592,140 @@ function AppContent() {
       }}
       isSettingsActive={route.screen === 'settings'}
     >
-      {route.screen === 'home' && (
-        <HomeScreen
-          onNavigateToTab={handleNavigateToTab}
-          onNavigateToRoute={navigateTo}
-        />
-      )}
+      {dataLoading ? (
+        <div className="flex flex-col items-center justify-center py-16 px-6 min-h-[300px]" id="app-loading-container">
+          <Loader2 size={32} className="animate-spin text-[#16325C]" />
+          <span className="text-sm text-[#1F2421]/60 mt-3 font-medium">
+            {language === 'hi' ? 'लोड हो रहा है...' : 'Loading...'}
+          </span>
+        </div>
+      ) : (
+        <>
+          {route.screen === 'home' && (
+            <HomeScreen
+              onNavigateToTab={handleNavigateToTab}
+              onNavigateToRoute={navigateTo}
+            />
+          )}
 
-      {route.screen === 'vichar' && (
-        <VicharScreen onNavigateToDetail={navigateTo} />
-      )}
+          {route.screen === 'vichar' && (
+            <VicharScreen onNavigateToDetail={navigateTo} />
+          )}
 
-      {route.screen === 'video' && (
-        <VideoScreen onNavigateToDetail={navigateTo} />
-      )}
+          {route.screen === 'video' && (
+            <VideoScreen onNavigateToDetail={navigateTo} />
+          )}
 
-      {route.screen === 'samagri' && (
-        <SamagriScreen onNavigateToDetail={navigateTo} />
-      )}
+          {route.screen === 'samagri' && (
+            <SamagriScreen onNavigateToDetail={navigateTo} />
+          )}
 
-      {route.screen === 'khoj' && (
-        <KhojScreen onNavigateToDetail={navigateTo} />
-      )}
+          {route.screen === 'khoj' && (
+            <KhojScreen onNavigateToDetail={navigateTo} />
+          )}
 
-      {/* Content Type List Screens */}
-      {route.screen === 'audio' && (
-        <AudioListScreen onNavigateToDetail={navigateTo} />
-      )}
+          {/* Content Type List Screens */}
+          {route.screen === 'audio' && (
+            <AudioListScreen onNavigateToDetail={navigateTo} />
+          )}
 
-      {route.screen === 'photo' && (
-        <PhotoListScreen onNavigateToDetail={navigateTo} />
-      )}
+          {route.screen === 'photo' && (
+            <PhotoListScreen onNavigateToDetail={navigateTo} />
+          )}
 
-      {route.screen === 'document' && (
-        <DocumentListScreen onNavigateToDetail={navigateTo} />
-      )}
+          {route.screen === 'document' && (
+            <DocumentListScreen onNavigateToDetail={navigateTo} />
+          )}
 
-      {route.screen === 'notice' && (
-        <NoticeListScreen onNavigateToDetail={navigateTo} />
-      )}
+          {route.screen === 'notice' && (
+            <NoticeListScreen onNavigateToDetail={navigateTo} />
+          )}
 
-      {/* Phase 5A Settings & Information Screens */}
-      {route.screen === 'settings' && (
-        <SettingsScreen
-          onNavigate={navigateTo}
-          onBack={handleBack}
-        />
-      )}
+          {/* Phase 5A Settings & Information Screens */}
+          {route.screen === 'settings' && (
+            <SettingsScreen
+              onNavigate={navigateTo}
+              onBack={handleBack}
+            />
+          )}
 
-      {route.screen === 'mission' && (
-        <MissionScreen
-          onNavigate={navigateTo}
-          onBack={handleBack}
-        />
-      )}
+          {route.screen === 'mission' && (
+            <MissionScreen
+              onNavigate={navigateTo}
+              onBack={handleBack}
+            />
+          )}
 
-      {route.screen === 'founder' && (
-        <FounderScreen
-          onNavigate={navigateTo}
-          onBack={handleBack}
-        />
-      )}
+          {route.screen === 'founder' && (
+            <FounderScreen
+              onNavigate={navigateTo}
+              onBack={handleBack}
+            />
+          )}
 
-      {route.screen === 'contact' && (
-        <ContactScreen
-          onNavigate={navigateTo}
-          onBack={handleBack}
-        />
-      )}
+          {route.screen === 'contact' && (
+            <ContactScreen
+              onNavigate={navigateTo}
+              onBack={handleBack}
+            />
+          )}
 
-      {route.screen === 'links' && (
-        <LinksScreen
-          onNavigate={navigateTo}
-          onBack={handleBack}
-        />
-      )}
+          {route.screen === 'links' && (
+            <LinksScreen
+              onNavigate={navigateTo}
+              onBack={handleBack}
+            />
+          )}
 
-      {/* Detail Screens */}
-      {route.screen === 'vichar-detail' && (
-        <MessageDetailScreen
-          id={route.id}
-          onBack={handleBack}
-          onNavigateToMessage={(msgId) => navigateTo(`/vichar/${msgId}`)}
-        />
-      )}
+          {/* Detail Screens */}
+          {route.screen === 'vichar-detail' && (
+            <MessageDetailScreen
+              id={route.id}
+              onBack={handleBack}
+              onNavigateToMessage={(msgId) => navigateTo(`/vichar/${msgId}`)}
+            />
+          )}
 
-      {route.screen === 'video-detail' && (
-        <VideoDetailScreen
-          id={route.id}
-          onBack={handleBack}
-          onNavigateToVideo={(vidId) => navigateTo(`/video/${vidId}`)}
-        />
-      )}
+          {route.screen === 'video-detail' && (
+            <VideoDetailScreen
+              id={route.id}
+              onBack={handleBack}
+              onNavigateToVideo={(vidId) => navigateTo(`/video/${vidId}`)}
+            />
+          )}
 
-      {route.screen === 'audio-detail' && (
-        <AudioDetailScreen
-          id={route.id}
-          onBack={handleBack}
-          onNavigateToAudio={(audId) => navigateTo(`/audio/${audId}`)}
-        />
-      )}
+          {route.screen === 'audio-detail' && (
+            <AudioDetailScreen
+              id={route.id}
+              onBack={handleBack}
+              onNavigateToAudio={(audId) => navigateTo(`/audio/${audId}`)}
+            />
+          )}
 
-      {route.screen === 'photo-detail' && (
-        <PhotoDetailScreen
-          id={route.id}
-          onBack={handleBack}
-          onNavigateToPhoto={(phoId) => navigateTo(`/photo/${phoId}`)}
-        />
-      )}
+          {route.screen === 'photo-detail' && (
+            <PhotoDetailScreen
+              id={route.id}
+              onBack={handleBack}
+              onNavigateToPhoto={(phoId) => navigateTo(`/photo/${phoId}`)}
+            />
+          )}
 
-      {route.screen === 'document-detail' && (
-        <DocumentDetailScreen
-          id={route.id}
-          onBack={handleBack}
-          onNavigateToDocument={(docId) => navigateTo(`/document/${docId}`)}
-        />
-      )}
+          {route.screen === 'document-detail' && (
+            <DocumentDetailScreen
+              id={route.id}
+              onBack={handleBack}
+              onNavigateToDocument={(docId) => navigateTo(`/document/${docId}`)}
+            />
+          )}
 
-      {route.screen === 'notice-detail' && (
-        <NoticeDetailScreen
-          id={route.id}
-          onBack={handleBack}
-          onNavigateToNotice={(notId) => navigateTo(`/notice/${notId}`)}
-        />
+          {route.screen === 'notice-detail' && (
+            <NoticeDetailScreen
+              id={route.id}
+              onBack={handleBack}
+              onNavigateToNotice={(notId) => navigateTo(`/notice/${notId}`)}
+            />
+          )}
+        </>
       )}
     </MobileShell>
   );

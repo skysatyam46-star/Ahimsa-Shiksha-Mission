@@ -10,6 +10,7 @@ export interface BaseContentItem {
   status: ContentStatus;
   createdAt: string;
   updatedAt: string;
+  publishedAt?: string;
   language?: ContentLanguage;
 }
 
@@ -33,7 +34,9 @@ export interface VideoItem extends BaseContentItem {
   speaker: string;
   duration: string;
   youtubeUrl: string;
+  youtubeVideoId?: string;
   thumbnailUrl: string;
+  thumbnailFileId?: string;
   description: string;
   topics?: string[];
 }
@@ -50,6 +53,7 @@ export interface AudioItem extends BaseContentItem {
   fileSize?: string;
   fileType?: string;
   audioUrl?: string;
+  audioFileId?: string;
   topics?: string[];
 }
 
@@ -59,6 +63,7 @@ export interface PhotoItem extends BaseContentItem {
   caption: string;
   description: string;
   imageUrl: string;
+  imageFileId?: string;
   location?: string;
 }
 
@@ -73,6 +78,7 @@ export interface DocumentItem extends BaseContentItem {
   chapters: string[];
   fileName?: string;
   pdfUrl?: string;
+  fileId?: string;
   category?: string;
 }
 
@@ -191,8 +197,6 @@ export function generateUniqueId(prefix: string = 'item'): string {
 
 // Initial seed data generator (Starts empty in production as per Phase 5D)
 export function getInitialSeedData(): AppStoreData {
-  const nowIso = new Date().toISOString();
-
   return {
     version: '2.0.0',
     vichar: [],
@@ -202,86 +206,18 @@ export function getInitialSeedData(): AppStoreData {
     documents: [],
     notices: [],
     links: [],
-    mission: {
-      title: 'अहिंसा शिक्षा मिशन',
-      subtitle: '',
-      objectiveTitle: 'हमारा उद्देश्य',
-      objectiveText: '',
-      objective: '',
-      philosophyTitle: 'हमारा दर्शन',
-      philosophyText: '',
-      philosophy: '',
-      effortTitle: 'हमारा प्रयास',
-      effortText: '',
-      effort: '',
-      additionalInfo: '',
-      corePillars: [],
-      pillars: [],
-      updatedAt: nowIso,
-    },
-    founder: {
-      name: '',
-      role: '',
-      title: '',
-      photoUrl: '',
-      quote: '',
-      bio: '',
-      message: '',
-      bioTitle: 'जीवन परिचय',
-      bioText: '',
-      messageTitle: 'संस्थापक का संदेश',
-      messageText: '',
-      updatedAt: nowIso,
-    },
-    contact: {
-      phone: '',
-      email: '',
-      address: '',
-      officeHours: '',
-      guidance: '',
-      note: '',
-      mapEmbedUrl: '',
-      additionalInfo: '',
-      updatedAt: nowIso,
-    },
+    mission: { title: "", subtitle: "", updatedAt: "" },
+    founder: { name: "", role: "", updatedAt: "" },
+    contact: { email: "", phone: "", address: "", updatedAt: "" }
   };
 }
 
-// Load data from LocalStorage or seed defaults
+// Load initial data (Starts completely empty for Phase B2 Firestore foundation)
 export function loadStoreFromStorage(): AppStoreData {
-  if (typeof window === 'undefined') {
-    return getInitialSeedData();
-  }
-
-  try {
-    const raw = localStorage.getItem(CMS_STORAGE_KEY);
-    if (!raw) {
-      const initial = getInitialSeedData();
-      localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(initial));
-      return initial;
-    }
-    const parsed = JSON.parse(raw);
-    const initial = getInitialSeedData();
-    return {
-      version: parsed.version || '2.0.0',
-      vichar: Array.isArray(parsed.vichar) ? parsed.vichar : initial.vichar,
-      videos: Array.isArray(parsed.videos) ? parsed.videos : initial.videos,
-      audio: Array.isArray(parsed.audio) ? parsed.audio : initial.audio,
-      photos: Array.isArray(parsed.photos) ? parsed.photos : initial.photos,
-      documents: Array.isArray(parsed.documents) ? parsed.documents : initial.documents,
-      notices: Array.isArray(parsed.notices) ? parsed.notices : initial.notices,
-      links: Array.isArray(parsed.links) ? parsed.links : initial.links,
-      mission: parsed.mission ? { ...initial.mission, ...parsed.mission } : initial.mission,
-      founder: parsed.founder ? { ...initial.founder, ...parsed.founder } : initial.founder,
-      contact: parsed.contact ? { ...initial.contact, ...parsed.contact } : initial.contact,
-    };
-  } catch (err) {
-    console.error('Error loading CMS data from localStorage:', err);
-    return getInitialSeedData();
-  }
+  return getInitialSeedData();
 }
 
-// Save data to LocalStorage
+// Save data to LocalStorage cache (optional secondary cache)
 export function saveStoreToStorage(data: AppStoreData): void {
   if (typeof window !== 'undefined') {
     try {

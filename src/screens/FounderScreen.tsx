@@ -1,7 +1,8 @@
 import React from 'react';
-import { User, Quote, Sparkles, Info, BookOpen } from 'lucide-react';
+import { User, Quote, Sparkles, BookOpen } from 'lucide-react';
 import { PageContainer, SectionHeading, BackButton, Footer } from '../components';
 import { useApp } from '../context/AppContext';
+import { useData } from '../context/DataContext';
 
 interface FounderScreenProps {
   onNavigate: (path: string) => void;
@@ -13,6 +14,14 @@ export const FounderScreen: React.FC<FounderScreenProps> = ({
   onBack,
 }) => {
   const { t } = useApp();
+  const { data } = useData();
+
+  const founder = data?.founder;
+  const founderName = founder?.name || t.founderName;
+  const founderRole = founder?.role || 'संस्थापक • अहिंसा शिक्षा मिशन';
+  const bioText = founder?.bio || founder?.bioText || t.founderBioPlaceholder;
+  const messageText = founder?.message || founder?.messageText || t.founderMessagePlaceholder;
+  const photoUrl = founder?.photoUrl;
 
   return (
     <PageContainer>
@@ -29,36 +38,36 @@ export const FounderScreen: React.FC<FounderScreenProps> = ({
         className="mb-4"
       />
 
-      {/* Notice regarding placeholder information */}
-      <div className="w-full bg-[#FEF8EC] border border-[#D97706]/20 rounded-2xl p-3 mb-5 flex items-start gap-2.5">
-        <Info size={16} className="text-[#D97706] shrink-0 mt-0.5" />
-        <p className="text-[12px] text-[#8C5D07] leading-relaxed">
-          {t.placeholderNotice}
-        </p>
-      </div>
-
       <div className="flex flex-col gap-5">
         {/* Founder Card with Avatar & Name */}
         <div className="w-full bg-white border border-[#E8E5DF] rounded-2xl p-5 shadow-2xs flex flex-col items-center text-center">
-          {/* Photo Placeholder Frame */}
+          {/* Photo Frame */}
           <div className="relative mb-3.5">
-            <div className="w-24 h-24 rounded-full bg-[#FAF8F5] border-2 border-[#16325C]/20 flex items-center justify-center text-[#16325C] shadow-inner">
-              <User size={48} strokeWidth={1.4} className="text-[#5C6773]" />
-            </div>
+            {photoUrl ? (
+              <img
+                src={photoUrl}
+                alt={founderName}
+                className="w-24 h-24 rounded-full object-cover border-2 border-[#16325C]/20 shadow-md"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-[#FAF8F5] border-2 border-[#16325C]/20 flex items-center justify-center text-[#16325C] shadow-inner">
+                <User size={48} strokeWidth={1.4} className="text-[#5C6773]" />
+              </div>
+            )}
             <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[#16325C] text-white flex items-center justify-center shadow-xs">
               <Sparkles size={14} />
             </div>
           </div>
 
           <h2 className="text-[19px] font-bold text-[#1F2421] tracking-tight mb-0.5">
-            {t.founderName}
+            {founderName}
           </h2>
           <span className="text-[12.5px] font-medium text-[#5C6773]">
-            संस्थापक • अहिंसा शिक्षा मिशन
+            {founderRole}
           </span>
         </div>
 
-        {/* Short Biography Placeholder */}
+        {/* Biography */}
         <div className="bg-white border border-[#E8E5DF] rounded-2xl p-4 shadow-2xs">
           <div className="flex items-center gap-2 mb-2.5">
             <div className="w-7 h-7 rounded-lg bg-[#EEF3FA] text-[#16325C] flex items-center justify-center">
@@ -68,12 +77,12 @@ export const FounderScreen: React.FC<FounderScreenProps> = ({
               {t.founderBioTitle}
             </h3>
           </div>
-          <p className="text-[14px] text-[#1F2421] leading-relaxed">
-            {t.founderBioPlaceholder}
+          <p className="text-[14px] text-[#1F2421] leading-relaxed whitespace-pre-line">
+            {bioText}
           </p>
         </div>
 
-        {/* Founder's Message / Vichar */}
+        {/* Founder's Message */}
         <div className="bg-gradient-to-b from-[#EEF3FA] to-[#FAF8F5] border border-[#16325C]/15 rounded-2xl p-4.5 shadow-2xs relative">
           <Quote
             size={32}
@@ -82,8 +91,8 @@ export const FounderScreen: React.FC<FounderScreenProps> = ({
           <h3 className="text-[14px] font-bold text-[#16325C] mb-2 uppercase tracking-wide">
             {t.founderMessageTitle}
           </h3>
-          <blockquote className="text-[15px] font-medium text-[#1F2421] leading-relaxed italic">
-            {t.founderMessagePlaceholder}
+          <blockquote className="text-[15px] font-medium text-[#1F2421] leading-relaxed italic whitespace-pre-line">
+            {messageText}
           </blockquote>
         </div>
       </div>

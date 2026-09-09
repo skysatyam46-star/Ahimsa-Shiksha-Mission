@@ -23,6 +23,7 @@ export const VideoDetailScreen: React.FC<VideoDetailScreenProps> = ({
   onNavigateToVideo,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [showSimulatedPlayNotice, setShowSimulatedPlayNotice] = useState(false);
   const { getVideoById, getPublishedVideos } = useData();
 
@@ -43,6 +44,18 @@ export const VideoDetailScreen: React.FC<VideoDetailScreenProps> = ({
       </PageContainer>
     );
   }
+
+  const getYoutubeEmbedUrl = (url?: string, videoId?: string) => {
+    if (videoId && /^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+      return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+    }
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return match && match[2].length === 11 ? `https://www.youtube.com/embed/${match[2]}?autoplay=1` : null;
+  };
+
+  const embedUrl = getYoutubeEmbedUrl(video.youtubeUrl, video.youtubeVideoId);
 
   const relatedVideos = getPublishedVideos()
     .filter((v) => v.id !== id)
@@ -93,38 +106,58 @@ export const VideoDetailScreen: React.FC<VideoDetailScreenProps> = ({
           <DateLabel date={video.date} />
         </div>
 
-        {/* 16:9 Future YouTube Player Canvas */}
+        {/* 16:9 YouTube Player Canvas */}
         <div
           role="button"
           tabIndex={0}
-          onClick={() => setShowSimulatedPlayNotice(true)}
+          onClick={() => {
+            if (embedUrl) {
+              setIsPlaying(true);
+            } else {
+              setShowSimulatedPlayNotice(true);
+            }
+          }}
           aria-label={`वीडियो चलाएं: ${video.title}`}
           className="relative w-full aspect-16/9 rounded-2xl overflow-hidden bg-[#16325C] border border-[#16325C]/20 shadow-md group cursor-pointer flex items-center justify-center"
         >
-          {/* Background thumbnail image */}
-          <img
-            src={video.thumbnailUrl}
-            alt={video.title}
-            className="w-full h-full object-cover opacity-85 group-hover:scale-102 transition-transform duration-300"
-          />
+          {isPlaying && embedUrl ? (
+            <iframe
+              src={embedUrl}
+              title={video.title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="w-full h-full border-0"
+            />
+          ) : (
+            <>
+              {/* Background thumbnail image */}
+              <img
+                src={video.thumbnailUrl || 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=800&q=80'}
+                alt={video.title}
+                className="w-full h-full object-cover opacity-85 group-hover:scale-102 transition-transform duration-300"
+              />
 
-          {/* Dark scrim gradient */}
-          <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-black/30 pointer-events-none" />
+              {/* Dark scrim gradient */}
+              <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-black/30 pointer-events-none" />
 
-          {/* Center Big Play Button (16:9 Placeholder aesthetic) */}
-          <div className="relative z-10 w-16 h-16 rounded-full bg-white/95 text-[#16325C] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200">
-            <Play size={28} fill="currentColor" className="ml-1 text-[#16325C]" />
-          </div>
+              {/* Center Big Play Button */}
+              <div className="relative z-10 w-16 h-16 rounded-full bg-white/95 text-[#16325C] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200">
+                <Play size={28} fill="currentColor" className="ml-1 text-[#16325C]" />
+              </div>
 
-          {/* Duration Badge Bottom Right */}
-          <span className="absolute bottom-2.5 right-2.5 px-2 py-0.5 bg-black/75 text-white font-mono text-[12px] font-medium rounded-md backdrop-blur-xs">
-            {video.duration}
-          </span>
+              {/* Duration Badge Bottom Right */}
+              {video.duration && (
+                <span className="absolute bottom-2.5 right-2.5 px-2 py-0.5 bg-black/75 text-white font-mono text-[12px] font-medium rounded-md backdrop-blur-xs">
+                  {video.duration}
+                </span>
+              )}
 
-          {/* Future YouTube Placeholder Watermark */}
-          <span className="absolute top-2.5 left-2.5 px-2 py-0.5 bg-black/60 text-white/90 text-[11px] font-medium rounded-md backdrop-blur-xs">
-            वीडियो प्लेयर
-          </span>
+              {/* YouTube Tag */}
+              <span className="absolute top-2.5 left-2.5 px-2 py-0.5 bg-black/60 text-white/90 text-[11px] font-medium rounded-md backdrop-blur-xs">
+                YouTube वीडियो
+              </span>
+            </>
+          )}
         </div>
 
         {/* Simulated notice banner on tap */}

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import { useAuth } from './AuthContext';
 import {
   AppStoreData,
   VicharItem,
@@ -11,8 +12,6 @@ import {
   MissionData,
   FounderData,
   ContactData,
-  loadStoreFromStorage,
-  saveStoreToStorage,
   getInitialSeedData,
   generateUniqueId,
   getFormattedCurrentDate,
@@ -42,6 +41,7 @@ export interface PublicSearchResult {
 
 interface DataContextType {
   data: AppStoreData;
+  loading: boolean;
   counts: {
     vichar: number;
     videos: number;
@@ -118,17 +118,159 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [data, setData] = useState<AppStoreData>(() => loadStoreFromStorage());
+// Helper for API saving
+const saveContentItemToApi = async (item: any) => {
+  const res = await fetch('/api/admin/content', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(item),
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    const msg = errData.error || 'Failed to save content item to Firestore';
+    alert("Error: " + msg);
+    window.dispatchEvent(new Event('refetch-data'));
+    throw new Error(msg);
+  }
+  return await res.json();
+};
 
-  // Save to localStorage on changes
-  const updateStore = useCallback((updater: (prev: AppStoreData) => AppStoreData) => {
-    setData((prev) => {
-      const next = updater(prev);
-      saveStoreToStorage(next);
-      return next;
-    });
-  }, []);
+const deleteContentItemFromApi = async (id: string) => {
+  const res = await fetch(`/api/admin/content/${id}`, { method: 'DELETE' });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    const msg = errData.error || 'Failed to delete content item from Firestore';
+    alert("Error: " + msg);
+    window.dispatchEvent(new Event('refetch-data'));
+    throw new Error(msg);
+  }
+};
+
+const saveLinkToApi = async (item: any) => {
+  const res = await fetch('/api/admin/links', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(item),
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    const msg = errData.error || 'Failed to save link to Firestore';
+    alert("Error: " + msg);
+    window.dispatchEvent(new Event('refetch-data'));
+    throw new Error(msg);
+  }
+};
+
+const deleteLinkFromApi = async (id: string) => {
+  const res = await fetch(`/api/admin/links/${id}`, { method: 'DELETE' });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    const msg = errData.error || 'Failed to delete link from Firestore';
+    alert("Error: " + msg);
+    window.dispatchEvent(new Event('refetch-data'));
+    throw new Error(msg);
+  }
+};
+
+const saveSettingsDocToApi = async (docId: string, payload: any) => {
+  const res = await fetch(`/api/admin/settings/${docId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    const msg = errData.error || `Failed to save ${docId} settings to Firestore`;
+    alert("Error: " + msg);
+    window.dispatchEvent(new Event('refetch-data'));
+    throw new Error(msg);
+  }
+};
+
+export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAdmin } = useAuth();
+  const [loading, setLoading] = useState<boolean>(true);
+  const [data, setData] = useState<AppStoreData>(() => getInitialSeedData());
+
+  // Load store from Firestore API on mount and whenever admin login status changes
+  useEffect(() => {
+    let isMounted = true;
+    
+    const handleRefetch = () => {
+      fetchFirestoreData();
+    };
+    window.addEventListener('refetch-data', handleRefetch);
+    setLoading(true);
+
+    const fetchFirestoreData = async () => {
+      try {
+        if (isAdmin) {
+          console.info('[DataContext] Fetching Admin CMS data (drafts + published) from Firestore...');
+          const res = await fetch('/api/admin/get-data');
+          if (res.ok) {
+            const result = await res.json();
+            if (result && result.success && result.data && isMounted) {
+              const initial = getInitialSeedData();
+              const merged: AppStoreData = {
+                version: result.data.version || '2.0.0',
+                vichar: Array.isArray(result.data.vichar) ? result.data.vichar : [],
+                videos: Array.isArray(result.data.videos) ? result.data.videos : [],
+                audio: Array.isArray(result.data.audio) ? result.data.audio : [],
+                photos: Array.isArray(result.data.photos) ? result.data.photos : [],
+                documents: Array.isArray(result.data.documents) ? result.data.documents : [],
+                notices: Array.isArray(result.data.notices) ? result.data.notices : [],
+                links: Array.isArray(result.data.links) ? result.data.links : [],
+                mission: result.data.mission ? { ...initial.mission, ...result.data.mission } : initial.mission,
+                founder: result.data.founder ? { ...initial.founder, ...result.data.founder } : initial.founder,
+                contact: result.data.contact ? { ...initial.contact, ...result.data.contact } : initial.contact,
+              };
+              setData(merged);
+              setLoading(false);
+              return;
+            }
+          }
+        } else {
+          console.info('[DataContext] Fetching Public CMS data (published only) from Firestore...');
+          const res = await fetch('/api/get-public-data');
+          if (res.ok) {
+            const publicStore = await res.json();
+            if (publicStore && isMounted) {
+              const initial = getInitialSeedData();
+              const merged: AppStoreData = {
+                version: publicStore.version || '2.0.0',
+                vichar: Array.isArray(publicStore.vichar) ? publicStore.vichar : [],
+                videos: Array.isArray(publicStore.videos) ? publicStore.videos : [],
+                audio: Array.isArray(publicStore.audio) ? publicStore.audio : [],
+                photos: Array.isArray(publicStore.photos) ? publicStore.photos : [],
+                documents: Array.isArray(publicStore.documents) ? publicStore.documents : [],
+                notices: Array.isArray(publicStore.notices) ? publicStore.notices : [],
+                links: Array.isArray(publicStore.links) ? publicStore.links : [],
+                mission: publicStore.mission ? { ...initial.mission, ...publicStore.mission } : initial.mission,
+                founder: publicStore.founder ? { ...initial.founder, ...publicStore.founder } : initial.founder,
+                contact: publicStore.contact ? { ...initial.contact, ...publicStore.contact } : initial.contact,
+              };
+              setData(merged);
+              setLoading(false);
+              return;
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[DataContext] Error fetching data from Firestore:', err);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchFirestoreData();
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('refetch-data', handleRefetch);
+    };
+  }, [isAdmin]);
 
   // Counts Calculation
   const counts = useMemo(() => {
@@ -169,6 +311,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   /* ---------------- VICHAR ---------------- */
   const addVichar = useCallback((item: Partial<VicharItem>): VicharItem => {
     const nowIso = new Date().toISOString();
+    const status = item.status || 'published';
     const newItem: VicharItem = {
       id: item.id || generateUniqueId('vichar'),
       type: 'vichar',
@@ -182,36 +325,60 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       paragraphs: item.paragraphs || [],
       keyTakeaway: item.keyTakeaway || '',
       imageUrl: item.imageUrl,
-      status: item.status || 'published',
+      status,
       language: item.language || 'hi',
       createdAt: nowIso,
       updatedAt: nowIso,
+      ...(status === 'published' ? { publishedAt: nowIso } : {}),
     };
 
-    updateStore((prev) => ({
+    setData((prev) => ({
       ...prev,
       vichar: [newItem, ...prev.vichar],
     }));
 
+    saveContentItemToApi(newItem);
     return newItem;
-  }, [updateStore]);
+  }, []);
 
   const updateVichar = useCallback((id: string, updates: Partial<VicharItem>) => {
     const nowIso = new Date().toISOString();
-    updateStore((prev) => ({
-      ...prev,
-      vichar: prev.vichar.map((item) =>
-        item.id === id ? { ...item, ...updates, updatedAt: nowIso } : item
-      ),
-    }));
-  }, [updateStore]);
+    setData((prev) => {
+      let updatedItem: VicharItem | null = null;
+      const newVichar = prev.vichar.map((item) => {
+        if (item.id === id) {
+          const nextStatus = updates.status || item.status;
+          const merged: VicharItem = {
+            ...item,
+            ...updates,
+            status: nextStatus,
+            updatedAt: nowIso,
+          };
+          if (nextStatus === 'published') {
+            merged.publishedAt = merged.publishedAt || nowIso;
+          } else {
+            delete merged.publishedAt;
+          }
+          updatedItem = merged;
+          return merged;
+        }
+        return item;
+      });
+
+      if (updatedItem) {
+        saveContentItemToApi(updatedItem);
+      }
+      return { ...prev, vichar: newVichar };
+    });
+  }, []);
 
   const deleteVichar = useCallback((id: string) => {
-    updateStore((prev) => ({
+    setData((prev) => ({
       ...prev,
       vichar: prev.vichar.filter((item) => item.id !== id),
     }));
-  }, [updateStore]);
+    deleteContentItemFromApi(id);
+  }, []);
 
   const getVicharById = useCallback((id: string) => {
     return data.vichar.find((item) => item.id === id);
@@ -220,6 +387,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   /* ---------------- VIDEO ---------------- */
   const addVideo = useCallback((item: Partial<VideoItem>): VideoItem => {
     const nowIso = new Date().toISOString();
+    const status = item.status || 'published';
     const newItem: VideoItem = {
       id: item.id || generateUniqueId('video'),
       type: 'video',
@@ -229,39 +397,64 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       speaker: item.speaker || 'अहिंसा शिक्षा मिशन',
       duration: item.duration || '१०:००',
       youtubeUrl: item.youtubeUrl || '',
+      youtubeVideoId: item.youtubeVideoId,
       thumbnailUrl: item.thumbnailUrl || '',
       description: item.description || '',
       topics: item.topics || [],
-      status: item.status || 'published',
+      status,
       language: item.language || 'hi',
       createdAt: nowIso,
       updatedAt: nowIso,
+      ...(status === 'published' ? { publishedAt: nowIso } : {}),
     };
 
-    updateStore((prev) => ({
+    setData((prev) => ({
       ...prev,
       videos: [newItem, ...prev.videos],
     }));
 
+    saveContentItemToApi(newItem);
     return newItem;
-  }, [updateStore]);
+  }, []);
 
   const updateVideo = useCallback((id: string, updates: Partial<VideoItem>) => {
     const nowIso = new Date().toISOString();
-    updateStore((prev) => ({
-      ...prev,
-      videos: prev.videos.map((item) =>
-        item.id === id ? { ...item, ...updates, updatedAt: nowIso } : item
-      ),
-    }));
-  }, [updateStore]);
+    setData((prev) => {
+      let updatedItem: VideoItem | null = null;
+      const newVideos = prev.videos.map((item) => {
+        if (item.id === id) {
+          const nextStatus = updates.status || item.status;
+          const merged: VideoItem = {
+            ...item,
+            ...updates,
+            status: nextStatus,
+            updatedAt: nowIso,
+          };
+          if (nextStatus === 'published') {
+            merged.publishedAt = merged.publishedAt || nowIso;
+          } else {
+            delete merged.publishedAt;
+          }
+          updatedItem = merged;
+          return merged;
+        }
+        return item;
+      });
+
+      if (updatedItem) {
+        saveContentItemToApi(updatedItem);
+      }
+      return { ...prev, videos: newVideos };
+    });
+  }, []);
 
   const deleteVideo = useCallback((id: string) => {
-    updateStore((prev) => ({
+    setData((prev) => ({
       ...prev,
       videos: prev.videos.filter((item) => item.id !== id),
     }));
-  }, [updateStore]);
+    deleteContentItemFromApi(id);
+  }, []);
 
   const getVideoById = useCallback((id: string) => {
     return data.videos.find((item) => item.id === id);
@@ -270,6 +463,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   /* ---------------- AUDIO ---------------- */
   const addAudio = useCallback((item: Partial<AudioItem>): AudioItem => {
     const nowIso = new Date().toISOString();
+    const status = item.status || 'published';
     const newItem: AudioItem = {
       id: item.id || generateUniqueId('audio'),
       type: 'audio',
@@ -285,36 +479,60 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       fileSize: item.fileSize || '२.५ MB',
       fileType: item.fileType || 'audio/mpeg',
       audioUrl: item.audioUrl || '',
-      status: item.status || 'published',
+      status,
       language: item.language || 'hi',
       createdAt: nowIso,
       updatedAt: nowIso,
+      ...(status === 'published' ? { publishedAt: nowIso } : {}),
     };
 
-    updateStore((prev) => ({
+    setData((prev) => ({
       ...prev,
       audio: [newItem, ...prev.audio],
     }));
 
+    saveContentItemToApi(newItem);
     return newItem;
-  }, [updateStore]);
+  }, []);
 
   const updateAudio = useCallback((id: string, updates: Partial<AudioItem>) => {
     const nowIso = new Date().toISOString();
-    updateStore((prev) => ({
-      ...prev,
-      audio: prev.audio.map((item) =>
-        item.id === id ? { ...item, ...updates, updatedAt: nowIso } : item
-      ),
-    }));
-  }, [updateStore]);
+    setData((prev) => {
+      let updatedItem: AudioItem | null = null;
+      const newAudio = prev.audio.map((item) => {
+        if (item.id === id) {
+          const nextStatus = updates.status || item.status;
+          const merged: AudioItem = {
+            ...item,
+            ...updates,
+            status: nextStatus,
+            updatedAt: nowIso,
+          };
+          if (nextStatus === 'published') {
+            merged.publishedAt = merged.publishedAt || nowIso;
+          } else {
+            delete merged.publishedAt;
+          }
+          updatedItem = merged;
+          return merged;
+        }
+        return item;
+      });
+
+      if (updatedItem) {
+        saveContentItemToApi(updatedItem);
+      }
+      return { ...prev, audio: newAudio };
+    });
+  }, []);
 
   const deleteAudio = useCallback((id: string) => {
-    updateStore((prev) => ({
+    setData((prev) => ({
       ...prev,
       audio: prev.audio.filter((item) => item.id !== id),
     }));
-  }, [updateStore]);
+    deleteContentItemFromApi(id);
+  }, []);
 
   const getAudioById = useCallback((id: string) => {
     return data.audio.find((item) => item.id === id);
@@ -323,6 +541,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   /* ---------------- PHOTO ---------------- */
   const addPhoto = useCallback((item: Partial<PhotoItem>): PhotoItem => {
     const nowIso = new Date().toISOString();
+    const status = item.status || 'published';
     const newItem: PhotoItem = {
       id: item.id || generateUniqueId('photo'),
       type: 'photo',
@@ -332,36 +551,61 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       caption: item.caption || '',
       description: item.description || '',
       imageUrl: item.imageUrl || '',
+      imageFileId: item.imageFileId || '',
       location: item.location || 'मिशन परिसर',
-      status: item.status || 'published',
+      status,
       createdAt: nowIso,
       updatedAt: nowIso,
+      ...(status === 'published' ? { publishedAt: nowIso } : {}),
     };
 
-    updateStore((prev) => ({
+    setData((prev) => ({
       ...prev,
       photos: [newItem, ...prev.photos],
     }));
 
+    saveContentItemToApi(newItem);
     return newItem;
-  }, [updateStore]);
+  }, []);
 
   const updatePhoto = useCallback((id: string, updates: Partial<PhotoItem>) => {
     const nowIso = new Date().toISOString();
-    updateStore((prev) => ({
-      ...prev,
-      photos: prev.photos.map((item) =>
-        item.id === id ? { ...item, ...updates, updatedAt: nowIso } : item
-      ),
-    }));
-  }, [updateStore]);
+    setData((prev) => {
+      let updatedItem: PhotoItem | null = null;
+      const newPhotos = prev.photos.map((item) => {
+        if (item.id === id) {
+          const nextStatus = updates.status || item.status;
+          const merged: PhotoItem = {
+            ...item,
+            ...updates,
+            status: nextStatus,
+            updatedAt: nowIso,
+          };
+          if (nextStatus === 'published') {
+            merged.publishedAt = merged.publishedAt || nowIso;
+          } else {
+            delete merged.publishedAt;
+          }
+          updatedItem = merged;
+          return merged;
+        }
+        return item;
+      });
+
+      if (updatedItem) {
+        saveContentItemToApi(updatedItem);
+      }
+      return { ...prev, photos: newPhotos };
+    });
+  }, []);
 
   const deletePhoto = useCallback((id: string) => {
-    updateStore((prev) => ({
+    setData((prev) => ({
       ...prev,
       photos: prev.photos.filter((item) => item.id !== id),
     }));
-  }, [updateStore]);
+    deleteContentItemFromApi(id);
+  }, []);
 
   const getPhotoById = useCallback((id: string) => {
     return data.photos.find((item) => item.id === id);
@@ -370,6 +614,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   /* ---------------- DOCUMENT ---------------- */
   const addDocument = useCallback((item: Partial<DocumentItem>): DocumentItem => {
     const nowIso = new Date().toISOString();
+    const status = item.status || 'published';
     const newItem: DocumentItem = {
       id: item.id || generateUniqueId('doc'),
       type: 'document',
@@ -384,36 +629,60 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       chapters: item.chapters || [],
       fileName: item.fileName || 'ahimsa_document.pdf',
       pdfUrl: item.pdfUrl || '',
-      status: item.status || 'published',
+      status,
       language: item.language || 'hi',
       createdAt: nowIso,
       updatedAt: nowIso,
+      ...(status === 'published' ? { publishedAt: nowIso } : {}),
     };
 
-    updateStore((prev) => ({
+    setData((prev) => ({
       ...prev,
       documents: [newItem, ...prev.documents],
     }));
 
+    saveContentItemToApi(newItem);
     return newItem;
-  }, [updateStore]);
+  }, []);
 
   const updateDocument = useCallback((id: string, updates: Partial<DocumentItem>) => {
     const nowIso = new Date().toISOString();
-    updateStore((prev) => ({
-      ...prev,
-      documents: prev.documents.map((item) =>
-        item.id === id ? { ...item, ...updates, updatedAt: nowIso } : item
-      ),
-    }));
-  }, [updateStore]);
+    setData((prev) => {
+      let updatedItem: DocumentItem | null = null;
+      const newDocs = prev.documents.map((item) => {
+        if (item.id === id) {
+          const nextStatus = updates.status || item.status;
+          const merged: DocumentItem = {
+            ...item,
+            ...updates,
+            status: nextStatus,
+            updatedAt: nowIso,
+          };
+          if (nextStatus === 'published') {
+            merged.publishedAt = merged.publishedAt || nowIso;
+          } else {
+            delete merged.publishedAt;
+          }
+          updatedItem = merged;
+          return merged;
+        }
+        return item;
+      });
+
+      if (updatedItem) {
+        saveContentItemToApi(updatedItem);
+      }
+      return { ...prev, documents: newDocs };
+    });
+  }, []);
 
   const deleteDocument = useCallback((id: string) => {
-    updateStore((prev) => ({
+    setData((prev) => ({
       ...prev,
       documents: prev.documents.filter((item) => item.id !== id),
     }));
-  }, [updateStore]);
+    deleteContentItemFromApi(id);
+  }, []);
 
   const getDocumentById = useCallback((id: string) => {
     return data.documents.find((item) => item.id === id);
@@ -422,6 +691,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   /* ---------------- NOTICE ---------------- */
   const addNotice = useCallback((item: Partial<NoticeItem>): NoticeItem => {
     const nowIso = new Date().toISOString();
+    const status = item.status || 'published';
     const newItem: NoticeItem = {
       id: item.id || generateUniqueId('notice'),
       type: 'notice',
@@ -438,35 +708,59 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       },
       guidelines: item.guidelines || [],
       contactInfo: item.contactInfo || 'मिशन कार्यालय से जानकारी प्राप्त करें।',
-      status: item.status || 'published',
+      status,
       createdAt: nowIso,
       updatedAt: nowIso,
+      ...(status === 'published' ? { publishedAt: nowIso } : {}),
     };
 
-    updateStore((prev) => ({
+    setData((prev) => ({
       ...prev,
       notices: [newItem, ...prev.notices],
     }));
 
+    saveContentItemToApi(newItem);
     return newItem;
-  }, [updateStore]);
+  }, []);
 
   const updateNotice = useCallback((id: string, updates: Partial<NoticeItem>) => {
     const nowIso = new Date().toISOString();
-    updateStore((prev) => ({
-      ...prev,
-      notices: prev.notices.map((item) =>
-        item.id === id ? { ...item, ...updates, updatedAt: nowIso } : item
-      ),
-    }));
-  }, [updateStore]);
+    setData((prev) => {
+      let updatedItem: NoticeItem | null = null;
+      const newNotices = prev.notices.map((item) => {
+        if (item.id === id) {
+          const nextStatus = updates.status || item.status;
+          const merged: NoticeItem = {
+            ...item,
+            ...updates,
+            status: nextStatus,
+            updatedAt: nowIso,
+          };
+          if (nextStatus === 'published') {
+            merged.publishedAt = merged.publishedAt || nowIso;
+          } else {
+            delete merged.publishedAt;
+          }
+          updatedItem = merged;
+          return merged;
+        }
+        return item;
+      });
+
+      if (updatedItem) {
+        saveContentItemToApi(updatedItem);
+      }
+      return { ...prev, notices: newNotices };
+    });
+  }, []);
 
   const deleteNotice = useCallback((id: string) => {
-    updateStore((prev) => ({
+    setData((prev) => ({
       ...prev,
       notices: prev.notices.filter((item) => item.id !== id),
     }));
-  }, [updateStore]);
+    deleteContentItemFromApi(id);
+  }, []);
 
   const getNoticeById = useCallback((id: string) => {
     return data.notices.find((item) => item.id === id);
@@ -486,91 +780,122 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updatedAt: nowIso,
     };
 
-    updateStore((prev) => ({
+    setData((prev) => ({
       ...prev,
       links: [...prev.links, newItem],
     }));
 
+    saveLinkToApi(newItem);
     return newItem;
-  }, [data.links.length, updateStore]);
+  }, [data.links.length]);
 
   const updateLink = useCallback((id: string, updates: Partial<LinkItem>) => {
     const nowIso = new Date().toISOString();
-    updateStore((prev) => ({
-      ...prev,
-      links: prev.links.map((item) =>
-        item.id === id ? { ...item, ...updates, updatedAt: nowIso } : item
-      ),
-    }));
-  }, [updateStore]);
+    setData((prev) => {
+      let updatedLink: LinkItem | null = null;
+      const newLinks = prev.links.map((item) => {
+        if (item.id === id) {
+          const merged: LinkItem = { ...item, ...updates, updatedAt: nowIso };
+          updatedLink = merged;
+          return merged;
+        }
+        return item;
+      });
+
+      if (updatedLink) {
+        saveLinkToApi(updatedLink);
+      }
+      return { ...prev, links: newLinks };
+    });
+  }, []);
 
   const deleteLink = useCallback((id: string) => {
-    updateStore((prev) => ({
+    setData((prev) => ({
       ...prev,
       links: prev.links.filter((item) => item.id !== id),
     }));
-  }, [updateStore]);
+    deleteLinkFromApi(id);
+  }, []);
 
   const reorderLinks = useCallback((orderedIds: string[]) => {
-    updateStore((prev) => {
+    setData((prev) => {
       const linkMap = new Map<string, LinkItem>(prev.links.map((l) => [l.id, l]));
       const newLinks: LinkItem[] = [];
       orderedIds.forEach((id, index) => {
         const link = linkMap.get(id);
         if (link) {
-          newLinks.push({ ...(link as LinkItem), order: index + 1 });
+          const updated = { ...(link as LinkItem), order: index + 1 };
+          newLinks.push(updated);
+          saveLinkToApi(updated);
         }
       });
       // Append any remaining
       prev.links.forEach((link) => {
         if (!orderedIds.includes(link.id)) {
-          newLinks.push({ ...link, order: newLinks.length + 1 });
+          const updated = { ...link, order: newLinks.length + 1 };
+          newLinks.push(updated);
+          saveLinkToApi(updated);
         }
       });
       return { ...prev, links: newLinks };
     });
-  }, [updateStore]);
+  }, []);
 
   /* ---------------- CMS PAGES ---------------- */
   const updateMission = useCallback((missionUpdates: Partial<MissionData>) => {
     const nowIso = new Date().toISOString();
-    updateStore((prev) => ({
-      ...prev,
-      mission: { ...prev.mission, ...missionUpdates, updatedAt: nowIso },
-    }));
-  }, [updateStore]);
+    setData((prev) => {
+      const updatedMission = { ...prev.mission, ...missionUpdates, updatedAt: nowIso };
+      saveSettingsDocToApi('mission', updatedMission);
+      return { ...prev, mission: updatedMission };
+    });
+  }, []);
 
   const updateFounder = useCallback((founderUpdates: Partial<FounderData>) => {
     const nowIso = new Date().toISOString();
-    updateStore((prev) => ({
-      ...prev,
-      founder: { ...prev.founder, ...founderUpdates, updatedAt: nowIso },
-    }));
-  }, [updateStore]);
+    setData((prev) => {
+      const updatedFounder = { ...prev.founder, ...founderUpdates, updatedAt: nowIso };
+      saveSettingsDocToApi('founder', updatedFounder);
+      return { ...prev, founder: updatedFounder };
+    });
+  }, []);
 
   const updateContact = useCallback((contactUpdates: Partial<ContactData>) => {
     const nowIso = new Date().toISOString();
-    updateStore((prev) => ({
-      ...prev,
-      contact: { ...prev.contact, ...contactUpdates, updatedAt: nowIso },
-    }));
-  }, [updateStore]);
+    setData((prev) => {
+      const updatedContact = { ...prev.contact, ...contactUpdates, updatedAt: nowIso };
+      saveSettingsDocToApi('contact', updatedContact);
+      return { ...prev, contact: updatedContact };
+    });
+  }, []);
 
   const resetDemoData = useCallback(() => {
     const fresh = getInitialSeedData();
-    saveStoreToStorage(fresh);
     setData(fresh);
+    fetch('/api/admin/save-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(fresh),
+    }).catch((err) => console.error('[DataContext] Error resetting store in Firestore:', err));
   }, []);
 
   const resetToSeedData = useCallback(() => {
     const fresh = getInitialSeedData();
-    saveStoreToStorage(fresh);
     setData(fresh);
+    fetch('/api/admin/save-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(fresh),
+    }).catch((err) => console.error('[DataContext] Error resetting store in Firestore:', err));
   }, []);
 
   const restoreData = useCallback((newData: AppStoreData) => {
-    saveStoreToStorage(newData);
     setData(newData);
+    fetch('/api/admin/save-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newData),
+    }).catch((err) => console.error('[DataContext] Error restoring store to Firestore:', err));
   }, []);
 
   /* ---------------- PUBLIC QUERY HELPERS ---------------- */
@@ -843,6 +1168,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <DataContext.Provider
       value={{
         data,
+        loading,
         counts,
         addVichar,
         updateVichar,

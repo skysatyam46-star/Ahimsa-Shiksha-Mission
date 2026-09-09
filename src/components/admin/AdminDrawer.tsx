@@ -51,24 +51,24 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({
   };
 
   const contentNavItems = [
-    { icon: <FileText size={17} />, label: 'Vichar (विचार)', count: data.vichar.length, path: '/admin/vichar' },
-    { icon: <Video size={17} />, label: 'Videos (वीडियो)', count: data.videos.length, path: '/admin/video' },
-    { icon: <Headphones size={17} />, label: 'Audio (ऑडियो)', count: data.audio.length, path: '/admin/audio' },
-    { icon: <ImageIcon size={17} />, label: 'Photos (फोटो)', count: data.photos.length, path: '/admin/photo' },
-    { icon: <Files size={17} />, label: 'Documents (दस्तावेज)', count: data.documents.length, path: '/admin/document' },
-    { icon: <Bell size={17} />, label: 'Notices (सूचनाएँ)', count: data.notices.length, path: '/admin/notice' },
+    { icon: <FileText size={17} />, label: 'विचार (Vichar)', count: data.vichar.length, path: '/admin/vichar' },
+    { icon: <Video size={17} />, label: 'वीडियो (Videos)', count: data.videos.length, path: '/admin/video' },
+    { icon: <Headphones size={17} />, label: 'ऑडियो (Audio)', count: data.audio.length, path: '/admin/audio' },
+    { icon: <ImageIcon size={17} />, label: 'फोटो (Photos)', count: data.photos.length, path: '/admin/photo' },
+    { icon: <Files size={17} />, label: 'दस्तावेज (Documents)', count: data.documents.length, path: '/admin/document' },
+    { icon: <Bell size={17} />, label: 'सूचनाएँ (Notices)', count: data.notices.length, path: '/admin/notice' },
   ];
 
   const websiteNavItems = [
-    { icon: <Compass size={17} />, label: 'Mission (उद्देश्य)', path: '/admin/mission' },
-    { icon: <User size={17} />, label: 'Founder (संस्थापक परिचय)', path: '/admin/founder' },
-    { icon: <PhoneCall size={17} />, label: 'Contact (संपर्क विवरण)', path: '/admin/contact' },
-    { icon: <ExternalLink size={17} />, label: 'Important Links (लिंक)', path: '/admin/links' },
-    { icon: <Settings size={17} />, label: 'Settings (सेटिंग्स)', path: '/admin/settings' },
+    { icon: <Compass size={17} />, label: 'उद्देश्य (Mission)', path: '/admin/mission' },
+    { icon: <User size={17} />, label: 'संस्थापक परिचय (Founder)', path: '/admin/founder' },
+    { icon: <PhoneCall size={17} />, label: 'संपर्क विवरण (Contact)', path: '/admin/contact' },
+    { icon: <ExternalLink size={17} />, label: 'महत्वपूर्ण लिंक (Links)', path: '/admin/links' },
+    { icon: <Settings size={17} />, label: 'सेटिंग्स (Settings)', path: '/admin/settings' },
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex" role="dialog" aria-modal="true" aria-label="Admin Navigation Menu">
+    <div className="fixed inset-0 z-50 flex" role="dialog" aria-modal="true" aria-label="प्रबंधक मेनू">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
@@ -91,16 +91,15 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({
               <div className="flex items-center gap-1 mt-0.5">
                 <ShieldCheck size={12} className="text-[#2E7D32] dark:text-emerald-400" />
                 <span className="text-[11px] font-semibold text-[#2E7D32] dark:text-emerald-400">
-                  Admin CMS
+                  वेबसाइट प्रबंधक
                 </span>
-                <span className="text-[11px] text-[#5C6773] dark:text-gray-400">· Prototype</span>
               </div>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Menu Band Karein"
+            aria-label="मेनू बंद करें"
             className="w-8 h-8 rounded-lg flex items-center justify-center text-[#5C6773] hover:text-[#16325C] hover:bg-[#EEF3FA] dark:hover:bg-slate-800 transition-colors tap-active"
           >
             <X size={18} />
@@ -122,20 +121,15 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({
             >
               <div className="flex items-center gap-2.5">
                 <LayoutDashboard size={18} strokeWidth={2} />
-                <span className="text-[14px]">Dashboard</span>
+                <span className="text-[14px] font-medium">डैशबोर्ड (Dashboard)</span>
               </div>
-              <span className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded font-bold ${
-                activePath === '/admin' ? 'bg-white/20 text-white' : 'bg-[#EEF3FA] dark:bg-slate-800 text-[#16325C] dark:text-[#93C5FD]'
-              }`}>
-                Live
-              </span>
             </button>
           </div>
 
           {/* Section: Content Management */}
           <div>
             <span className="text-[11px] font-bold text-[#8C96A3] uppercase tracking-wider px-3 mb-1.5 block">
-              Content (सामग्री प्रबंधन)
+              सामग्री (Content)
             </span>
             <div className="space-y-0.5">
               {contentNavItems.map((item) => {
@@ -172,7 +166,7 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({
           {/* Section: Website Management */}
           <div>
             <span className="text-[11px] font-bold text-[#8C96A3] uppercase tracking-wider px-3 mb-1.5 block">
-              Website (वेबसाइट सेटिंग्स)
+              वेबसाइट जानकारी (Website Info)
             </span>
             <div className="space-y-0.5">
               {websiteNavItems.map((item) => {
@@ -228,7 +222,7 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({
             className="w-full min-h-[40px] px-3 py-2 rounded-xl flex items-center justify-center gap-2 text-[13px] font-semibold text-[#16325C] dark:text-[#93C5FD] bg-[#EEF3FA] dark:bg-slate-800 hover:bg-[#E2ECF8] transition-colors tap-active"
           >
             <Globe size={15} />
-            <span>Public Website Par Jayein</span>
+            <span>सार्वजनिक वेबसाइट (Public Website)</span>
           </button>
         </div>
       </div>

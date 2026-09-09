@@ -61,7 +61,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     <nav
       id="fixed-bottom-nav"
       aria-label="मुख्य नेविगेशन"
-      className={`fixed bottom-0 left-0 right-0 z-50 bg-[#FFFFFF]/95 backdrop-blur-md border-t border-[#E8E5DF] transition-all duration-200 ${className}`}
+      className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-50 bg-[#FFFFFF]/95 backdrop-blur-md border-t border-[#E8E5DF] transition-all duration-200 ${className}`}
     >
       <div className="w-full max-w-[430px] mx-auto h-[64px] px-2 flex items-center justify-around">
         {navItems.map((item) => {
@@ -80,11 +80,6 @@ export const BottomNav: React.FC<BottomNavProps> = ({
               aria-label={item.label}
               aria-current={isActive ? 'page' : undefined}
             >
-              {/* Active subtle indicator dot */}
-              {isActive && (
-                <span className="absolute top-1 w-1 h-1 rounded-full bg-[#16325C]" />
-              )}
-
               <Icon
                 size={22}
                 strokeWidth={isActive ? 2.3 : 1.8}

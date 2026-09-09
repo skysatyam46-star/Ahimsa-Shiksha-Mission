@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Phone, Mail, MapPin, Info, Check, Copy } from 'lucide-react';
+import { Phone, Mail, MapPin, Check, Copy, Clock, Info } from 'lucide-react';
 import { PageContainer, SectionHeading, BackButton, Footer } from '../components';
 import { useApp } from '../context/AppContext';
+import { useData } from '../context/DataContext';
 
 interface ContactScreenProps {
   onNavigate: (path: string) => void;
@@ -13,18 +14,22 @@ export const ContactScreen: React.FC<ContactScreenProps> = ({
   onBack,
 }) => {
   const { t } = useApp();
+  const { data } = useData();
   const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const contactData = {
+    phone: data?.contact?.phone || '+91 98765 43210',
+    email: data?.contact?.email || 'contact@ahimsashiksha.org',
+    address: data?.contact?.address || 'अहिंसा भवन, गांधी अध्ययन केंद्र परिसर, नई दिल्ली - 110001',
+    officeHours: data?.contact?.officeHours || 'प्रातः ९:०० से सायं ६:०० बजे तक',
+    guidance: data?.contact?.guidance || '',
+    note: data?.contact?.note || '',
+  };
 
   const handleCopy = (field: string, text: string) => {
     navigator.clipboard.writeText(text);
     setCopiedField(field);
     setTimeout(() => setCopiedField(null), 2000);
-  };
-
-  const contactData = {
-    phone: '+91 XXXXX XXXXX',
-    email: 'contact@example.com',
-    address: 'अहिंसा भवन, शिक्षा मार्ग, नई दिल्ली - 110001',
   };
 
   return (
@@ -41,14 +46,6 @@ export const ContactScreen: React.FC<ContactScreenProps> = ({
         level={1}
         className="mb-4"
       />
-
-      {/* Notice regarding mock contact information */}
-      <div className="w-full bg-[#FEF8EC] border border-[#D97706]/20 rounded-2xl p-3 mb-5 flex items-start gap-2.5">
-        <Info size={16} className="text-[#D97706] shrink-0 mt-0.5" />
-        <p className="text-[12px] text-[#8C5D07] leading-relaxed">
-          {t.mockContactNotice}
-        </p>
-      </div>
 
       <div className="flex flex-col gap-4">
         {/* Phone Contact Card */}
@@ -148,9 +145,6 @@ export const ContactScreen: React.FC<ContactScreenProps> = ({
               <p className="text-[14px] text-[#1F2421] leading-relaxed">
                 {contactData.address}
               </p>
-              <span className="text-[11px] text-[#8C96A3] mt-1 block">
-                (स्थानधारक पता • Sample address)
-              </span>
             </div>
           </div>
         </div>

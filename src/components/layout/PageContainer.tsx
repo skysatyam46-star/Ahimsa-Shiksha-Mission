@@ -15,7 +15,7 @@ export const PageContainer: React.FC<PageContainerProps> = ({
     <main
       className={`w-full max-w-[430px] mx-auto min-h-[calc(100vh-56px)] flex flex-col ${
         disablePadding ? '' : 'px-4 py-5'
-      } pb-24 ${className}`}
+      } pb-32 ${className}`}
     >
       {children}
     </main>
