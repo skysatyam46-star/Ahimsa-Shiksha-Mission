@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Sun,
   Moon,
+  ThumbsUp,
 } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { useData } from '../../context/DataContext';
@@ -64,6 +65,7 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({
   ];
 
   const websiteNavItems = [
+    { icon: <ThumbsUp size={17} />, label: 'पसंद विवरण (Likes)', path: '/admin/likes' },
     { icon: <Compass size={17} />, label: 'उद्देश्य (Mission)', path: '/admin/mission' },
     { icon: <User size={17} />, label: 'संस्थापक परिचय (Founder)', path: '/admin/founder' },
     { icon: <PhoneCall size={17} />, label: 'संपर्क विवरण (Contact)', path: '/admin/contact' },

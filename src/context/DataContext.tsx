@@ -274,6 +274,17 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [adminNotifications, setAdminNotifications] = useState<AdminNotificationItem[]>([]);
   const [unreadNotifCount, setUnreadNotifCount] = useState<number>(0);
 
+  // Helper to delete content item and instantly clean up related notifications locally
+  const deleteContentItemAndCleanLocalNotifications = useCallback(async (id: string) => {
+    await deleteContentItemFromApi(id);
+    setAdminNotifications((prev) => {
+      const filtered = prev.filter((n) => n.contentId !== id);
+      const unreadCount = filtered.filter((n) => !n.read).length;
+      setUnreadNotifCount(unreadCount);
+      return filtered;
+    });
+  }, []);
+
   // Fetch liked item IDs for this device on mount
   useEffect(() => {
     let isMounted = true;
@@ -618,12 +629,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [data.vichar]);
 
   const deleteVichar = useCallback(async (id: string): Promise<void> => {
-    await deleteContentItemFromApi(id);
+    await deleteContentItemAndCleanLocalNotifications(id);
     setData((prev) => ({
       ...prev,
       vichar: prev.vichar.filter((item) => item.id !== id),
     }));
-  }, []);
+  }, [deleteContentItemAndCleanLocalNotifications]);
 
   const getVicharById = useCallback((id: string) => {
     return data.vichar.find((item) => item.id === id);
@@ -692,12 +703,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [data.videos]);
 
   const deleteVideo = useCallback(async (id: string): Promise<void> => {
-    await deleteContentItemFromApi(id);
+    await deleteContentItemAndCleanLocalNotifications(id);
     setData((prev) => ({
       ...prev,
       videos: prev.videos.filter((item) => item.id !== id),
     }));
-  }, []);
+  }, [deleteContentItemAndCleanLocalNotifications]);
 
   const getVideoById = useCallback((id: string) => {
     return data.videos.find((item) => item.id === id);
@@ -768,12 +779,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [data.audio]);
 
   const deleteAudio = useCallback(async (id: string): Promise<void> => {
-    await deleteContentItemFromApi(id);
+    await deleteContentItemAndCleanLocalNotifications(id);
     setData((prev) => ({
       ...prev,
       audio: prev.audio.filter((item) => item.id !== id),
     }));
-  }, []);
+  }, [deleteContentItemAndCleanLocalNotifications]);
 
   const getAudioById = useCallback((id: string) => {
     return data.audio.find((item) => item.id === id);
@@ -839,12 +850,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [data.photos]);
 
   const deletePhoto = useCallback(async (id: string): Promise<void> => {
-    await deleteContentItemFromApi(id);
+    await deleteContentItemAndCleanLocalNotifications(id);
     setData((prev) => ({
       ...prev,
       photos: prev.photos.filter((item) => item.id !== id),
     }));
-  }, []);
+  }, [deleteContentItemAndCleanLocalNotifications]);
 
   const getPhotoById = useCallback((id: string) => {
     return data.photos.find((item) => item.id === id);
@@ -914,12 +925,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [data.documents]);
 
   const deleteDocument = useCallback(async (id: string): Promise<void> => {
-    await deleteContentItemFromApi(id);
+    await deleteContentItemAndCleanLocalNotifications(id);
     setData((prev) => ({
       ...prev,
       documents: prev.documents.filter((item) => item.id !== id),
     }));
-  }, []);
+  }, [deleteContentItemAndCleanLocalNotifications]);
 
   const getDocumentById = useCallback((id: string) => {
     return data.documents.find((item) => item.id === id);
@@ -990,12 +1001,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [data.notices]);
 
   const deleteNotice = useCallback(async (id: string): Promise<void> => {
-    await deleteContentItemFromApi(id);
+    await deleteContentItemAndCleanLocalNotifications(id);
     setData((prev) => ({
       ...prev,
       notices: prev.notices.filter((item) => item.id !== id),
     }));
-  }, []);
+  }, [deleteContentItemAndCleanLocalNotifications]);
 
   const getNoticeById = useCallback((id: string) => {
     return data.notices.find((item) => item.id === id);

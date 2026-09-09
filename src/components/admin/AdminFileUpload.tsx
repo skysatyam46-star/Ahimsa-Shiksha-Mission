@@ -40,6 +40,9 @@ export const AdminFileUpload: React.FC<AdminFileUploadProps> = ({
     fileSize: string;
     fileType: string;
     previewUrl: string;
+    originalSize?: string;
+    compressedSize?: string;
+    reductionPercent?: string;
   } | null>(
     currentFileName || currentUrl
       ? {
@@ -59,7 +62,87 @@ export const AdminFileUpload: React.FC<AdminFileUploadProps> = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  const processFile = (file: File) => {
+  const compressImage = (file: File): Promise<{
+    previewUrl: string;
+    compressedSizeStr: string;
+    originalSizeStr: string;
+    reductionPercentStr: string;
+  }> => {
+    return new Promise((resolve, reject) => {
+      const originalSizeBytes = file.size;
+      const originalSizeStr = formatBytes(originalSizeBytes);
+
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+
+        // Maximum dimensions: 1920px on the longest side
+        const maxDim = 1920;
+        let width = img.width;
+        let height = img.height;
+
+        // Preserve aspect ratio and do not upscale small images
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('कैनवास संदर्भ (Canvas Context) प्राप्त करने में असमर्थ।'));
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Set quality dynamically
+        let quality = 0.82;
+        if (originalSizeBytes < 400 * 1024 && img.width <= maxDim && img.height <= maxDim) {
+          // If the image is already small and optimized, don't degrade it unnecessarily
+          quality = 0.90;
+        }
+
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+
+        // Calculate compressed size from Base64
+        const base64Content = compressedDataUrl.substring(compressedDataUrl.indexOf(',') + 1);
+        const compressedSizeBytes = Math.round((base64Content.length * 3) / 4);
+        const compressedSizeStr = formatBytes(compressedSizeBytes);
+
+        const reductionPercent = originalSizeBytes > 0
+          ? Math.max(0, Math.round(((originalSizeBytes - compressedSizeBytes) / originalSizeBytes) * 100))
+          : 0;
+        const reductionPercentStr = `लगभग ${reductionPercent}% कम`;
+
+        resolve({
+          previewUrl: compressedDataUrl,
+          compressedSizeStr,
+          originalSizeStr,
+          reductionPercentStr,
+        });
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('इमेज लोड करने में असमर्थ। कृपया सत्यापित करें कि फ़ाइल एक वैध छवि है।'));
+      };
+
+      img.src = objectUrl;
+    });
+  };
+
+  const processFile = async (file: File) => {
     // Validation for image uploads
     if (type === 'image') {
       if (!file.type.startsWith('image/')) {
@@ -70,6 +153,25 @@ export const AdminFileUpload: React.FC<AdminFileUploadProps> = ({
         alert('इमेज साइज़ 10MB से कम होना चाहिए।');
         return;
       }
+
+      try {
+        const result = await compressImage(file);
+        const meta = {
+          fileName: file.name,
+          fileSize: result.compressedSizeStr,
+          fileType: 'image/jpeg',
+          previewUrl: result.previewUrl,
+          originalSize: result.originalSizeStr,
+          compressedSize: result.compressedSizeStr,
+          reductionPercent: result.reductionPercentStr,
+        };
+        setSelectedMeta(meta);
+        onFileSelect(meta);
+      } catch (err: any) {
+        console.error('Compression failed:', err);
+        alert(err?.message || 'इमेज कंप्रेस करने में त्रुटि आई। कृपया पुनः प्रयास करें।');
+      }
+      return;
     }
 
     const reader = new FileReader();
@@ -244,6 +346,19 @@ export const AdminFileUpload: React.FC<AdminFileUploadProps> = ({
                 caption="अपलोड की गई फ़ाइल का पूर्वावलोकन"
                 onClose={() => setIsZoomOpen(false)}
               />
+
+              {/* Compression stats */}
+              {selectedMeta.compressedSize && (
+                <div className="mt-2.5 p-3 bg-emerald-50/55 dark:bg-emerald-950/25 border border-emerald-100 dark:border-emerald-900/40 rounded-xl flex items-center justify-between text-[13px] font-medium text-emerald-800 dark:text-emerald-300">
+                  <div className="space-y-0.5">
+                    <div>Original: <span className="font-bold">{selectedMeta.originalSize}</span></div>
+                    <div>Compressed: <span className="font-bold text-emerald-600 dark:text-emerald-400">{selectedMeta.compressedSize}</span></div>
+                  </div>
+                  <span className="bg-emerald-100 dark:bg-emerald-900/60 text-[#2E7D32] dark:text-emerald-300 px-2.5 py-1 rounded-lg font-extrabold text-[12px]">
+                    {selectedMeta.reductionPercent}
+                  </span>
+                </div>
+              )}
             </>
           )}
 

@@ -50,6 +50,7 @@ import { AdminMissionScreen } from './screens/admin/AdminMissionScreen';
 import { AdminFounderScreen } from './screens/admin/AdminFounderScreen';
 import { AdminContactScreen } from './screens/admin/AdminContactScreen';
 import { AdminSettingsScreen } from './screens/admin/AdminSettingsScreen';
+import { AdminLikesScreen } from './screens/admin/AdminLikesScreen';
 
 export type AppRoute =
   | { screen: 'home' }
@@ -91,6 +92,7 @@ export type AppRoute =
   | { screen: 'admin-founder' }
   | { screen: 'admin-contact' }
   | { screen: 'admin-settings' }
+  | { screen: 'admin-likes' }
   | { screen: 'vichar-detail'; id: string }
   | { screen: 'video-detail'; id: string }
   | { screen: 'audio-detail'; id: string }
@@ -142,6 +144,7 @@ const parsePath = (path: string): AppRoute => {
   if (clean === '/admin/notice') return { screen: 'admin-notice' };
 
   // Admin Website Settings
+  if (clean === '/admin/likes') return { screen: 'admin-likes' };
   if (clean === '/admin/links') return { screen: 'admin-links' };
   if (clean === '/admin/mission') return { screen: 'admin-mission' };
   if (clean === '/admin/founder') return { screen: 'admin-founder' };
@@ -584,6 +587,15 @@ function AppContent() {
   if (route.screen === 'admin-settings') {
     return (
       <AdminSettingsScreen
+        onNavigate={navigateTo}
+        onLogout={handleAdminLogout}
+      />
+    );
+  }
+
+  if (route.screen === 'admin-likes') {
+    return (
+      <AdminLikesScreen
         onNavigate={navigateTo}
         onLogout={handleAdminLogout}
       />

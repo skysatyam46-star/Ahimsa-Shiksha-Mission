@@ -670,6 +670,36 @@ app.delete("/api/admin/content/:id", requireAdmin, async (req, res) => {
     console.info(`[ServerCMS] Deleting content document (${id}) from Firestore...`);
     await docRef.delete();
 
+    // Clean up related likes from Firestore
+    try {
+      const likesSnapshot = await adminDb.collection("likes").where("contentId", "==", id).get();
+      if (!likesSnapshot.empty) {
+        const batch = adminDb.batch();
+        likesSnapshot.forEach((doc: any) => {
+          batch.delete(doc.ref);
+        });
+        await batch.commit();
+        console.info(`[ServerCMS] Deleted associated likes for content (${id})`);
+      }
+    } catch (likeCleanErr) {
+      console.error(`[ServerCMS] Failed to delete associated likes for (${id}):`, likeCleanErr);
+    }
+
+    // Clean up related notifications from Firestore
+    try {
+      const notifsSnapshot = await adminDb.collection("notifications").where("contentId", "==", id).get();
+      if (!notifsSnapshot.empty) {
+        const batch = adminDb.batch();
+        notifsSnapshot.forEach((doc: any) => {
+          batch.delete(doc.ref);
+        });
+        await batch.commit();
+        console.info(`[ServerCMS] Deleted associated notifications for content (${id})`);
+      }
+    } catch (notifCleanErr) {
+      console.error(`[ServerCMS] Failed to delete associated notifications for (${id}):`, notifCleanErr);
+    }
+
     return res.json({ success: true });
   } catch (error: any) {
     console.error("[ServerCMS] Error deleting content from Firestore:", error);
@@ -677,7 +707,7 @@ app.delete("/api/admin/content/:id", requireAdmin, async (req, res) => {
   }
 });
 
-// 7b. Upload Image (Supports ImageKit CDN or Local Server Storage Fallback)
+// 7b. Upload Image (Strictly Enforces ImageKit CDN for Photos with validation)
 app.post("/api/admin/upload-image", requireAdmin, async (req, res) => {
   try {
     const { file, fileName } = req.body;
@@ -685,70 +715,75 @@ app.post("/api/admin/upload-image", requireAdmin, async (req, res) => {
       return res.status(400).json({ success: false, error: "No image file provided for upload." });
     }
 
-    const { ik, missing } = getImageKitInstance();
-    // 1. Primary: Use ImageKit if credentials are fully provided in env
-    if (ik && missing.length === 0) {
-      console.info("[ImageKit] Uploading image file to ImageKit...");
-      const uploadRes = await ik.upload({
-        file,
-        fileName: fileName || `ahimsa_photo_${Date.now()}.jpg`,
-        folder: "/ahimsa_photos",
-      });
-
-      console.info(`[ImageKit] Upload succeeded! URL: ${uploadRes.url}, fileId: ${uploadRes.fileId}`);
-      return res.json({
-        success: true,
-        url: uploadRes.url,
-        fileId: uploadRes.fileId,
-      });
-    }
-
-    // 2. Fallback: Save locally on server if ImageKit secrets are not configured
-    console.info("[LocalUpload] ImageKit credentials not configured. Saving image to local server storage...");
-    let fileBuffer: Buffer;
-    let ext = "jpg";
-
+    // 1. Validate that the uploaded file is an image and check file size / MIME types
     if (typeof file === "string" && file.startsWith("data:")) {
-      const match = file.match(/^data:(image\/[a-zA-Z0-9+-]+);base64,(.+)$/);
-      if (match) {
-        const mimeType = match[1];
-        ext = mimeType.split("/")[1] || "jpg";
-        if (ext === "jpeg") ext = "jpg";
-        fileBuffer = Buffer.from(match[2], "base64");
-      } else {
-        const parts = file.split(",");
-        fileBuffer = Buffer.from(parts[1] || file, "base64");
+      const match = file.match(/^data:([^;]+);base64,(.+)$/);
+      if (!match) {
+        return res.status(400).json({ success: false, error: "अमान्य फ़ाइल फॉर्मेट।" });
+      }
+
+      const mimeType = match[1];
+      const base64Data = match[2];
+
+      // Validate MIME type is an image
+      if (!mimeType.startsWith("image/")) {
+        return res.status(400).json({
+          success: false,
+          error: `केवल इमेज फ़ाइलें (JPEG, PNG, WebP, GIF) अपलोड करने की अनुमति है। मिला: ${mimeType}`
+        });
+      }
+
+      // Check file size (Base64 size limit ~10MB)
+      const approxSizeBytes = (base64Data.length * 3) / 4;
+      const maxSizeBytes = 10 * 1024 * 1024; // 10MB
+      if (approxSizeBytes > maxSizeBytes) {
+        return res.status(400).json({
+          success: false,
+          error: "चुनी गई इमेज बहुत बड़ी है। अधिकतम सीमा 10MB है।"
+        });
       }
     } else if (typeof file === "string" && (file.startsWith("http://") || file.startsWith("https://"))) {
+      // Already uploaded / remote URL, return as is
       return res.json({
         success: true,
         url: file,
         fileId: `url_${Date.now()}`,
       });
-    } else if (typeof file === "string") {
-      fileBuffer = Buffer.from(file, "base64");
     } else {
-      return res.status(400).json({ success: false, error: "Invalid image file payload." });
+      // Raw string or unsupported format
+      return res.status(400).json({
+        success: false,
+        error: "कृपया इमेज को मान्य Base64 डेटा यूआरएल फॉर्मेट में भेजें।"
+      });
     }
 
-    const fileId = `local_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
-    const cleanFileName = `${fileId}.${ext}`;
-    const filePath = path.join(uploadsDir, cleanFileName);
+    // 2. Initialize ImageKit
+    const { ik, missing } = getImageKitInstance();
+    if (!ik || missing.length > 0) {
+      return res.status(500).json({
+        success: false,
+        error: `इमेज किट सर्वर पर कॉन्फ़िगर नहीं है। कृपया ये पर्यावरण चर दर्ज करें: ${missing.join(", ")}`
+      });
+    }
 
-    fs.writeFileSync(filePath, fileBuffer);
-    const localUrl = `/uploads/${cleanFileName}`;
+    console.info("[ImageKit] Uploading image file to ImageKit...");
+    const uploadRes = await ik.upload({
+      file,
+      fileName: fileName || `ahimsa_photo_${Date.now()}.jpg`,
+      folder: "/ahimsa_photos",
+    });
 
-    console.info(`[LocalUpload] Image saved successfully! URL: ${localUrl}, fileId: ${fileId}`);
+    console.info(`[ImageKit] Upload succeeded! URL: ${uploadRes.url}, fileId: ${uploadRes.fileId}`);
     return res.json({
       success: true,
-      url: localUrl,
-      fileId,
+      url: uploadRes.url,
+      fileId: uploadRes.fileId,
     });
   } catch (err: any) {
-    console.error("[Upload] Upload failed:", err);
+    console.error("[Upload] Strict ImageKit upload failed:", err);
     return res.status(500).json({
       success: false,
-      error: err?.message || "Failed to upload image",
+      error: `इमेज किट अपलोड विफल: ${err?.message || "सर्वर त्रुटि"}`,
     });
   }
 });

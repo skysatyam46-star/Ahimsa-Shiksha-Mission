@@ -21,7 +21,11 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
   const [rotation, setRotation] = useState(0);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [isPinching, setIsPinching] = useState(false);
+
   const dragStartRef = useRef({ x: 0, y: 0 });
+  const startTouchDistanceRef = useRef(0);
+  const startScaleRef = useRef(1);
 
   // Reset controls when modal opens or image changes
   useEffect(() => {
@@ -29,6 +33,8 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
       setScale(1);
       setRotation(0);
       setPosition({ x: 0, y: 0 });
+      setIsDragging(false);
+      setIsPinching(false);
     }
   }, [isOpen, imageUrl]);
 
@@ -108,6 +114,63 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
 
   const handleMouseUp = () => {
     setIsDragging(false);
+  };
+
+  // Touch gestures for mobile (Pinch to Zoom & Drag to Pan)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      setIsDragging(true);
+      dragStartRef.current = {
+        x: e.touches[0].clientX - position.x,
+        y: e.touches[0].clientY - position.y,
+      };
+    } else if (e.touches.length === 2) {
+      setIsPinching(true);
+      setIsDragging(false);
+      const distance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      startTouchDistanceRef.current = distance;
+      startScaleRef.current = scale;
+
+      const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      dragStartRef.current = {
+        x: centerX - position.x,
+        y: centerY - position.y,
+      };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (isDragging && e.touches.length === 1) {
+      setPosition({
+        x: e.touches[0].clientX - dragStartRef.current.x,
+        y: e.touches[0].clientY - dragStartRef.current.y,
+      });
+    } else if (isPinching && e.touches.length === 2) {
+      const distance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const factor = distance / startTouchDistanceRef.current;
+      const newScale = Math.max(0.5, Math.min(startScaleRef.current * factor, 4));
+      setScale(newScale);
+
+      // Pan while pinching
+      const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      setPosition({
+        x: centerX - dragStartRef.current.x,
+        y: centerY - dragStartRef.current.y,
+      });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    setIsPinching(false);
   };
 
   const handleWheel = (e: React.WheelEvent) => {
@@ -220,13 +283,16 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
 
         {/* Central Canvas View */}
         <div
-          className="relative w-full flex-1 flex items-center justify-center overflow-hidden my-3 cursor-grab active:cursor-grabbing"
+          className="relative w-full flex-1 flex items-center justify-center overflow-hidden my-3 cursor-grab active:cursor-grabbing touch-none"
           onClick={(e) => e.stopPropagation()}
           onWheel={handleWheel}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           <motion.img
             src={imageUrl}
@@ -234,7 +300,7 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
             onDoubleClick={handleDoubleClick}
             style={{
               transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${rotation}deg)`,
-              transition: isDragging ? 'none' : 'transform 0.15s ease-out',
+              transition: (isDragging || isPinching) ? 'none' : 'transform 0.15s ease-out',
             }}
             className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl pointer-events-auto"
             draggable={false}
@@ -247,7 +313,7 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
           onClick={(e) => e.stopPropagation()}
         >
           <span>
-            💡 डबल-क्लिक करें या माउस व्हील घुमाएं ज़ूम करने के लिए | माउस से खींचकर फोटो सरकाएं
+            💡 पिंच करके ज़ूम करें / सरकाएं (2 उंगली) | डबल-क्लिक या व्हील से भी ज़ूम संभव है
           </span>
         </div>
       </motion.div>
