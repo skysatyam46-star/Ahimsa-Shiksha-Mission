@@ -3,7 +3,7 @@ import { Save, AlertCircle, CheckCircle2, MapPin, Loader2 } from 'lucide-react';
 import { PageContainer, Footer } from '../../components';
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
 import { AdminFileUpload } from '../../components/admin/AdminFileUpload';
-import { useData } from '../../context/DataContext';
+import { useData, getAdminAuthHeaders } from '../../context/DataContext';
 import { PhotoItem } from '../../lib/adminStore';
 
 interface AdminPhotoFormScreenProps {
@@ -33,23 +33,25 @@ export const AdminPhotoFormScreen: React.FC<AdminPhotoFormScreenProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-    useEffect(() => {
-    if (existingItem) {
-      setTitle(existingItem.title);
-      setCaption(existingItem.caption);
+  useEffect(() => {
+    if (isEdit && existingItem) {
+      setTitle(existingItem.title || '');
+      setCaption(existingItem.caption || '');
       setLocation(existingItem.location || '');
       setImageUrl(existingItem.imageUrl || '');
       setImageFileId(existingItem.imageFileId || '');
       setStatus(existingItem.status || 'published');
-        } else {
+    } else if (!isEdit) {
       setTitle('');
       setCaption('');
       setLocation('');
       setImageUrl('');
       setImageFileId('');
       setStatus('published');
+      setError(null);
+      setSuccess(null);
     }
-  }, [existingItem]);
+  }, [id, isEdit, existingItem]);
 
   const handleSave = async (targetStatus?: 'published' | 'draft') => {
     setError(null);
@@ -74,7 +76,8 @@ export const AdminPhotoFormScreen: React.FC<AdminPhotoFormScreenProps> = ({
       try {
         const uploadRes = await fetch('/api/admin/upload-image', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAdminAuthHeaders(),
+          credentials: 'include',
           body: JSON.stringify({
             file: imageUrl,
             fileName: fileName || `photo_${Date.now()}.jpg`,
@@ -95,7 +98,8 @@ export const AdminPhotoFormScreen: React.FC<AdminPhotoFormScreenProps> = ({
         if (oldFileId && oldFileId !== finalFileId) {
           fetch('/api/admin/delete-image', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAdminAuthHeaders(),
+            credentials: 'include',
             body: JSON.stringify({ fileId: oldFileId }),
           }).catch((err) => console.error('[PhotoForm] Failed to delete old ImageKit asset:', err));
         }
@@ -118,17 +122,21 @@ export const AdminPhotoFormScreen: React.FC<AdminPhotoFormScreenProps> = ({
       status: saveStatus,
     };
 
-    if (isEdit && id) {
-      updatePhoto(id, itemPayload);
-      setSuccess('फोटो सफलतापूर्वक अपडेट हो गई!');
-    } else {
-      addPhoto(itemPayload);
-      setSuccess('नई फोटो सफलतापूर्वक जोड़ दी गई!');
-    }
+    try {
+      if (isEdit && id) {
+        await updatePhoto(id, itemPayload);
+        setSuccess('फोटो सफलतापूर्वक अपडेट और डेटाबेस में सुरक्षित हो गई!');
+      } else {
+        await addPhoto(itemPayload);
+        setSuccess('नई फोटो सफलतापूर्वक प्रकाशित और डेटाबेस में सुरक्षित हो गई!');
+      }
 
-    setTimeout(() => {
-      onNavigate('/admin/photo');
-    }, 1000);
+      setTimeout(() => {
+        onNavigate('/admin/photo');
+      }, 800);
+    } catch (err: any) {
+      setError(err?.message || 'डेटाबेस में सहेजने में विफल। कृपया पुनः प्रयास करें।');
+    }
   };
 
   return (

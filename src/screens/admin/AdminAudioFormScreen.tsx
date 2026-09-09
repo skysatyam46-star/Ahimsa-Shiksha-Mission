@@ -34,16 +34,16 @@ export const AdminAudioFormScreen: React.FC<AdminAudioFormScreenProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-    useEffect(() => {
-    if (existingItem) {
-      setTitle(existingItem.title);
-      setDescription(existingItem.description);
+  useEffect(() => {
+    if (isEdit && existingItem) {
+      setTitle(existingItem.title || '');
+      setDescription(existingItem.description || '');
       setFileName(existingItem.fileName || '');
       setFileSize(existingItem.fileSize || '');
       setAudioUrl(existingItem.audioUrl || '');
       setLanguage(existingItem.language || 'hi');
       setStatus(existingItem.status || 'published');
-        } else {
+    } else if (!isEdit) {
       setTitle('');
       setDescription('');
       setFileName('');
@@ -51,10 +51,12 @@ export const AdminAudioFormScreen: React.FC<AdminAudioFormScreenProps> = ({
       setAudioUrl('');
       setLanguage('hi');
       setStatus('published');
+      setError(null);
+      setSuccess(null);
     }
-  }, [existingItem]);
+  }, [id, isEdit, existingItem]);
 
-  const handleSave = (targetStatus?: 'published' | 'draft') => {
+  const handleSave = async (targetStatus?: 'published' | 'draft') => {
     setError(null);
     const saveStatus = targetStatus || status;
 
@@ -77,17 +79,21 @@ export const AdminAudioFormScreen: React.FC<AdminAudioFormScreenProps> = ({
       status: saveStatus,
     };
 
-    if (isEdit && id) {
-      updateAudio(id, itemPayload);
-      setSuccess('ऑडियो संदेश सफलतापूर्वक अपडेट हो गया!');
-    } else {
-      addAudio(itemPayload);
-      setSuccess('नया ऑडियो संदेश सफलतापूर्वक जोड़ दिया गया!');
-    }
+    try {
+      if (isEdit && id) {
+        await updateAudio(id, itemPayload);
+        setSuccess('ऑडियो संदेश सफलतापूर्वक अपडेट और डेटाबेस में सुरक्षित हो गया!');
+      } else {
+        await addAudio(itemPayload);
+        setSuccess('नया ऑडियो संदेश सफलतापूर्वक प्रकाशित और डेटाबेस में सुरक्षित हो गया!');
+      }
 
-    setTimeout(() => {
-      onNavigate('/admin/audio');
-    }, 1000);
+      setTimeout(() => {
+        onNavigate('/admin/audio');
+      }, 800);
+    } catch (err: any) {
+      setError(err?.message || 'डेटाबेस में सहेजने में विफल। कृपया पुनः प्रयास करें।');
+    }
   };
 
   return (

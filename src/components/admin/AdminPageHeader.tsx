@@ -1,6 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Plus, ExternalLink, Sun, Moon } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { ArrowLeft, Plus, ExternalLink } from 'lucide-react';
 
 interface AdminPageHeaderProps {
   title: string;
@@ -29,8 +28,6 @@ export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
   primaryAction,
   secondaryAction,
 }) => {
-  const { theme, setTheme } = useApp();
-
   return (
     <div className="mb-5 pb-3 border-b border-[#E8E5DF] dark:border-[#334155]">
       {onBack && (
@@ -66,27 +63,6 @@ export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-          {/* Single Click Theme Toggle Button */}
-          <button
-            type="button"
-            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-            aria-label={theme === 'light' ? 'डार्क मोड पर बदलें' : 'लाइट मोड पर बदलें'}
-            title={theme === 'light' ? 'डार्क मोड करें' : 'लाइट मोड करें'}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-[#E8E5DF] dark:border-slate-700 shadow-2xs hover:bg-[#EEF3FA] dark:hover:bg-slate-700 text-[#16325C] dark:text-[#93C5FD] transition-all tap-active shrink-0"
-          >
-            {theme === 'light' ? (
-              <>
-                <Sun size={15} className="text-amber-500 fill-amber-400/30" />
-                <span className="text-[11.5px] font-semibold text-[#1F2421]">लाइट</span>
-              </>
-            ) : (
-              <>
-                <Moon size={15} className="text-blue-300 fill-blue-300/30" />
-                <span className="text-[11.5px] font-semibold text-white">डार्क</span>
-              </>
-            )}
-          </button>
-
           {secondaryAction && (
             <button
               type="button"

@@ -199,39 +199,6 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({
             </div>
           </div>
 
-          {/* Section: Theme Mode (अलग-अलग विकल्प) */}
-          <div className="pt-2 border-t border-[#E8E5DF] dark:border-[#334155]">
-            <span className="text-[11px] font-bold text-[#8C96A3] uppercase tracking-wider px-3 mb-2 block">
-              थीम चयन (Theme Mode)
-            </span>
-            <div className="grid grid-cols-2 gap-2 px-1">
-              <button
-                type="button"
-                onClick={() => setTheme('light')}
-                className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-[12.5px] font-semibold border transition-all tap-active ${
-                  theme === 'light'
-                    ? 'bg-white text-[#16325C] border-[#16325C]/30 shadow-xs ring-2 ring-[#16325C]/15'
-                    : 'bg-[#FAF8F5] dark:bg-slate-800 text-[#5C6773] dark:text-slate-400 border-[#E8E5DF] dark:border-slate-700 hover:text-[#16325C]'
-                }`}
-              >
-                <Sun size={15} className={theme === 'light' ? 'text-amber-500 fill-amber-400/30' : ''} />
-                <span>लाइट मोड</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setTheme('dark')}
-                className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-[12.5px] font-semibold border transition-all tap-active ${
-                  theme === 'dark'
-                    ? 'bg-[#16325C] text-white border-[#16325C] shadow-xs ring-2 ring-blue-400/30'
-                    : 'bg-[#FAF8F5] dark:bg-slate-800 text-[#5C6773] dark:text-slate-400 border-[#E8E5DF] dark:border-slate-700 hover:text-white'
-                }`}
-              >
-                <Moon size={15} className={theme === 'dark' ? 'text-blue-200 fill-blue-300/30' : ''} />
-                <span>डार्क मोड</span>
-              </button>
-            </div>
-          </div>
-
           {/* Section: Account */}
           <div className="pt-2 border-t border-[#E8E5DF] dark:border-[#334155]">
             <span className="text-[11px] font-bold text-[#8C96A3] uppercase tracking-wider px-3 mb-1.5 block">

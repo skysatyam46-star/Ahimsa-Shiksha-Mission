@@ -36,16 +36,16 @@ export const AdminNoticeFormScreen: React.FC<AdminNoticeFormScreenProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-    useEffect(() => {
-    if (existingItem) {
-      setTitle(existingItem.title);
-      setContent(existingItem.content);
+  useEffect(() => {
+    if (isEdit && existingItem) {
+      setTitle(existingItem.title || '');
+      setContent(existingItem.content || '');
       setEventDate(existingItem.details?.eventDate || '');
       setTime(existingItem.details?.time || '');
       setVenue(existingItem.details?.venue || '');
       setSubject(existingItem.details?.subject || '');
       setStatus(existingItem.status || 'published');
-        } else {
+    } else if (!isEdit) {
       setTitle('');
       setContent('');
       setEventDate('');
@@ -53,10 +53,12 @@ export const AdminNoticeFormScreen: React.FC<AdminNoticeFormScreenProps> = ({
       setVenue('');
       setSubject('');
       setStatus('published');
+      setError(null);
+      setSuccess(null);
     }
-  }, [existingItem]);
+  }, [id, isEdit, existingItem]);
 
-  const handleSave = (targetStatus?: 'published' | 'draft') => {
+  const handleSave = async (targetStatus?: 'published' | 'draft') => {
     setError(null);
     const saveStatus = targetStatus || status;
 
@@ -90,17 +92,21 @@ export const AdminNoticeFormScreen: React.FC<AdminNoticeFormScreenProps> = ({
       status: saveStatus,
     };
 
-    if (isEdit && id) {
-      updateNotice(id, itemPayload);
-      setSuccess('सूचना सफलतापूर्वक अपडेट हो गई!');
-    } else {
-      addNotice(itemPayload);
-      setSuccess('नई सूचना सफलतापूर्वक जारी कर दी गई!');
-    }
+    try {
+      if (isEdit && id) {
+        await updateNotice(id, itemPayload);
+        setSuccess('सूचना सफलतापूर्वक अपडेट और डेटाबेस में सुरक्षित हो गई!');
+      } else {
+        await addNotice(itemPayload);
+        setSuccess('नई सूचना सफलतापूर्वक जारी और डेटाबेस में सुरक्षित कर दी गई!');
+      }
 
-    setTimeout(() => {
-      onNavigate('/admin/notice');
-    }, 1000);
+      setTimeout(() => {
+        onNavigate('/admin/notice');
+      }, 800);
+    } catch (err: any) {
+      setError(err?.message || 'डेटाबेस में सहेजने में विफल। कृपया पुनः प्रयास करें।');
+    }
   };
 
   return (

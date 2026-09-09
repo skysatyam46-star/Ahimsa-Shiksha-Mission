@@ -1,5 +1,22 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
+export const ADMIN_TOKEN_KEY = 'ahimsa_admin_token';
+
+export const getStoredAdminToken = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(ADMIN_TOKEN_KEY);
+};
+
+export const setStoredAdminToken = (token: string): void => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(ADMIN_TOKEN_KEY, token);
+};
+
+export const removeStoredAdminToken = (): void => {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(ADMIN_TOKEN_KEY);
+};
+
 export interface AdminUserProfile {
   role: 'admin';
   active: boolean;
@@ -23,29 +40,61 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const [adminProfile, setAdminProfile] = useState<AdminUserProfile | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean>(() => {
+    return !!getStoredAdminToken();
+  });
+  const [adminProfile, setAdminProfile] = useState<AdminUserProfile | null>(() => {
+    return getStoredAdminToken()
+      ? {
+          role: 'admin',
+          active: true,
+          email: 'admin@ahimsa.org',
+          name: 'Ahimsa Admin',
+        }
+      : null;
+  });
   const [loading, setLoading] = useState<boolean>(true);
 
   const checkSession = useCallback(async (): Promise<boolean> => {
     try {
-      const response = await fetch('/api/admin/check-session');
+      const storedToken = getStoredAdminToken();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (storedToken) {
+        headers['x-admin-token'] = storedToken;
+        headers['Authorization'] = `Bearer ${storedToken}`;
+      }
+
+      const response = await fetch('/api/admin/check-session', {
+        headers,
+        credentials: 'include',
+      });
+
       if (response.ok) {
         const result = await response.json();
         if (result.success && result.isAdmin) {
+          if (result.token) {
+            setStoredAdminToken(result.token);
+          }
           setIsAdmin(true);
-          setAdminProfile({
-            role: 'admin',
-            active: true,
-            email: 'admin@ahimsa.org',
-            name: 'Ahimsa Admin',
-          });
+          setAdminProfile(
+            result.profile || {
+              role: 'admin',
+              active: true,
+              email: 'admin@ahimsa.org',
+              name: 'Ahimsa Admin',
+            }
+          );
           return true;
         }
       }
     } catch (err) {
       console.error('[AuthContext] Failed to check session:', err);
     }
+
+    // If server says session is invalid, clear token
+    removeStoredAdminToken();
     setIsAdmin(false);
     setAdminProfile(null);
     return false;
@@ -66,6 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ password }),
       });
 
@@ -74,13 +124,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error(result.error || 'Incorrect password');
       }
 
+      if (result.token) {
+        setStoredAdminToken(result.token);
+      }
+
       setIsAdmin(true);
-      setAdminProfile({
-        role: 'admin',
-        active: true,
-        email: 'admin@ahimsa.org',
-        name: 'Ahimsa Admin',
-      });
+      setAdminProfile(
+        result.profile || {
+          role: 'admin',
+          active: true,
+          email: 'admin@ahimsa.org',
+          name: 'Ahimsa Admin',
+        }
+      );
     } catch (err: any) {
       console.error('[AuthContext] Login error:', err);
       throw err;
@@ -88,13 +144,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const logout = useCallback(async (): Promise<void> => {
+    const storedToken = getStoredAdminToken();
     try {
-      await fetch('/api/admin/logout', { method: 'POST' });
+      const headers: Record<string, string> = {};
+      if (storedToken) {
+        headers['x-admin-token'] = storedToken;
+        headers['Authorization'] = `Bearer ${storedToken}`;
+      }
+      await fetch('/api/admin/logout', {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+      });
     } catch (err) {
       console.error('[AuthContext] Logout failed on server:', err);
+    } finally {
+      removeStoredAdminToken();
+      setIsAdmin(false);
+      setAdminProfile(null);
     }
-    setIsAdmin(false);
-    setAdminProfile(null);
   }, []);
 
   const refreshAdminStatus = useCallback(async (): Promise<boolean> => {

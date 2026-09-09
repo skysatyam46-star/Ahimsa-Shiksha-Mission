@@ -212,8 +212,34 @@ export function getInitialSeedData(): AppStoreData {
   };
 }
 
-// Load initial data (Starts completely empty for Phase B2 Firestore foundation)
+// Load initial data from localStorage cache if available
 export function loadStoreFromStorage(): AppStoreData {
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem(CMS_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && typeof parsed === 'object') {
+          const initial = getInitialSeedData();
+          return {
+            version: parsed.version || initial.version,
+            vichar: Array.isArray(parsed.vichar) ? parsed.vichar : initial.vichar,
+            videos: Array.isArray(parsed.videos) ? parsed.videos : initial.videos,
+            audio: Array.isArray(parsed.audio) ? parsed.audio : initial.audio,
+            photos: Array.isArray(parsed.photos) ? parsed.photos : initial.photos,
+            documents: Array.isArray(parsed.documents) ? parsed.documents : initial.documents,
+            notices: Array.isArray(parsed.notices) ? parsed.notices : initial.notices,
+            links: Array.isArray(parsed.links) ? parsed.links : initial.links,
+            mission: parsed.mission ? { ...initial.mission, ...parsed.mission } : initial.mission,
+            founder: parsed.founder ? { ...initial.founder, ...parsed.founder } : initial.founder,
+            contact: parsed.contact ? { ...initial.contact, ...parsed.contact } : initial.contact,
+          };
+        }
+      }
+    } catch (err) {
+      console.warn('Error loading CMS data from localStorage:', err);
+    }
+  }
   return getInitialSeedData();
 }
 

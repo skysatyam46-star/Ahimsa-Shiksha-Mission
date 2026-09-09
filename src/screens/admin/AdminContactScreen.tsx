@@ -21,25 +21,29 @@ export const AdminContactScreen: React.FC<AdminContactScreenProps> = ({ onNaviga
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!email.trim() || !phone.trim()) {
       setError('कृपया ईमेल और फोन नंबर अवश्य दर्ज करें।');
       return;
     }
 
-    updateContact({
-      email: email.trim(),
-      phone: phone.trim(),
-      address: address.trim(),
-      officeHours: officeHours.trim(),
-      guidance: guidance.trim(),
-      note: note.trim(),
-      mapEmbedUrl: mapEmbedUrl.trim(),
-    });
+    try {
+      await updateContact({
+        email: email.trim(),
+        phone: phone.trim(),
+        address: address.trim(),
+        officeHours: officeHours.trim(),
+        guidance: guidance.trim(),
+        note: note.trim(),
+        mapEmbedUrl: mapEmbedUrl.trim(),
+      });
 
-    setFeedback('संपर्क जानकारी सफलतापूर्वक अपडेट हो गई!');
-    setError(null);
-    setTimeout(() => setFeedback(null), 3000);
+      setFeedback('संपर्क जानकारी सफलतापूर्वक अपडेट और सुरक्षित हो गई!');
+      setError(null);
+      setTimeout(() => setFeedback(null), 3000);
+    } catch (err: any) {
+      setError(err?.message || 'डेटाबेस में सहेजने में विफल।');
+    }
   };
 
   return (

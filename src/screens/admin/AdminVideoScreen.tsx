@@ -35,11 +35,16 @@ export const AdminVideoScreen: React.FC<AdminVideoScreenProps> = ({ onNavigate }
     });
   }, [data.videos, searchQuery, statusFilter]);
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (itemToDelete) {
-      deleteVideo(itemToDelete.id);
-      showToast(`“${itemToDelete.title}” video delete ho gaya`);
-      setItemToDelete(null);
+      try {
+        await deleteVideo(itemToDelete.id);
+        showToast(`“${itemToDelete.title}” सफलतापूर्वक हटा दिया गया`);
+      } catch (err: any) {
+        showToast(err?.message || 'हटाने में विफल।');
+      } finally {
+        setItemToDelete(null);
+      }
     }
   };
 

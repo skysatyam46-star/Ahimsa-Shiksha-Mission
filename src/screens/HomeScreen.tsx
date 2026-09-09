@@ -73,7 +73,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       list.push({ id: n.id, itemType: 'notice', date: n.date, createdAt: n.createdAt, raw: n })
     );
 
-    return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return list.sort((a, b) => {
+      const timeA = new Date(a.raw?.publishedAt || a.createdAt || a.date || 0).getTime() || 0;
+      const timeB = new Date(b.raw?.publishedAt || b.createdAt || b.date || 0).getTime() || 0;
+      return timeB - timeA;
+    });
   }, [
     getPublishedVichar,
     getPublishedVideos,

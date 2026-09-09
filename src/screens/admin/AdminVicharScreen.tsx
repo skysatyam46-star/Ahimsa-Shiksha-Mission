@@ -36,11 +36,16 @@ export const AdminVicharScreen: React.FC<AdminVicharScreenProps> = ({ onNavigate
     });
   }, [data.vichar, searchQuery, statusFilter]);
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (itemToDelete) {
-      deleteVichar(itemToDelete.id);
-      showToast(`“${itemToDelete.title}” delete ho gaya`);
-      setItemToDelete(null);
+      try {
+        await deleteVichar(itemToDelete.id);
+        showToast(`“${itemToDelete.title}” सफलतापूर्वक हटा दिया गया`);
+      } catch (err: any) {
+        showToast(err?.message || 'हटाने में विफल।');
+      } finally {
+        setItemToDelete(null);
+      }
     }
   };
 

@@ -63,19 +63,19 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
         <button
           type="button"
           onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-          aria-label={theme === 'light' ? 'डार्क मोड पर बदलें' : 'लाइट मोड पर बदलें'}
-          title={theme === 'light' ? 'डार्क मोड करें' : 'लाइट मोड करें'}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-[#E8E5DF] dark:border-slate-700 shadow-2xs hover:bg-[#EEF3FA] dark:hover:bg-slate-700 text-[#16325C] dark:text-[#93C5FD] transition-all tap-active shrink-0"
+          aria-label={theme === 'light' ? 'डार्क मोड चालू करें' : 'लाइट मोड चालू करें'}
+          title={theme === 'light' ? 'डार्क मोड पर बदलें' : 'लाइट मोड पर बदलें'}
+          className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-[#E8E5DF] dark:border-slate-700 shadow-2xs hover:bg-[#EEF3FA] dark:hover:bg-slate-700 text-[#16325C] dark:text-[#93C5FD] transition-all tap-active shrink-0 cursor-pointer"
         >
           {theme === 'light' ? (
             <>
-              <Sun size={16} className="text-amber-500 fill-amber-400/30" />
-              <span className="text-[12px] font-semibold text-[#1F2421]">लाइट</span>
+              <Moon size={15} className="text-[#16325C]" />
+              <span className="text-[12px] font-semibold text-[#1F2421]">डार्क मोड</span>
             </>
           ) : (
             <>
-              <Moon size={16} className="text-blue-300 fill-blue-300/30" />
-              <span className="text-[12px] font-semibold text-white">डार्क</span>
+              <Sun size={15} className="text-amber-400 fill-amber-400" />
+              <span className="text-[12px] font-semibold text-white">लाइट मोड</span>
             </>
           )}
         </button>

@@ -55,7 +55,7 @@ export const AdminLinksScreen: React.FC<AdminLinksScreenProps> = ({ onNavigate }
     setError(null);
   };
 
-  const handleSaveForm = () => {
+  const handleSaveForm = async () => {
     if (!title.trim()) {
       setError('कृपया लिंक का शीर्षक (Title) दर्ज करें।');
       return;
@@ -65,32 +65,41 @@ export const AdminLinksScreen: React.FC<AdminLinksScreenProps> = ({ onNavigate }
       return;
     }
 
-    if (editingLink) {
-      updateLink(editingLink.id, {
-        title: title.trim(),
-        url: url.trim(),
-        description: description.trim(),
-        status,
-      });
-      showToast('लिंक सफलतापूर्वक अपडेट हो गया');
-    } else {
-      addLink({
-        title: title.trim(),
-        url: url.trim(),
-        description: description.trim(),
-        status,
-      });
-      showToast('नया लिंक सफलतापूर्वक जोड़ दिया गया');
-    }
+    try {
+      if (editingLink) {
+        await updateLink(editingLink.id, {
+          title: title.trim(),
+          url: url.trim(),
+          description: description.trim(),
+          status,
+        });
+        showToast('लिंक सफलतापूर्वक अपडेट और सुरक्षित हो गया');
+      } else {
+        await addLink({
+          title: title.trim(),
+          url: url.trim(),
+          description: description.trim(),
+          status,
+        });
+        showToast('नया लिंक सफलतापूर्वक जोड़ और सुरक्षित कर दिया गया');
+      }
 
-    handleCancelForm();
+      handleCancelForm();
+    } catch (err: any) {
+      setError(err?.message || 'डेटाबेस में सहेजने में विफल।');
+    }
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (itemToDelete) {
-      deleteLink(itemToDelete.id);
-      showToast(`“${itemToDelete.title}” delete ho gaya`);
-      setItemToDelete(null);
+      try {
+        await deleteLink(itemToDelete.id);
+        showToast(`“${itemToDelete.title}” सफलतापूर्वक हटा दिया गया`);
+      } catch (err: any) {
+        showToast(err?.message || 'हटाने में विफल।');
+      } finally {
+        setItemToDelete(null);
+      }
     }
   };
 

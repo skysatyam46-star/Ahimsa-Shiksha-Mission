@@ -13,6 +13,8 @@ import {
   FounderData,
   ContactData,
   getInitialSeedData,
+  loadStoreFromStorage,
+  saveStoreToStorage,
   generateUniqueId,
   getFormattedCurrentDate,
 } from '../lib/adminStore';
@@ -55,51 +57,51 @@ interface DataContextType {
     draft: number;
   };
   // Vichar CRUD
-  addVichar: (item: Partial<VicharItem>) => VicharItem;
-  updateVichar: (id: string, item: Partial<VicharItem>) => void;
-  deleteVichar: (id: string) => void;
+  addVichar: (item: Partial<VicharItem>) => Promise<VicharItem>;
+  updateVichar: (id: string, item: Partial<VicharItem>) => Promise<void>;
+  deleteVichar: (id: string) => Promise<void>;
   getVicharById: (id: string) => VicharItem | undefined;
 
   // Video CRUD
-  addVideo: (item: Partial<VideoItem>) => VideoItem;
-  updateVideo: (id: string, item: Partial<VideoItem>) => void;
-  deleteVideo: (id: string) => void;
+  addVideo: (item: Partial<VideoItem>) => Promise<VideoItem>;
+  updateVideo: (id: string, item: Partial<VideoItem>) => Promise<void>;
+  deleteVideo: (id: string) => Promise<void>;
   getVideoById: (id: string) => VideoItem | undefined;
 
   // Audio CRUD
-  addAudio: (item: Partial<AudioItem>) => AudioItem;
-  updateAudio: (id: string, item: Partial<AudioItem>) => void;
-  deleteAudio: (id: string) => void;
+  addAudio: (item: Partial<AudioItem>) => Promise<AudioItem>;
+  updateAudio: (id: string, item: Partial<AudioItem>) => Promise<void>;
+  deleteAudio: (id: string) => Promise<void>;
   getAudioById: (id: string) => AudioItem | undefined;
 
   // Photo CRUD
-  addPhoto: (item: Partial<PhotoItem>) => PhotoItem;
-  updatePhoto: (id: string, item: Partial<PhotoItem>) => void;
-  deletePhoto: (id: string) => void;
+  addPhoto: (item: Partial<PhotoItem>) => Promise<PhotoItem>;
+  updatePhoto: (id: string, item: Partial<PhotoItem>) => Promise<void>;
+  deletePhoto: (id: string) => Promise<void>;
   getPhotoById: (id: string) => PhotoItem | undefined;
 
   // Document CRUD
-  addDocument: (item: Partial<DocumentItem>) => DocumentItem;
-  updateDocument: (id: string, item: Partial<DocumentItem>) => void;
-  deleteDocument: (id: string) => void;
+  addDocument: (item: Partial<DocumentItem>) => Promise<DocumentItem>;
+  updateDocument: (id: string, item: Partial<DocumentItem>) => Promise<void>;
+  deleteDocument: (id: string) => Promise<void>;
   getDocumentById: (id: string) => DocumentItem | undefined;
 
   // Notice CRUD
-  addNotice: (item: Partial<NoticeItem>) => NoticeItem;
-  updateNotice: (id: string, item: Partial<NoticeItem>) => void;
-  deleteNotice: (id: string) => void;
+  addNotice: (item: Partial<NoticeItem>) => Promise<NoticeItem>;
+  updateNotice: (id: string, item: Partial<NoticeItem>) => Promise<void>;
+  deleteNotice: (id: string) => Promise<void>;
   getNoticeById: (id: string) => NoticeItem | undefined;
 
   // Link CRUD
-  addLink: (item: Partial<LinkItem>) => LinkItem;
-  updateLink: (id: string, item: Partial<LinkItem>) => void;
-  deleteLink: (id: string) => void;
-  reorderLinks: (orderedIds: string[]) => void;
+  addLink: (item: Partial<LinkItem>) => Promise<LinkItem>;
+  updateLink: (id: string, item: Partial<LinkItem>) => Promise<void>;
+  deleteLink: (id: string) => Promise<void>;
+  reorderLinks: (orderedIds: string[]) => Promise<void>;
 
   // Website Settings / CMS
-  updateMission: (mission: Partial<MissionData>) => void;
-  updateFounder: (founder: Partial<FounderData>) => void;
-  updateContact: (contact: Partial<ContactData>) => void;
+  updateMission: (mission: Partial<MissionData>) => Promise<void>;
+  updateFounder: (founder: Partial<FounderData>) => Promise<void>;
+  updateContact: (contact: Partial<ContactData>) => Promise<void>;
   resetDemoData: () => void;
   resetToSeedData: () => void;
   restoreData: (newData: AppStoreData) => void;
@@ -118,79 +120,134 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// Helper for API saving
-const saveContentItemToApi = async (item: any) => {
-  const res = await fetch('/api/admin/content', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(item),
-  });
-  if (!res.ok) {
-    const errData = await res.json().catch(() => ({}));
-    const msg = errData.error || 'Failed to save content item to Firestore';
-    alert("Error: " + msg);
-    window.dispatchEvent(new Event('refetch-data'));
-    throw new Error(msg);
+// Helper to construct authorization headers for admin requests
+export const getAdminAuthHeaders = (): Record<string, string> => {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('ahimsa_admin_token');
+    if (token) {
+      headers['x-admin-token'] = token;
+      headers['Authorization'] = `Bearer ${token}`;
+    }
   }
-  return await res.json();
+  return headers;
+};
+
+// Helper for API saving with resilient persistence and credentials
+const saveContentItemToApi = async (item: any) => {
+  try {
+    const res = await fetch('/api/admin/content', {
+      method: 'POST',
+      headers: getAdminAuthHeaders(),
+      credentials: 'include',
+      body: JSON.stringify(item),
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      const msg = errData.error || 'डेटाबेस (Firestore) में सामग्री सहेजने में विफल।';
+      console.error('[DataContext] Error saving content to Firestore:', msg);
+      throw new Error(msg);
+    }
+    return await res.json();
+  } catch (err: any) {
+    console.error('[DataContext] Exception saving content to Firestore:', err);
+    throw err;
+  }
 };
 
 const deleteContentItemFromApi = async (id: string) => {
-  const res = await fetch(`/api/admin/content/${id}`, { method: 'DELETE' });
-  if (!res.ok) {
-    const errData = await res.json().catch(() => ({}));
-    const msg = errData.error || 'Failed to delete content item from Firestore';
-    alert("Error: " + msg);
-    window.dispatchEvent(new Event('refetch-data'));
-    throw new Error(msg);
+  try {
+    const res = await fetch(`/api/admin/content/${id}`, {
+      method: 'DELETE',
+      headers: getAdminAuthHeaders(),
+      credentials: 'include',
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      const msg = errData.error || 'डेटाबेस (Firestore) से सामग्री हटाने में विफल।';
+      console.error('[DataContext] Error deleting content from Firestore:', msg);
+      throw new Error(msg);
+    }
+    return await res.json();
+  } catch (err: any) {
+    console.error('[DataContext] Exception deleting content from Firestore:', err);
+    throw err;
   }
 };
 
 const saveLinkToApi = async (item: any) => {
-  const res = await fetch('/api/admin/links', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(item),
-  });
-  if (!res.ok) {
-    const errData = await res.json().catch(() => ({}));
-    const msg = errData.error || 'Failed to save link to Firestore';
-    alert("Error: " + msg);
-    window.dispatchEvent(new Event('refetch-data'));
-    throw new Error(msg);
+  try {
+    const res = await fetch('/api/admin/links', {
+      method: 'POST',
+      headers: getAdminAuthHeaders(),
+      credentials: 'include',
+      body: JSON.stringify(item),
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      const msg = errData.error || 'लिंक सहेजने में विफल।';
+      console.error('[DataContext] Warning saving link:', msg);
+      throw new Error(msg);
+    }
+    return await res.json();
+  } catch (err: any) {
+    console.error('[DataContext] Error saving link to Firestore:', err);
+    throw err;
   }
 };
 
 const deleteLinkFromApi = async (id: string) => {
-  const res = await fetch(`/api/admin/links/${id}`, { method: 'DELETE' });
-  if (!res.ok) {
-    const errData = await res.json().catch(() => ({}));
-    const msg = errData.error || 'Failed to delete link from Firestore';
-    alert("Error: " + msg);
-    window.dispatchEvent(new Event('refetch-data'));
-    throw new Error(msg);
+  try {
+    const res = await fetch(`/api/admin/links/${id}`, {
+      method: 'DELETE',
+      headers: getAdminAuthHeaders(),
+      credentials: 'include',
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      const msg = errData.error || 'लिंक हटाने में विफल।';
+      console.error('[DataContext] Warning deleting link:', msg);
+      throw new Error(msg);
+    }
+    return await res.json();
+  } catch (err: any) {
+    console.error('[DataContext] Error deleting link from Firestore:', err);
+    throw err;
   }
 };
 
 const saveSettingsDocToApi = async (docId: string, payload: any) => {
-  const res = await fetch(`/api/admin/settings/${docId}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) {
-    const errData = await res.json().catch(() => ({}));
-    const msg = errData.error || `Failed to save ${docId} settings to Firestore`;
-    alert("Error: " + msg);
-    window.dispatchEvent(new Event('refetch-data'));
-    throw new Error(msg);
+  try {
+    const res = await fetch(`/api/admin/settings/${docId}`, {
+      method: 'POST',
+      headers: getAdminAuthHeaders(),
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      const msg = errData.error || `${docId} सेटिंग सहेजने में विफल।`;
+      console.error(`[DataContext] Warning saving ${docId}:`, msg);
+      throw new Error(msg);
+    }
+    return await res.json();
+  } catch (err: any) {
+    console.error(`[DataContext] Error saving ${docId} to Firestore:`, err);
+    throw err;
   }
 };
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAdmin } = useAuth();
   const [loading, setLoading] = useState<boolean>(true);
-  const [data, setData] = useState<AppStoreData>(() => getInitialSeedData());
+  const [data, setData] = useState<AppStoreData>(() => loadStoreFromStorage());
+
+  // Automatically keep localStorage cache synchronized with latest state
+  useEffect(() => {
+    saveStoreToStorage(data);
+  }, [data]);
 
   // Load store from Firestore API on mount and whenever admin login status changes
   useEffect(() => {
@@ -206,7 +263,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         if (isAdmin) {
           console.info('[DataContext] Fetching Admin CMS data (drafts + published) from Firestore...');
-          const res = await fetch('/api/admin/get-data');
+          const res = await fetch('/api/admin/get-data', { 
+            headers: getAdminAuthHeaders(),
+            credentials: 'include' 
+          });
           if (res.ok) {
             const result = await res.json();
             if (result && result.success && result.data && isMounted) {
@@ -225,6 +285,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 contact: result.data.contact ? { ...initial.contact, ...result.data.contact } : initial.contact,
               };
               setData(merged);
+              saveStoreToStorage(merged);
               setLoading(false);
               return;
             }
@@ -250,6 +311,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 contact: publicStore.contact ? { ...initial.contact, ...publicStore.contact } : initial.contact,
               };
               setData(merged);
+              saveStoreToStorage(merged);
               setLoading(false);
               return;
             }
@@ -309,7 +371,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [data]);
 
   /* ---------------- VICHAR ---------------- */
-  const addVichar = useCallback((item: Partial<VicharItem>): VicharItem => {
+  const addVichar = useCallback(async (item: Partial<VicharItem>): Promise<VicharItem> => {
     const nowIso = new Date().toISOString();
     const status = item.status || 'published';
     const newItem: VicharItem = {
@@ -332,52 +394,50 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...(status === 'published' ? { publishedAt: nowIso } : {}),
     };
 
+    await saveContentItemToApi(newItem);
+
     setData((prev) => ({
       ...prev,
-      vichar: [newItem, ...prev.vichar],
+      vichar: [newItem, ...prev.vichar.filter((v) => v.id !== newItem.id)],
     }));
 
-    saveContentItemToApi(newItem);
     return newItem;
   }, []);
 
-  const updateVichar = useCallback((id: string, updates: Partial<VicharItem>) => {
+  const updateVichar = useCallback(async (id: string, updates: Partial<VicharItem>): Promise<void> => {
     const nowIso = new Date().toISOString();
-    setData((prev) => {
-      let updatedItem: VicharItem | null = null;
-      const newVichar = prev.vichar.map((item) => {
-        if (item.id === id) {
-          const nextStatus = updates.status || item.status;
-          const merged: VicharItem = {
-            ...item,
-            ...updates,
-            status: nextStatus,
-            updatedAt: nowIso,
-          };
-          if (nextStatus === 'published') {
-            merged.publishedAt = merged.publishedAt || nowIso;
-          } else {
-            delete merged.publishedAt;
-          }
-          updatedItem = merged;
-          return merged;
-        }
-        return item;
-      });
+    const current = data.vichar.find((item) => item.id === id);
+    if (!current) {
+      throw new Error("विचार नहीं मिला");
+    }
 
-      if (updatedItem) {
-        saveContentItemToApi(updatedItem);
-      }
-      return { ...prev, vichar: newVichar };
-    });
-  }, []);
+    const nextStatus = updates.status || current.status;
+    const merged: VicharItem = {
+      ...current,
+      ...updates,
+      status: nextStatus,
+      updatedAt: nowIso,
+    };
+    if (nextStatus === 'published') {
+      merged.publishedAt = merged.publishedAt || nowIso;
+    } else {
+      delete merged.publishedAt;
+    }
 
-  const deleteVichar = useCallback((id: string) => {
+    await saveContentItemToApi(merged);
+
+    setData((prev) => ({
+      ...prev,
+      vichar: prev.vichar.map((item) => (item.id === id ? merged : item)),
+    }));
+  }, [data.vichar]);
+
+  const deleteVichar = useCallback(async (id: string): Promise<void> => {
+    await deleteContentItemFromApi(id);
     setData((prev) => ({
       ...prev,
       vichar: prev.vichar.filter((item) => item.id !== id),
     }));
-    deleteContentItemFromApi(id);
   }, []);
 
   const getVicharById = useCallback((id: string) => {
@@ -385,7 +445,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [data.vichar]);
 
   /* ---------------- VIDEO ---------------- */
-  const addVideo = useCallback((item: Partial<VideoItem>): VideoItem => {
+  const addVideo = useCallback(async (item: Partial<VideoItem>): Promise<VideoItem> => {
     const nowIso = new Date().toISOString();
     const status = item.status || 'published';
     const newItem: VideoItem = {
@@ -408,52 +468,50 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...(status === 'published' ? { publishedAt: nowIso } : {}),
     };
 
+    await saveContentItemToApi(newItem);
+
     setData((prev) => ({
       ...prev,
-      videos: [newItem, ...prev.videos],
+      videos: [newItem, ...prev.videos.filter((v) => v.id !== newItem.id)],
     }));
 
-    saveContentItemToApi(newItem);
     return newItem;
   }, []);
 
-  const updateVideo = useCallback((id: string, updates: Partial<VideoItem>) => {
+  const updateVideo = useCallback(async (id: string, updates: Partial<VideoItem>): Promise<void> => {
     const nowIso = new Date().toISOString();
-    setData((prev) => {
-      let updatedItem: VideoItem | null = null;
-      const newVideos = prev.videos.map((item) => {
-        if (item.id === id) {
-          const nextStatus = updates.status || item.status;
-          const merged: VideoItem = {
-            ...item,
-            ...updates,
-            status: nextStatus,
-            updatedAt: nowIso,
-          };
-          if (nextStatus === 'published') {
-            merged.publishedAt = merged.publishedAt || nowIso;
-          } else {
-            delete merged.publishedAt;
-          }
-          updatedItem = merged;
-          return merged;
-        }
-        return item;
-      });
+    const current = data.videos.find((item) => item.id === id);
+    if (!current) {
+      throw new Error("वीडियो नहीं मिला");
+    }
 
-      if (updatedItem) {
-        saveContentItemToApi(updatedItem);
-      }
-      return { ...prev, videos: newVideos };
-    });
-  }, []);
+    const nextStatus = updates.status || current.status;
+    const merged: VideoItem = {
+      ...current,
+      ...updates,
+      status: nextStatus,
+      updatedAt: nowIso,
+    };
+    if (nextStatus === 'published') {
+      merged.publishedAt = merged.publishedAt || nowIso;
+    } else {
+      delete merged.publishedAt;
+    }
 
-  const deleteVideo = useCallback((id: string) => {
+    await saveContentItemToApi(merged);
+
+    setData((prev) => ({
+      ...prev,
+      videos: prev.videos.map((item) => (item.id === id ? merged : item)),
+    }));
+  }, [data.videos]);
+
+  const deleteVideo = useCallback(async (id: string): Promise<void> => {
+    await deleteContentItemFromApi(id);
     setData((prev) => ({
       ...prev,
       videos: prev.videos.filter((item) => item.id !== id),
     }));
-    deleteContentItemFromApi(id);
   }, []);
 
   const getVideoById = useCallback((id: string) => {
@@ -461,7 +519,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [data.videos]);
 
   /* ---------------- AUDIO ---------------- */
-  const addAudio = useCallback((item: Partial<AudioItem>): AudioItem => {
+  const addAudio = useCallback(async (item: Partial<AudioItem>): Promise<AudioItem> => {
     const nowIso = new Date().toISOString();
     const status = item.status || 'published';
     const newItem: AudioItem = {
@@ -486,52 +544,50 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...(status === 'published' ? { publishedAt: nowIso } : {}),
     };
 
+    await saveContentItemToApi(newItem);
+
     setData((prev) => ({
       ...prev,
-      audio: [newItem, ...prev.audio],
+      audio: [newItem, ...prev.audio.filter((a) => a.id !== newItem.id)],
     }));
 
-    saveContentItemToApi(newItem);
     return newItem;
   }, []);
 
-  const updateAudio = useCallback((id: string, updates: Partial<AudioItem>) => {
+  const updateAudio = useCallback(async (id: string, updates: Partial<AudioItem>): Promise<void> => {
     const nowIso = new Date().toISOString();
-    setData((prev) => {
-      let updatedItem: AudioItem | null = null;
-      const newAudio = prev.audio.map((item) => {
-        if (item.id === id) {
-          const nextStatus = updates.status || item.status;
-          const merged: AudioItem = {
-            ...item,
-            ...updates,
-            status: nextStatus,
-            updatedAt: nowIso,
-          };
-          if (nextStatus === 'published') {
-            merged.publishedAt = merged.publishedAt || nowIso;
-          } else {
-            delete merged.publishedAt;
-          }
-          updatedItem = merged;
-          return merged;
-        }
-        return item;
-      });
+    const current = data.audio.find((item) => item.id === id);
+    if (!current) {
+      throw new Error("ऑडियो नहीं मिला");
+    }
 
-      if (updatedItem) {
-        saveContentItemToApi(updatedItem);
-      }
-      return { ...prev, audio: newAudio };
-    });
-  }, []);
+    const nextStatus = updates.status || current.status;
+    const merged: AudioItem = {
+      ...current,
+      ...updates,
+      status: nextStatus,
+      updatedAt: nowIso,
+    };
+    if (nextStatus === 'published') {
+      merged.publishedAt = merged.publishedAt || nowIso;
+    } else {
+      delete merged.publishedAt;
+    }
 
-  const deleteAudio = useCallback((id: string) => {
+    await saveContentItemToApi(merged);
+
+    setData((prev) => ({
+      ...prev,
+      audio: prev.audio.map((item) => (item.id === id ? merged : item)),
+    }));
+  }, [data.audio]);
+
+  const deleteAudio = useCallback(async (id: string): Promise<void> => {
+    await deleteContentItemFromApi(id);
     setData((prev) => ({
       ...prev,
       audio: prev.audio.filter((item) => item.id !== id),
     }));
-    deleteContentItemFromApi(id);
   }, []);
 
   const getAudioById = useCallback((id: string) => {
@@ -539,7 +595,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [data.audio]);
 
   /* ---------------- PHOTO ---------------- */
-  const addPhoto = useCallback((item: Partial<PhotoItem>): PhotoItem => {
+  const addPhoto = useCallback(async (item: Partial<PhotoItem>): Promise<PhotoItem> => {
     const nowIso = new Date().toISOString();
     const status = item.status || 'published';
     const newItem: PhotoItem = {
@@ -559,52 +615,50 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...(status === 'published' ? { publishedAt: nowIso } : {}),
     };
 
+    await saveContentItemToApi(newItem);
+
     setData((prev) => ({
       ...prev,
-      photos: [newItem, ...prev.photos],
+      photos: [newItem, ...prev.photos.filter((p) => p.id !== newItem.id)],
     }));
 
-    saveContentItemToApi(newItem);
     return newItem;
   }, []);
 
-  const updatePhoto = useCallback((id: string, updates: Partial<PhotoItem>) => {
+  const updatePhoto = useCallback(async (id: string, updates: Partial<PhotoItem>): Promise<void> => {
     const nowIso = new Date().toISOString();
-    setData((prev) => {
-      let updatedItem: PhotoItem | null = null;
-      const newPhotos = prev.photos.map((item) => {
-        if (item.id === id) {
-          const nextStatus = updates.status || item.status;
-          const merged: PhotoItem = {
-            ...item,
-            ...updates,
-            status: nextStatus,
-            updatedAt: nowIso,
-          };
-          if (nextStatus === 'published') {
-            merged.publishedAt = merged.publishedAt || nowIso;
-          } else {
-            delete merged.publishedAt;
-          }
-          updatedItem = merged;
-          return merged;
-        }
-        return item;
-      });
+    const current = data.photos.find((item) => item.id === id);
+    if (!current) {
+      throw new Error("फोटो नहीं मिला");
+    }
 
-      if (updatedItem) {
-        saveContentItemToApi(updatedItem);
-      }
-      return { ...prev, photos: newPhotos };
-    });
-  }, []);
+    const nextStatus = updates.status || current.status;
+    const merged: PhotoItem = {
+      ...current,
+      ...updates,
+      status: nextStatus,
+      updatedAt: nowIso,
+    };
+    if (nextStatus === 'published') {
+      merged.publishedAt = merged.publishedAt || nowIso;
+    } else {
+      delete merged.publishedAt;
+    }
 
-  const deletePhoto = useCallback((id: string) => {
+    await saveContentItemToApi(merged);
+
+    setData((prev) => ({
+      ...prev,
+      photos: prev.photos.map((item) => (item.id === id ? merged : item)),
+    }));
+  }, [data.photos]);
+
+  const deletePhoto = useCallback(async (id: string): Promise<void> => {
+    await deleteContentItemFromApi(id);
     setData((prev) => ({
       ...prev,
       photos: prev.photos.filter((item) => item.id !== id),
     }));
-    deleteContentItemFromApi(id);
   }, []);
 
   const getPhotoById = useCallback((id: string) => {
@@ -612,7 +666,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [data.photos]);
 
   /* ---------------- DOCUMENT ---------------- */
-  const addDocument = useCallback((item: Partial<DocumentItem>): DocumentItem => {
+  const addDocument = useCallback(async (item: Partial<DocumentItem>): Promise<DocumentItem> => {
     const nowIso = new Date().toISOString();
     const status = item.status || 'published';
     const newItem: DocumentItem = {
@@ -636,52 +690,50 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...(status === 'published' ? { publishedAt: nowIso } : {}),
     };
 
+    await saveContentItemToApi(newItem);
+
     setData((prev) => ({
       ...prev,
-      documents: [newItem, ...prev.documents],
+      documents: [newItem, ...prev.documents.filter((d) => d.id !== newItem.id)],
     }));
 
-    saveContentItemToApi(newItem);
     return newItem;
   }, []);
 
-  const updateDocument = useCallback((id: string, updates: Partial<DocumentItem>) => {
+  const updateDocument = useCallback(async (id: string, updates: Partial<DocumentItem>): Promise<void> => {
     const nowIso = new Date().toISOString();
-    setData((prev) => {
-      let updatedItem: DocumentItem | null = null;
-      const newDocs = prev.documents.map((item) => {
-        if (item.id === id) {
-          const nextStatus = updates.status || item.status;
-          const merged: DocumentItem = {
-            ...item,
-            ...updates,
-            status: nextStatus,
-            updatedAt: nowIso,
-          };
-          if (nextStatus === 'published') {
-            merged.publishedAt = merged.publishedAt || nowIso;
-          } else {
-            delete merged.publishedAt;
-          }
-          updatedItem = merged;
-          return merged;
-        }
-        return item;
-      });
+    const current = data.documents.find((item) => item.id === id);
+    if (!current) {
+      throw new Error("दस्तावेज नहीं मिला");
+    }
 
-      if (updatedItem) {
-        saveContentItemToApi(updatedItem);
-      }
-      return { ...prev, documents: newDocs };
-    });
-  }, []);
+    const nextStatus = updates.status || current.status;
+    const merged: DocumentItem = {
+      ...current,
+      ...updates,
+      status: nextStatus,
+      updatedAt: nowIso,
+    };
+    if (nextStatus === 'published') {
+      merged.publishedAt = merged.publishedAt || nowIso;
+    } else {
+      delete merged.publishedAt;
+    }
 
-  const deleteDocument = useCallback((id: string) => {
+    await saveContentItemToApi(merged);
+
+    setData((prev) => ({
+      ...prev,
+      documents: prev.documents.map((item) => (item.id === id ? merged : item)),
+    }));
+  }, [data.documents]);
+
+  const deleteDocument = useCallback(async (id: string): Promise<void> => {
+    await deleteContentItemFromApi(id);
     setData((prev) => ({
       ...prev,
       documents: prev.documents.filter((item) => item.id !== id),
     }));
-    deleteContentItemFromApi(id);
   }, []);
 
   const getDocumentById = useCallback((id: string) => {
@@ -689,7 +741,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [data.documents]);
 
   /* ---------------- NOTICE ---------------- */
-  const addNotice = useCallback((item: Partial<NoticeItem>): NoticeItem => {
+  const addNotice = useCallback(async (item: Partial<NoticeItem>): Promise<NoticeItem> => {
     const nowIso = new Date().toISOString();
     const status = item.status || 'published';
     const newItem: NoticeItem = {
@@ -714,52 +766,50 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...(status === 'published' ? { publishedAt: nowIso } : {}),
     };
 
+    await saveContentItemToApi(newItem);
+
     setData((prev) => ({
       ...prev,
-      notices: [newItem, ...prev.notices],
+      notices: [newItem, ...prev.notices.filter((n) => n.id !== newItem.id)],
     }));
 
-    saveContentItemToApi(newItem);
     return newItem;
   }, []);
 
-  const updateNotice = useCallback((id: string, updates: Partial<NoticeItem>) => {
+  const updateNotice = useCallback(async (id: string, updates: Partial<NoticeItem>): Promise<void> => {
     const nowIso = new Date().toISOString();
-    setData((prev) => {
-      let updatedItem: NoticeItem | null = null;
-      const newNotices = prev.notices.map((item) => {
-        if (item.id === id) {
-          const nextStatus = updates.status || item.status;
-          const merged: NoticeItem = {
-            ...item,
-            ...updates,
-            status: nextStatus,
-            updatedAt: nowIso,
-          };
-          if (nextStatus === 'published') {
-            merged.publishedAt = merged.publishedAt || nowIso;
-          } else {
-            delete merged.publishedAt;
-          }
-          updatedItem = merged;
-          return merged;
-        }
-        return item;
-      });
+    const current = data.notices.find((item) => item.id === id);
+    if (!current) {
+      throw new Error("सूचना नहीं मिली");
+    }
 
-      if (updatedItem) {
-        saveContentItemToApi(updatedItem);
-      }
-      return { ...prev, notices: newNotices };
-    });
-  }, []);
+    const nextStatus = updates.status || current.status;
+    const merged: NoticeItem = {
+      ...current,
+      ...updates,
+      status: nextStatus,
+      updatedAt: nowIso,
+    };
+    if (nextStatus === 'published') {
+      merged.publishedAt = merged.publishedAt || nowIso;
+    } else {
+      delete merged.publishedAt;
+    }
 
-  const deleteNotice = useCallback((id: string) => {
+    await saveContentItemToApi(merged);
+
+    setData((prev) => ({
+      ...prev,
+      notices: prev.notices.map((item) => (item.id === id ? merged : item)),
+    }));
+  }, [data.notices]);
+
+  const deleteNotice = useCallback(async (id: string): Promise<void> => {
+    await deleteContentItemFromApi(id);
     setData((prev) => ({
       ...prev,
       notices: prev.notices.filter((item) => item.id !== id),
     }));
-    deleteContentItemFromApi(id);
   }, []);
 
   const getNoticeById = useCallback((id: string) => {
@@ -767,7 +817,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [data.notices]);
 
   /* ---------------- LINKS ---------------- */
-  const addLink = useCallback((item: Partial<LinkItem>): LinkItem => {
+  const addLink = useCallback(async (item: Partial<LinkItem>): Promise<LinkItem> => {
     const nowIso = new Date().toISOString();
     const newItem: LinkItem = {
       id: item.id || generateUniqueId('link'),
@@ -780,101 +830,92 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updatedAt: nowIso,
     };
 
+    await saveLinkToApi(newItem);
+
     setData((prev) => ({
       ...prev,
-      links: [...prev.links, newItem],
+      links: [...prev.links.filter((l) => l.id !== newItem.id), newItem],
     }));
 
-    saveLinkToApi(newItem);
     return newItem;
   }, [data.links.length]);
 
-  const updateLink = useCallback((id: string, updates: Partial<LinkItem>) => {
+  const updateLink = useCallback(async (id: string, updates: Partial<LinkItem>): Promise<void> => {
     const nowIso = new Date().toISOString();
-    setData((prev) => {
-      let updatedLink: LinkItem | null = null;
-      const newLinks = prev.links.map((item) => {
-        if (item.id === id) {
-          const merged: LinkItem = { ...item, ...updates, updatedAt: nowIso };
-          updatedLink = merged;
-          return merged;
-        }
-        return item;
-      });
+    const current = data.links.find((item) => item.id === id);
+    if (!current) {
+      throw new Error("लिंक नहीं मिला");
+    }
 
-      if (updatedLink) {
-        saveLinkToApi(updatedLink);
-      }
-      return { ...prev, links: newLinks };
-    });
-  }, []);
+    const merged: LinkItem = { ...current, ...updates, updatedAt: nowIso };
+    await saveLinkToApi(merged);
 
-  const deleteLink = useCallback((id: string) => {
+    setData((prev) => ({
+      ...prev,
+      links: prev.links.map((item) => (item.id === id ? merged : item)),
+    }));
+  }, [data.links]);
+
+  const deleteLink = useCallback(async (id: string): Promise<void> => {
+    await deleteLinkFromApi(id);
     setData((prev) => ({
       ...prev,
       links: prev.links.filter((item) => item.id !== id),
     }));
-    deleteLinkFromApi(id);
   }, []);
 
-  const reorderLinks = useCallback((orderedIds: string[]) => {
-    setData((prev) => {
-      const linkMap = new Map<string, LinkItem>(prev.links.map((l) => [l.id, l]));
-      const newLinks: LinkItem[] = [];
-      orderedIds.forEach((id, index) => {
-        const link = linkMap.get(id);
-        if (link) {
-          const updated = { ...(link as LinkItem), order: index + 1 };
-          newLinks.push(updated);
-          saveLinkToApi(updated);
-        }
-      });
-      // Append any remaining
-      prev.links.forEach((link) => {
-        if (!orderedIds.includes(link.id)) {
-          const updated = { ...link, order: newLinks.length + 1 };
-          newLinks.push(updated);
-          saveLinkToApi(updated);
-        }
-      });
-      return { ...prev, links: newLinks };
+  const reorderLinks = useCallback(async (orderedIds: string[]): Promise<void> => {
+    const linkMap = new Map<string, LinkItem>(data.links.map((l) => [l.id, l]));
+    const updatedLinks: LinkItem[] = [];
+
+    orderedIds.forEach((id, index) => {
+      const link = linkMap.get(id);
+      if (link) {
+        updatedLinks.push({ ...link, order: index + 1 });
+      }
     });
-  }, []);
+
+    data.links.forEach((link) => {
+      if (!orderedIds.includes(link.id)) {
+        updatedLinks.push({ ...link, order: updatedLinks.length + 1 });
+      }
+    });
+
+    // Save each in parallel
+    await Promise.all(updatedLinks.map((l) => saveLinkToApi(l)));
+
+    setData((prev) => ({ ...prev, links: updatedLinks }));
+  }, [data.links]);
 
   /* ---------------- CMS PAGES ---------------- */
-  const updateMission = useCallback((missionUpdates: Partial<MissionData>) => {
+  const updateMission = useCallback(async (missionUpdates: Partial<MissionData>): Promise<void> => {
     const nowIso = new Date().toISOString();
-    setData((prev) => {
-      const updatedMission = { ...prev.mission, ...missionUpdates, updatedAt: nowIso };
-      saveSettingsDocToApi('mission', updatedMission);
-      return { ...prev, mission: updatedMission };
-    });
-  }, []);
+    const updatedMission = { ...data.mission, ...missionUpdates, updatedAt: nowIso };
+    await saveSettingsDocToApi('mission', updatedMission);
+    setData((prev) => ({ ...prev, mission: updatedMission }));
+  }, [data.mission]);
 
-  const updateFounder = useCallback((founderUpdates: Partial<FounderData>) => {
+  const updateFounder = useCallback(async (founderUpdates: Partial<FounderData>): Promise<void> => {
     const nowIso = new Date().toISOString();
-    setData((prev) => {
-      const updatedFounder = { ...prev.founder, ...founderUpdates, updatedAt: nowIso };
-      saveSettingsDocToApi('founder', updatedFounder);
-      return { ...prev, founder: updatedFounder };
-    });
-  }, []);
+    const updatedFounder = { ...data.founder, ...founderUpdates, updatedAt: nowIso };
+    await saveSettingsDocToApi('founder', updatedFounder);
+    setData((prev) => ({ ...prev, founder: updatedFounder }));
+  }, [data.founder]);
 
-  const updateContact = useCallback((contactUpdates: Partial<ContactData>) => {
+  const updateContact = useCallback(async (contactUpdates: Partial<ContactData>): Promise<void> => {
     const nowIso = new Date().toISOString();
-    setData((prev) => {
-      const updatedContact = { ...prev.contact, ...contactUpdates, updatedAt: nowIso };
-      saveSettingsDocToApi('contact', updatedContact);
-      return { ...prev, contact: updatedContact };
-    });
-  }, []);
+    const updatedContact = { ...data.contact, ...contactUpdates, updatedAt: nowIso };
+    await saveSettingsDocToApi('contact', updatedContact);
+    setData((prev) => ({ ...prev, contact: updatedContact }));
+  }, [data.contact]);
 
   const resetDemoData = useCallback(() => {
     const fresh = getInitialSeedData();
     setData(fresh);
     fetch('/api/admin/save-data', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAdminAuthHeaders(),
+      credentials: 'include',
       body: JSON.stringify(fresh),
     }).catch((err) => console.error('[DataContext] Error resetting store in Firestore:', err));
   }, []);
@@ -884,7 +925,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setData(fresh);
     fetch('/api/admin/save-data', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAdminAuthHeaders(),
+      credentials: 'include',
       body: JSON.stringify(fresh),
     }).catch((err) => console.error('[DataContext] Error resetting store in Firestore:', err));
   }, []);

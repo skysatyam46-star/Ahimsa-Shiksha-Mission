@@ -35,11 +35,16 @@ export const AdminDocumentScreen: React.FC<AdminDocumentScreenProps> = ({ onNavi
     });
   }, [data.documents, searchQuery, statusFilter]);
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (itemToDelete) {
-      deleteDocument(itemToDelete.id);
-      showToast(`“${itemToDelete.title}” दस्तावेज delete ho gaya`);
-      setItemToDelete(null);
+      try {
+        await deleteDocument(itemToDelete.id);
+        showToast(`“${itemToDelete.title}” सफलतापूर्वक हटा दिया गया`);
+      } catch (err: any) {
+        showToast(err?.message || 'हटाने में विफल।');
+      } finally {
+        setItemToDelete(null);
+      }
     }
   };
 

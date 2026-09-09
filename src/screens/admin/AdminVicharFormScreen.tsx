@@ -19,35 +19,43 @@ export const AdminVicharFormScreen: React.FC<AdminVicharFormScreenProps> = ({
 
   const existingItem = isEdit && id ? getVicharById(id) : undefined;
 
-  const [title, setTitle] = useState(existingItem?.title || '');
-  const [author] = useState(existingItem?.author || 'अहिंसा शिक्षा मिशन');
-  const [topic] = useState(existingItem?.topic || 'अहिंसा');
-  const [leadParagraph, setLeadParagraph] = useState(existingItem?.leadParagraph || '');
-  const [bodyText, setBodyText] = useState(existingItem?.paragraphs?.join('\n\n') || '');
-  const [keyTakeaway] = useState(existingItem?.keyTakeaway || '');
-  const [language, setLanguage] = useState<'hi' | 'en'>(existingItem?.language || 'hi');
-  const [status, setStatus] = useState<'published' | 'draft'>(existingItem?.status || 'published');
+  const [title, setTitle] = useState(isEdit && existingItem ? existingItem.title : '');
+  const [author, setAuthor] = useState(isEdit && existingItem ? existingItem.author : 'अहिंसा शिक्षा मिशन');
+  const [topic, setTopic] = useState(isEdit && existingItem ? existingItem.topic || 'अहिंसा' : 'अहिंसा');
+  const [leadParagraph, setLeadParagraph] = useState(isEdit && existingItem ? existingItem.leadParagraph || '' : '');
+  const [bodyText, setBodyText] = useState(isEdit && existingItem ? existingItem.paragraphs?.join('\n\n') || '' : '');
+  const [keyTakeaway, setKeyTakeaway] = useState(isEdit && existingItem ? existingItem.keyTakeaway || '' : '');
+  const [language, setLanguage] = useState<'hi' | 'en'>(isEdit && existingItem ? existingItem.language || 'hi' : 'hi');
+  const [status, setStatus] = useState<'published' | 'draft'>(isEdit && existingItem ? existingItem.status || 'published' : 'published');
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-    useEffect(() => {
-    if (existingItem) {
-      setTitle(existingItem.title);
+  useEffect(() => {
+    if (isEdit && existingItem) {
+      setTitle(existingItem.title || '');
+      setAuthor(existingItem.author || 'अहिंसा शिक्षा मिशन');
+      setTopic(existingItem.topic || 'अहिंसा');
       setLeadParagraph(existingItem.leadParagraph || '');
       setBodyText(existingItem.paragraphs?.join('\n\n') || '');
+      setKeyTakeaway(existingItem.keyTakeaway || '');
       setLanguage(existingItem.language || 'hi');
       setStatus(existingItem.status || 'published');
-        } else {
+    } else if (!isEdit) {
       setTitle('');
+      setAuthor('अहिंसा शिक्षा मिशन');
+      setTopic('अहिंसा');
       setLeadParagraph('');
       setBodyText('');
+      setKeyTakeaway('');
       setLanguage('hi');
       setStatus('published');
+      setError(null);
+      setSuccess(null);
     }
-  }, [existingItem]);
+  }, [id, isEdit, existingItem]);
 
-  const handleSave = (targetStatus?: 'published' | 'draft') => {
+  const handleSave = async (targetStatus?: 'published' | 'draft') => {
     setError(null);
     const saveStatus = targetStatus || status;
 
@@ -77,21 +85,20 @@ export const AdminVicharFormScreen: React.FC<AdminVicharFormScreenProps> = ({
       status: saveStatus,
     };
 
-    if (isEdit && id) {
-      updateVichar(id, itemPayload);
-      setSuccess('सफलतापूर्वक अपडेट हो गया!');
-    } else {
-      addVichar(itemPayload);
-      setSuccess('सफलतापूर्वक जोड़ दिया गया!');
+    try {
+      if (isEdit && id) {
+        await updateVichar(id, itemPayload);
+        setSuccess('सफलतापूर्वक अपडेट और डेटाबेस में सुरक्षित हो गया!');
+      } else {
+        await addVichar(itemPayload);
+        setSuccess('सफलतापूर्वक प्रकाशित और डेटाबेस में सुरक्षित हो गया!');
+      }
       setTimeout(() => {
         onNavigate(`/admin/vichar`);
-      }, 1000);
-      return;
+      }, 800);
+    } catch (err: any) {
+      setError(err?.message || 'डेटाबेस में सहेजने में विफल। कृपया पुनः प्रयास करें।');
     }
-
-    setTimeout(() => {
-      onNavigate(`/admin/vichar`);
-    }, 1000);
   };
 
   return (

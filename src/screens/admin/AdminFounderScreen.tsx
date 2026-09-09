@@ -21,24 +21,28 @@ export const AdminFounderScreen: React.FC<AdminFounderScreenProps> = ({ onNaviga
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim()) {
       setError('कृपया संस्थापक का नाम दर्ज करें।');
       return;
     }
 
-    updateFounder({
-      name: name.trim(),
-      title: title.trim(),
-      photoUrl,
-      quote: quote.trim(),
-      bio: bio.trim(),
-      message: message.trim(),
-    });
+    try {
+      await updateFounder({
+        name: name.trim(),
+        title: title.trim(),
+        photoUrl,
+        quote: quote.trim(),
+        bio: bio.trim(),
+        message: message.trim(),
+      });
 
-    setFeedback('संस्थापक परिचय पृष्ठ की जानकारी सफलतापूर्वक अपडेट हो गई!');
-    setError(null);
-    setTimeout(() => setFeedback(null), 3000);
+      setFeedback('संस्थापक परिचय पृष्ठ की जानकारी सफलतापूर्वक अपडेट और सुरक्षित हो गई!');
+      setError(null);
+      setTimeout(() => setFeedback(null), 3000);
+    } catch (err: any) {
+      setError(err?.message || 'डेटाबेस में सहेजने में विफल।');
+    }
   };
 
   return (

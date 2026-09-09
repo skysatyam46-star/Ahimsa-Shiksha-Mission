@@ -34,16 +34,16 @@ export const AdminDocumentFormScreen: React.FC<AdminDocumentFormScreenProps> = (
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-    useEffect(() => {
-    if (existingItem) {
-      setTitle(existingItem.title);
-      setDescription(existingItem.description);
-      setFileSize(existingItem.fileSize);
+  useEffect(() => {
+    if (isEdit && existingItem) {
+      setTitle(existingItem.title || '');
+      setDescription(existingItem.description || '');
+      setFileSize(existingItem.fileSize || '');
       setFileName(existingItem.fileName || 'document.pdf');
       setPdfUrl(existingItem.pdfUrl || '');
       setLanguage(existingItem.language || 'hi');
       setStatus(existingItem.status || 'published');
-        } else {
+    } else if (!isEdit) {
       setTitle('');
       setDescription('');
       setFileSize('');
@@ -51,10 +51,12 @@ export const AdminDocumentFormScreen: React.FC<AdminDocumentFormScreenProps> = (
       setPdfUrl('');
       setLanguage('hi');
       setStatus('published');
+      setError(null);
+      setSuccess(null);
     }
-  }, [existingItem]);
+  }, [id, isEdit, existingItem]);
 
-  const handleSave = (targetStatus?: 'published' | 'draft') => {
+  const handleSave = async (targetStatus?: 'published' | 'draft') => {
     setError(null);
     const saveStatus = targetStatus || status;
 
@@ -82,17 +84,21 @@ export const AdminDocumentFormScreen: React.FC<AdminDocumentFormScreenProps> = (
       status: saveStatus,
     };
 
-    if (isEdit && id) {
-      updateDocument(id, itemPayload);
-      setSuccess('दस्तावेज सफलतापूर्वक अपडेट हो गया!');
-    } else {
-      addDocument(itemPayload);
-      setSuccess('नया दस्तावेज सफलतापूर्वक जोड़ दिया गया!');
-    }
+    try {
+      if (isEdit && id) {
+        await updateDocument(id, itemPayload);
+        setSuccess('दस्तावेज सफलतापूर्वक अपडेट और डेटाबेस में सुरक्षित हो गया!');
+      } else {
+        await addDocument(itemPayload);
+        setSuccess('नया दस्तावेज सफलतापूर्वक प्रकाशित और डेटाबेस में सुरक्षित हो गया!');
+      }
 
-    setTimeout(() => {
-      onNavigate('/admin/document');
-    }, 1000);
+      setTimeout(() => {
+        onNavigate('/admin/document');
+      }, 800);
+    } catch (err: any) {
+      setError(err?.message || 'डेटाबेस में सहेजने में विफल। कृपया पुनः प्रयास करें।');
+    }
   };
 
   return (

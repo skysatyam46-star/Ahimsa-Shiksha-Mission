@@ -35,11 +35,16 @@ export const AdminAudioScreen: React.FC<AdminAudioScreenProps> = ({ onNavigate }
     });
   }, [data.audio, searchQuery, statusFilter]);
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (itemToDelete) {
-      deleteAudio(itemToDelete.id);
-      showToast(`“${itemToDelete.title}” audio delete ho gaya`);
-      setItemToDelete(null);
+      try {
+        await deleteAudio(itemToDelete.id);
+        showToast(`“${itemToDelete.title}” सफलतापूर्वक हटा दिया गया`);
+      } catch (err: any) {
+        showToast(err?.message || 'हटाने में विफल।');
+      } finally {
+        setItemToDelete(null);
+      }
     }
   };
 

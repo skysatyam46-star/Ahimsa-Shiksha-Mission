@@ -23,7 +23,7 @@ export const AdminMissionScreen: React.FC<AdminMissionScreenProps> = ({ onNaviga
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!objective.trim()) {
       setError('कृपया मुख्य उद्देश्य (Objective) दर्ज करें।');
       return;
@@ -34,19 +34,23 @@ export const AdminMissionScreen: React.FC<AdminMissionScreenProps> = ({ onNaviga
       .map((p) => p.trim())
       .filter((p) => p.length > 0);
 
-    updateMission({
-      title: title.trim(),
-      subtitle: subtitle.trim(),
-      objective: objective.trim(),
-      philosophy: philosophy.trim(),
-      effort: effort.trim(),
-      corePillars,
-      additionalInfo: additionalInfo.trim(),
-    });
+    try {
+      await updateMission({
+        title: title.trim(),
+        subtitle: subtitle.trim(),
+        objective: objective.trim(),
+        philosophy: philosophy.trim(),
+        effort: effort.trim(),
+        corePillars,
+        additionalInfo: additionalInfo.trim(),
+      });
 
-    setFeedback('मिशन पृष्ठ की जानकारी सफलतापूर्वक अपडेट हो गई!');
-    setError(null);
-    setTimeout(() => setFeedback(null), 3000);
+      setFeedback('मिशन पृष्ठ की जानकारी सफलतापूर्वक अपडेट और सुरक्षित हो गई!');
+      setError(null);
+      setTimeout(() => setFeedback(null), 3000);
+    } catch (err: any) {
+      setError(err?.message || 'डेटाबेस में सहेजने में विफल।');
+    }
   };
 
   return (

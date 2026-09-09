@@ -1,5 +1,7 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
+import crypto from "crypto";
 import dotenv from "dotenv";
 import ImageKit from "imagekit";
 import { createServer as createViteServer } from "vite";
@@ -8,6 +10,12 @@ import { getFirestore } from "firebase-admin/firestore";
 
 // Load environment variables
 dotenv.config();
+
+// Ensure local uploads directory exists for image uploads fallback
+const uploadsDir = path.join(process.cwd(), "public", "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // Helper to initialize ImageKit SDK securely using environment variables
 function getImageKitInstance() {
@@ -35,6 +43,12 @@ const app = express();
 const PORT = 3000;
 
 app.use(express.json({ limit: "50mb" })); // Support large CMS payloads if necessary
+app.use("/uploads", express.static(uploadsDir));
+
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", time: new Date().toISOString() });
+});
 
 // Initialize firebase-admin
 const projectId = process.env.VITE_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || "ahimsa-shiksha-mission";
@@ -78,8 +92,20 @@ try {
   adminDb = getFirestore(); // fallback to default
 }
 
-// Session Tracking (In-Memory Set)
+// Active Admin Sessions (In-Memory Set + Persistent Signed Token)
 const activeSessions = new Set<string>();
+
+function getAdminToken(): string {
+  const secret = process.env.ADMIN_PASSWORD || "ahimsa_mission_secret_salt_2026";
+  return crypto.createHmac("sha256", secret).update("ahimsa_admin_authenticated_session").digest("hex");
+}
+
+function isValidAdminSession(session?: string): boolean {
+  if (!session || typeof session !== "string") return false;
+  const trimmed = session.trim();
+  if (!trimmed) return false;
+  return trimmed === getAdminToken() || activeSessions.has(trimmed);
+}
 
 // Login Rate-Limiting Store (In-Memory Map)
 const loginAttempts = new Map<string, { count: number; lockUntil: number }>();
@@ -97,12 +123,34 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
   return cookies;
 }
 
+// Extract admin authentication token from request (header or cookie)
+function extractAdminToken(req: express.Request): string | undefined {
+  // 1. Check custom header x-admin-token
+  const xToken = req.headers["x-admin-token"];
+  if (typeof xToken === "string" && xToken.trim()) {
+    return xToken.trim();
+  }
+  // 2. Check Authorization Bearer header
+  const authHeader = req.headers["authorization"];
+  if (typeof authHeader === "string") {
+    const match = authHeader.match(/^Bearer\s+(.+)$/i);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+  }
+  // 3. Check cookies
+  const cookies = parseCookies(req.headers.cookie);
+  if (cookies["admin_session"]) {
+    return cookies["admin_session"].trim();
+  }
+  return undefined;
+}
+
 // Authentication Middleware to Guard Admin Endpoints
 function requireAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
-  const cookies = parseCookies(req.headers.cookie);
-  const session = cookies["admin_session"];
+  const token = extractAdminToken(req);
   
-  if (session && activeSessions.has(session)) {
+  if (isValidAdminSession(token)) {
     return next();
   }
   
@@ -114,11 +162,20 @@ function requireAdmin(req: express.Request, res: express.Response, next: express
 
 // 1. Session Verification
 app.get("/api/admin/check-session", (req, res) => {
-  const cookies = parseCookies(req.headers.cookie);
-  const session = cookies["admin_session"];
-  const isValid = Boolean(session && activeSessions.has(session));
+  const token = extractAdminToken(req);
+  const isValid = isValidAdminSession(token);
   
-  return res.json({ success: true, isAdmin: isValid });
+  return res.json({ 
+    success: true, 
+    isAdmin: isValid,
+    token: isValid ? token : undefined,
+    profile: isValid ? {
+      role: "admin",
+      active: true,
+      email: "admin@ahimsa.org",
+      name: "Ahimsa Admin"
+    } : null
+  });
 });
 
 // 2. Admin Login API with brute-force rate-limiting
@@ -148,21 +205,27 @@ app.post("/api/admin/login", (req, res) => {
     // Clear failed login records
     loginAttempts.delete(ipStr);
 
-    // Generate secure session ID
-    const sessionId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    // Generate secure persistent signed session ID
+    const sessionId = getAdminToken();
     activeSessions.add(sessionId);
 
-    // Set secure HttpOnly, SameSite cookie
-    // Max age of 24 hours (86400 seconds)
-    const isProd = process.env.NODE_ENV === "production";
-    let cookieString = `admin_session=${sessionId}; Path=/; HttpOnly; SameSite=Strict; Max-Age=86400`;
-    if (isProd) {
-      cookieString += "; Secure";
-    }
-    
-    res.setHeader("Set-Cookie", cookieString);
+    // Set cookie supporting modern iframe/embedded preview (SameSite=None; Secure)
+    res.setHeader(
+      "Set-Cookie", 
+      `admin_session=${sessionId}; Path=/; HttpOnly; SameSite=None; Secure; Max-Age=2592000`
+    );
     console.info(`[ServerAuth] Successful Admin Login from IP: ${ipStr}`);
-    return res.json({ success: true, isAdmin: true });
+    return res.json({ 
+      success: true, 
+      isAdmin: true, 
+      token: sessionId,
+      profile: {
+        role: "admin",
+        active: true,
+        email: "admin@ahimsa.org",
+        name: "Ahimsa Admin"
+      }
+    });
   } else {
     // Fail: Increment rate-limiting count
     const count = (record?.count || 0) + 1;
@@ -173,23 +236,22 @@ app.post("/api/admin/login", (req, res) => {
       loginAttempts.set(ipStr, { count, lockUntil: 0 });
     }
 
-    return res.status(401).json({ success: false, error: "Access Denied. Incorrect password." });
+    return res.status(401).json({ success: false, error: "गलत पासवर्ड। कृपया सही पासवर्ड दर्ज करें।" });
   }
 });
 
 // 3. Admin Logout API
 app.post("/api/admin/logout", (req, res) => {
-  const cookies = parseCookies(req.headers.cookie);
-  const session = cookies["admin_session"];
+  const token = extractAdminToken(req);
   
-  if (session) {
-    activeSessions.delete(session);
+  if (token) {
+    activeSessions.delete(token);
   }
 
   // Clear cookie header
   res.setHeader(
     "Set-Cookie", 
-    "admin_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0"
+    "admin_session=; Path=/; HttpOnly; SameSite=None; Secure; Max-Age=0"
   );
   
   console.info("[ServerAuth] Admin session logged out successfully.");
@@ -228,6 +290,20 @@ app.get("/api/get-public-data", async (req, res) => {
         else if (item.type === "notice") notices.push(item);
       }
     });
+
+    // Sort content newest first
+    const sortByDateDesc = (a: any, b: any) => {
+      const timeA = new Date(a.publishedAt || a.createdAt || a.updatedAt || 0).getTime();
+      const timeB = new Date(b.publishedAt || b.createdAt || b.updatedAt || 0).getTime();
+      return timeB - timeA;
+    };
+
+    vichar.sort(sortByDateDesc);
+    videos.sort(sortByDateDesc);
+    audio.sort(sortByDateDesc);
+    photos.sort(sortByDateDesc);
+    documents.sort(sortByDateDesc);
+    notices.sort(sortByDateDesc);
 
     const links: any[] = [];
     linksDocs.forEach(doc => {
@@ -301,6 +377,20 @@ app.get("/api/admin/get-data", requireAdmin, async (req, res) => {
       else if (item.type === "notice") notices.push(item);
     });
 
+    // Sort content newest first
+    const sortByDateDesc = (a: any, b: any) => {
+      const timeA = new Date(a.publishedAt || a.createdAt || a.updatedAt || 0).getTime();
+      const timeB = new Date(b.publishedAt || b.createdAt || b.updatedAt || 0).getTime();
+      return timeB - timeA;
+    };
+
+    vichar.sort(sortByDateDesc);
+    videos.sort(sortByDateDesc);
+    audio.sort(sortByDateDesc);
+    photos.sort(sortByDateDesc);
+    documents.sort(sortByDateDesc);
+    notices.sort(sortByDateDesc);
+
     const links: any[] = [];
     linksDocs.forEach(doc => {
       links.push(doc.data());
@@ -338,6 +428,63 @@ app.get("/api/admin/get-data", requireAdmin, async (req, res) => {
   } catch (error: any) {
     console.error("[ServerCMS] Error loading Admin CMS data from Firestore:", error);
     return res.status(500).json({ success: false, error: "Failed to load Admin CMS data." });
+  }
+});
+
+// 5b. Bulk Save Data Endpoint (Guarded - Admin session validation required)
+app.post("/api/admin/save-data", requireAdmin, async (req, res) => {
+  try {
+    const payload = req.body;
+    if (!payload || typeof payload !== "object") {
+      return res.status(400).json({ success: false, error: "Invalid data payload" });
+    }
+
+    const batch = adminDb.batch();
+
+    // Content items
+    const allItems = [
+      ...(Array.isArray(payload.vichar) ? payload.vichar : []),
+      ...(Array.isArray(payload.videos) ? payload.videos : []),
+      ...(Array.isArray(payload.audio) ? payload.audio : []),
+      ...(Array.isArray(payload.photos) ? payload.photos : []),
+      ...(Array.isArray(payload.documents) ? payload.documents : []),
+      ...(Array.isArray(payload.notices) ? payload.notices : []),
+    ];
+
+    for (const item of allItems) {
+      if (item && item.id) {
+        const ref = adminDb.collection("content").doc(item.id);
+        batch.set(ref, item);
+      }
+    }
+
+    // Links
+    if (Array.isArray(payload.links)) {
+      for (const link of payload.links) {
+        if (link && link.id) {
+          const ref = adminDb.collection("links").doc(link.id);
+          batch.set(ref, link);
+        }
+      }
+    }
+
+    // Settings
+    if (payload.mission) {
+      batch.set(adminDb.collection("settings").doc("mission"), payload.mission);
+    }
+    if (payload.founder) {
+      batch.set(adminDb.collection("settings").doc("founder"), payload.founder);
+    }
+    if (payload.contact) {
+      batch.set(adminDb.collection("settings").doc("contact"), payload.contact);
+    }
+
+    await batch.commit();
+    console.info("[ServerCMS] Successfully saved bulk data to Firestore.");
+    return res.json({ success: true });
+  } catch (error: any) {
+    console.error("[ServerCMS] Error saving bulk data to Firestore:", error);
+    return res.status(500).json({ success: false, error: "Failed to bulk save data to Firestore." });
   }
 });
 
@@ -386,13 +533,30 @@ app.delete("/api/admin/content/:id", requireAdmin, async (req, res) => {
       const data = docSnap.data();
       const fileIdToDelete = data?.imageFileId || data?.thumbnailFileId;
       if (fileIdToDelete) {
-        const { ik } = getImageKitInstance();
-        if (ik) {
-          try {
-            await ik.deleteFile(fileIdToDelete);
-            console.info(`[ImageKit] Cleaned up associated fileId (${fileIdToDelete}) for deleted content (${id})`);
-          } catch (ikErr) {
-            console.error(`[ImageKit] Failed to delete associated fileId (${fileIdToDelete}):`, ikErr);
+        if (typeof fileIdToDelete === "string" && fileIdToDelete.startsWith("local_")) {
+          if (fs.existsSync(uploadsDir)) {
+            const files = fs.readdirSync(uploadsDir);
+            for (const f of files) {
+              if (f.startsWith(fileIdToDelete)) {
+                try {
+                  fs.unlinkSync(path.join(uploadsDir, f));
+                  console.info(`[LocalUpload] Cleaned up local file (${f}) for deleted content (${id})`);
+                } catch (e) {
+                  console.error(`[LocalUpload] Failed to delete local file (${f}):`, e);
+                }
+                break;
+              }
+            }
+          }
+        } else {
+          const { ik } = getImageKitInstance();
+          if (ik) {
+            try {
+              await ik.deleteFile(fileIdToDelete);
+              console.info(`[ImageKit] Cleaned up associated fileId (${fileIdToDelete}) for deleted content (${id})`);
+            } catch (ikErr) {
+              console.error(`[ImageKit] Failed to delete associated fileId (${fileIdToDelete}):`, ikErr);
+            }
           }
         }
       }
@@ -408,7 +572,7 @@ app.delete("/api/admin/content/:id", requireAdmin, async (req, res) => {
   }
 });
 
-// 7b. Upload Image to ImageKit (Guarded - Admin session validation required)
+// 7b. Upload Image (Supports ImageKit CDN or Local Server Storage Fallback)
 app.post("/api/admin/upload-image", requireAdmin, async (req, res) => {
   try {
     const { file, fileName } = req.body;
@@ -417,37 +581,74 @@ app.post("/api/admin/upload-image", requireAdmin, async (req, res) => {
     }
 
     const { ik, missing } = getImageKitInstance();
-    if (!ik || missing.length > 0) {
-      console.warn(`[ImageKit] Upload attempted but missing secrets: ${missing.join(", ")}`);
-      return res.status(400).json({
-        success: false,
-        error: `Missing ImageKit secrets: ${missing.join(", ")} environment variable(s) not configured.`
+    // 1. Primary: Use ImageKit if credentials are fully provided in env
+    if (ik && missing.length === 0) {
+      console.info("[ImageKit] Uploading image file to ImageKit...");
+      const uploadRes = await ik.upload({
+        file,
+        fileName: fileName || `ahimsa_photo_${Date.now()}.jpg`,
+        folder: "/ahimsa_photos",
+      });
+
+      console.info(`[ImageKit] Upload succeeded! URL: ${uploadRes.url}, fileId: ${uploadRes.fileId}`);
+      return res.json({
+        success: true,
+        url: uploadRes.url,
+        fileId: uploadRes.fileId,
       });
     }
 
-    console.info("[ImageKit] Uploading image file to ImageKit...");
-    const uploadRes = await ik.upload({
-      file,
-      fileName: fileName || `ahimsa_photo_${Date.now()}.jpg`,
-      folder: "/ahimsa_photos",
-    });
+    // 2. Fallback: Save locally on server if ImageKit secrets are not configured
+    console.info("[LocalUpload] ImageKit credentials not configured. Saving image to local server storage...");
+    let fileBuffer: Buffer;
+    let ext = "jpg";
 
-    console.info(`[ImageKit] Upload succeeded! URL: ${uploadRes.url}, fileId: ${uploadRes.fileId}`);
+    if (typeof file === "string" && file.startsWith("data:")) {
+      const match = file.match(/^data:(image\/[a-zA-Z0-9+-]+);base64,(.+)$/);
+      if (match) {
+        const mimeType = match[1];
+        ext = mimeType.split("/")[1] || "jpg";
+        if (ext === "jpeg") ext = "jpg";
+        fileBuffer = Buffer.from(match[2], "base64");
+      } else {
+        const parts = file.split(",");
+        fileBuffer = Buffer.from(parts[1] || file, "base64");
+      }
+    } else if (typeof file === "string" && (file.startsWith("http://") || file.startsWith("https://"))) {
+      return res.json({
+        success: true,
+        url: file,
+        fileId: `url_${Date.now()}`,
+      });
+    } else if (typeof file === "string") {
+      fileBuffer = Buffer.from(file, "base64");
+    } else {
+      return res.status(400).json({ success: false, error: "Invalid image file payload." });
+    }
+
+    const fileId = `local_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+    const cleanFileName = `${fileId}.${ext}`;
+    const filePath = path.join(uploadsDir, cleanFileName);
+
+    fs.writeFileSync(filePath, fileBuffer);
+    const localUrl = `/uploads/${cleanFileName}`;
+
+    console.info(`[LocalUpload] Image saved successfully! URL: ${localUrl}, fileId: ${fileId}`);
     return res.json({
       success: true,
-      url: uploadRes.url,
-      fileId: uploadRes.fileId,
+      url: localUrl,
+      fileId,
     });
   } catch (err: any) {
-    console.error("[ImageKit] Upload failed:", err);
+    console.error("[Upload] Upload failed:", err);
     return res.status(500).json({
       success: false,
-      error: err?.message || "Failed to upload image to ImageKit",
+      error: err?.message || "Failed to upload image",
     });
   }
 });
 
-// 7c. Delete Image from ImageKit (Guarded - Admin session validation required)
+// 7c. Delete Image (Supports ImageKit CDN or Local Server Storage Fallback)
 app.post("/api/admin/delete-image", requireAdmin, async (req, res) => {
   try {
     const { fileId } = req.body;
@@ -455,24 +656,37 @@ app.post("/api/admin/delete-image", requireAdmin, async (req, res) => {
       return res.status(400).json({ success: false, error: "Missing fileId parameter." });
     }
 
-    const { ik, missing } = getImageKitInstance();
-    if (!ik || missing.length > 0) {
-      return res.status(400).json({
-        success: false,
-        error: `Missing ImageKit secrets: ${missing.join(", ")} environment variable(s) not configured.`
-      });
+    if (typeof fileId === "string" && fileId.startsWith("local_")) {
+      if (fs.existsSync(uploadsDir)) {
+        const files = fs.readdirSync(uploadsDir);
+        for (const file of files) {
+          if (file.startsWith(fileId)) {
+            try {
+              fs.unlinkSync(path.join(uploadsDir, file));
+              console.info(`[LocalUpload] Deleted local file ${file}`);
+            } catch (e) {
+              console.error(`[LocalUpload] Error unlinking ${file}:`, e);
+            }
+            break;
+          }
+        }
+      }
+      return res.json({ success: true });
     }
 
-    console.info(`[ImageKit] Deleting fileId ${fileId} from ImageKit...`);
-    await ik.deleteFile(fileId);
-    console.info(`[ImageKit] FileId ${fileId} successfully deleted from ImageKit.`);
+    const { ik, missing } = getImageKitInstance();
+    if (ik && missing.length === 0) {
+      console.info(`[ImageKit] Deleting fileId ${fileId} from ImageKit...`);
+      await ik.deleteFile(fileId);
+      console.info(`[ImageKit] FileId ${fileId} successfully deleted from ImageKit.`);
+    }
 
     return res.json({ success: true });
   } catch (err: any) {
-    console.error("[ImageKit] Delete fileId error:", err);
+    console.error("[Upload] Delete fileId error:", err);
     return res.status(500).json({
       success: false,
-      error: err?.message || "Failed to delete asset from ImageKit",
+      error: err?.message || "Failed to delete image asset",
     });
   }
 });

@@ -32,21 +32,23 @@ export const AdminVideoFormScreen: React.FC<AdminVideoFormScreenProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-    useEffect(() => {
-    if (existingItem) {
-      setTitle(existingItem.title);
-      setYoutubeUrl(existingItem.youtubeUrl);
-      setDescription(existingItem.description);
+  useEffect(() => {
+    if (isEdit && existingItem) {
+      setTitle(existingItem.title || '');
+      setYoutubeUrl(existingItem.youtubeUrl || '');
+      setDescription(existingItem.description || '');
       setLanguage(existingItem.language || 'hi');
       setStatus(existingItem.status || 'published');
-        } else {
+    } else if (!isEdit) {
       setTitle('');
       setYoutubeUrl('');
       setDescription('');
       setLanguage('hi');
       setStatus('published');
+      setError(null);
+      setSuccess(null);
     }
-  }, [existingItem]);
+  }, [id, isEdit, existingItem]);
 
   const extractYoutubeVideoId = (url: string): string | null => {
     if (!url) return null;
@@ -59,7 +61,7 @@ export const AdminVideoFormScreen: React.FC<AdminVideoFormScreenProps> = ({
     return (match && match[2] && match[2].length === 11) ? match[2] : null;
   };
 
-  const handleSave = (targetStatus?: 'published' | 'draft') => {
+  const handleSave = async (targetStatus?: 'published' | 'draft') => {
     setError(null);
     const saveStatus = targetStatus || status;
 
@@ -100,17 +102,21 @@ export const AdminVideoFormScreen: React.FC<AdminVideoFormScreenProps> = ({
       status: saveStatus,
     };
 
-    if (isEdit && id) {
-      updateVideo(id, itemPayload);
-      setSuccess('वीडियो सफलतापूर्वक अपडेट हो गया!');
-    } else {
-      addVideo(itemPayload);
-      setSuccess('वीडियो सफलतापूर्वक प्रकाशित हो गया!');
-    }
+    try {
+      if (isEdit && id) {
+        await updateVideo(id, itemPayload);
+        setSuccess('वीडियो सफलतापूर्वक अपडेट और डेटाबेस में सुरक्षित हो गया!');
+      } else {
+        await addVideo(itemPayload);
+        setSuccess('वीडियो सफलतापूर्वक प्रकाशित और डेटाबेस में सुरक्षित हो गया!');
+      }
 
-    setTimeout(() => {
-      onNavigate('/admin/video');
-    }, 1000);
+      setTimeout(() => {
+        onNavigate('/admin/video');
+      }, 800);
+    } catch (err: any) {
+      setError(err?.message || 'डेटाबेस में सहेजने में विफल। कृपया पुनः प्रयास करें।');
+    }
   };
 
   return (

@@ -35,11 +35,16 @@ export const AdminPhotoScreen: React.FC<AdminPhotoScreenProps> = ({ onNavigate }
     });
   }, [data.photos, searchQuery, statusFilter]);
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (itemToDelete) {
-      deletePhoto(itemToDelete.id);
-      showToast(`“${itemToDelete.title}” photo delete ho gaya`);
-      setItemToDelete(null);
+      try {
+        await deletePhoto(itemToDelete.id);
+        showToast(`“${itemToDelete.title}” सफलतापूर्वक हटा दिया गया`);
+      } catch (err: any) {
+        showToast(err?.message || 'हटाने में विफल।');
+      } finally {
+        setItemToDelete(null);
+      }
     }
   };
 

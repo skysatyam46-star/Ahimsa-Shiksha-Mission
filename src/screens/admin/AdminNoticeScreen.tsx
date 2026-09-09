@@ -35,11 +35,16 @@ export const AdminNoticeScreen: React.FC<AdminNoticeScreenProps> = ({ onNavigate
     });
   }, [data.notices, searchQuery, statusFilter]);
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (itemToDelete) {
-      deleteNotice(itemToDelete.id);
-      showToast(`“${itemToDelete.title}” सूचना delete ho gayi`);
-      setItemToDelete(null);
+      try {
+        await deleteNotice(itemToDelete.id);
+        showToast(`“${itemToDelete.title}” सफलतापूर्वक हटा दी गई`);
+      } catch (err: any) {
+        showToast(err?.message || 'हटाने में विफल।');
+      } finally {
+        setItemToDelete(null);
+      }
     }
   };
 
