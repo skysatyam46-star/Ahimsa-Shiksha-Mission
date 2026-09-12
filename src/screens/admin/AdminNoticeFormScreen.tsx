@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Save, AlertCircle, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
 import { PageContainer, Footer } from '../../components';
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
+import { ExpandedTextEditor, ExpandButton } from '../../components/admin/ExpandedTextEditor';
 import { useData } from '../../context/DataContext';
 import { NoticeItem } from '../../lib/adminStore';
 
@@ -35,6 +36,9 @@ export const AdminNoticeFormScreen: React.FC<AdminNoticeFormScreenProps> = ({
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Expanded Editor Modal State
+  const [isContentExpanded, setIsContentExpanded] = useState(false);
 
   useEffect(() => {
     if (isEdit && existingItem) {
@@ -150,9 +154,12 @@ export const AdminNoticeFormScreen: React.FC<AdminNoticeFormScreenProps> = ({
 
         {/* 2. Content */}
         <div>
-          <label htmlFor="notice-content" className="block text-[13.5px] font-bold text-[#1F2421] dark:text-gray-200 mb-1.5">
-            मुख्य संदेश / विवरण <span className="text-red-500">*</span>
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label htmlFor="notice-content" className="text-[13.5px] font-bold text-[#1F2421] dark:text-gray-200">
+              मुख्य संदेश / विवरण <span className="text-red-500">*</span>
+            </label>
+            <ExpandButton onClick={() => setIsContentExpanded(true)} />
+          </div>
           <textarea
             id="notice-content"
             rows={4}
@@ -266,6 +273,17 @@ export const AdminNoticeFormScreen: React.FC<AdminNoticeFormScreenProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Expanded Text Editor Modal */}
+      {isContentExpanded && (
+        <ExpandedTextEditor
+          isOpen={isContentExpanded}
+          onClose={() => setIsContentExpanded(false)}
+          title="सूचना का मुख्य विवरण"
+          value={content}
+          onChange={(newVal) => setContent(newVal)}
+        />
+      )}
 
       <Footer />
     </PageContainer>

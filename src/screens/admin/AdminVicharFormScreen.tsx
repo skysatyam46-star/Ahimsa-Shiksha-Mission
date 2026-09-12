@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Eye, ArrowLeft, CheckCircle2, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Save, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { PageContainer } from '../../components';
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
+import { ExpandedTextEditor, ExpandButton } from '../../components/admin/ExpandedTextEditor';
 import { useData } from '../../context/DataContext';
 import { VicharItem } from '../../lib/adminStore';
 
@@ -14,7 +15,7 @@ export const AdminVicharFormScreen: React.FC<AdminVicharFormScreenProps> = ({
   id,
   onNavigate,
 }) => {
-  const { data, addVichar, updateVichar, getVicharById } = useData();
+  const { addVichar, updateVichar, getVicharById } = useData();
   const isEdit = Boolean(id && id !== 'new');
 
   const existingItem = isEdit && id ? getVicharById(id) : undefined;
@@ -30,6 +31,12 @@ export const AdminVicharFormScreen: React.FC<AdminVicharFormScreenProps> = ({
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Expanded Editor Modal State
+  const [activeExpandedField, setActiveExpandedField] = useState<{
+    key: 'leadParagraph' | 'bodyText';
+    title: string;
+  } | null>(null);
 
   useEffect(() => {
     if (isEdit && existingItem) {
@@ -142,9 +149,14 @@ export const AdminVicharFormScreen: React.FC<AdminVicharFormScreenProps> = ({
 
         {/* 2. Main Message */}
         <div>
-          <label htmlFor="vichar-lead" className="block text-[13.5px] font-bold text-[#1F2421] dark:text-gray-200 mb-1.5">
-            मुख्य विचार / संदेश <span className="text-red-500">*</span>
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label htmlFor="vichar-lead" className="text-[13.5px] font-bold text-[#1F2421] dark:text-gray-200">
+              मुख्य विचार / संदेश <span className="text-red-500">*</span>
+            </label>
+            <ExpandButton
+              onClick={() => setActiveExpandedField({ key: 'leadParagraph', title: 'मुख्य विचार / संदेश' })}
+            />
+          </div>
           <textarea
             id="vichar-lead"
             rows={3}
@@ -157,9 +169,14 @@ export const AdminVicharFormScreen: React.FC<AdminVicharFormScreenProps> = ({
 
         {/* 3. Detailed Description (Optional) */}
         <div>
-          <label htmlFor="vichar-body" className="block text-[13.5px] font-bold text-[#1F2421] dark:text-gray-200 mb-1.5">
-            विस्तृत जानकारी (वैकल्पिक)
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label htmlFor="vichar-body" className="text-[13.5px] font-bold text-[#1F2421] dark:text-gray-200">
+              विस्तृत जानकारी (वैकल्पिक)
+            </label>
+            <ExpandButton
+              onClick={() => setActiveExpandedField({ key: 'bodyText', title: 'विस्तृत जानकारी' })}
+            />
+          </div>
           <textarea
             id="vichar-body"
             rows={4}
@@ -168,37 +185,6 @@ export const AdminVicharFormScreen: React.FC<AdminVicharFormScreenProps> = ({
             placeholder="विस्तृत व्याख्या या अतिरिक्त विवरण…"
             className="w-full px-3.5 py-2.5 text-[13.5px] bg-[#FAF8F5] dark:bg-[#0F172A] border border-[#E8E5DF] dark:border-[#334155] rounded-xl focus:outline-none focus:border-[#16325C] dark:focus:border-[#93C5FD] text-[#1F2421] dark:text-white placeholder-[#8C96A3]"
           />
-        </div>
-
-        {/* 4. Language */}
-        <div>
-          <label className="block text-[13.5px] font-bold text-[#1F2421] dark:text-gray-200 mb-1.5">
-            सामग्री की भाषा
-          </label>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setLanguage('hi')}
-              className={`px-4 py-2 text-[13px] font-semibold rounded-xl border transition-colors ${
-                language === 'hi'
-                  ? 'bg-[#16325C] text-white border-[#16325C]'
-                  : 'bg-[#FAF8F5] dark:bg-slate-800 text-[#5C6773] dark:text-gray-300 border-[#E8E5DF] dark:border-slate-700'
-              }`}
-            >
-              हिंदी
-            </button>
-            <button
-              type="button"
-              onClick={() => setLanguage('en')}
-              className={`px-4 py-2 text-[13px] font-semibold rounded-xl border transition-colors ${
-                language === 'en'
-                  ? 'bg-[#16325C] text-white border-[#16325C]'
-                  : 'bg-[#FAF8F5] dark:bg-slate-800 text-[#5C6773] dark:text-gray-300 border-[#E8E5DF] dark:border-slate-700'
-              }`}
-            >
-              English
-            </button>
-          </div>
         </div>
 
         {/* Bottom Action Buttons */}
@@ -230,6 +216,23 @@ export const AdminVicharFormScreen: React.FC<AdminVicharFormScreenProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Expanded Text Editor Modal */}
+      {activeExpandedField && (
+        <ExpandedTextEditor
+          isOpen={Boolean(activeExpandedField)}
+          onClose={() => setActiveExpandedField(null)}
+          title={activeExpandedField.title}
+          value={activeExpandedField.key === 'leadParagraph' ? leadParagraph : bodyText}
+          onChange={(newVal) => {
+            if (activeExpandedField.key === 'leadParagraph') {
+              setLeadParagraph(newVal);
+            } else {
+              setBodyText(newVal);
+            }
+          }}
+        />
+      )}
     </PageContainer>
   );
 };

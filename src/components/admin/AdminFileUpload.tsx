@@ -365,8 +365,8 @@ export const AdminFileUpload: React.FC<AdminFileUploadProps> = ({
           {type === 'audio' && selectedMeta.previewUrl && (
             <div className="p-2.5 bg-[#FAF8F5] dark:bg-[#0F172A] rounded-xl border border-[#E8E5DF] dark:border-[#334155] space-y-1.5">
               <audio controls src={selectedMeta.previewUrl} className="w-full h-8" />
-              <p className="text-[11px] text-[#8C5D07] dark:text-amber-400 font-medium">
-                नोट: यह स्थानीय ऑडियो फ़ाइल का पूर्वावलोकन है। स्थायी क्लाउड ऑडियो स्टोरेज इंटीग्रेशन आगामी चरण में उपलब्ध होगा।
+              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                यह ऑडियो फ़ाइल का पूर्वावलोकन है। प्रकाशन के समय यह सुरक्षित रूप से सर्वर पर अपलोड की जाएगी।
               </p>
             </div>
           )}
@@ -377,8 +377,8 @@ export const AdminFileUpload: React.FC<AdminFileUploadProps> = ({
                 <FileText size={16} className="text-[#DC2626]" />
                 <span>PDF दस्तावेज तैयार है ({selectedMeta.fileSize})</span>
               </div>
-              <p className="text-[11px] text-[#8C5D07] dark:text-amber-400 font-medium">
-                नोट: यह स्थानीय PDF फ़ाइल का पूर्वावलोकन है। स्थायी क्लाउड PDF स्टोरेज इंटीग्रेशन आगामी चरण में उपलब्ध होगा।
+              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                यह PDF दस्तावेज का पूर्वावलोकन है। प्रकाशन के समय यह सुरक्षित रूप से सर्वर पर अपलोड किया जाएगा।
               </p>
             </div>
           )}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 import { MobileShell, NavTabId } from './components';
 import { Logo } from './components/brand/Logo';
@@ -274,6 +274,12 @@ function AppContent() {
   const { user, isAdmin, loading: authLoading, logout } = useAuth();
   const { loading: dataLoading } = useData();
 
+  const prevRouteRef = useRef<AppRoute>({ screen: 'home' });
+
+  useEffect(() => {
+    prevRouteRef.current = route;
+  }, [route]);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       if ('scrollRestoration' in window.history) {
@@ -281,9 +287,23 @@ function AppContent() {
       }
       const initialRoute = parsePath(window.location.pathname);
       setRoute(initialRoute);
+      prevRouteRef.current = initialRoute;
 
       const handlePopState = () => {
-        setRoute(parsePath(window.location.pathname));
+        const nextRoute = parsePath(window.location.pathname);
+        const prevRoute = prevRouteRef.current;
+
+        const isPrevPublic = !prevRoute.screen.startsWith('admin');
+        const isNextAdmin = nextRoute.screen.startsWith('admin');
+
+        // If transitioning from public to admin via browser Back/Forward (e.g. Back from Public Website after coming from Admin),
+        // go back once more to skip the admin history completely.
+        if (isPrevPublic && isNextAdmin) {
+          window.history.back();
+          return;
+        }
+
+        setRoute(nextRoute);
         window.scrollTo(0, 0);
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
@@ -302,11 +322,15 @@ function AppContent() {
     }
   }, [route]);
 
-  const navigateTo = useCallback((path: string) => {
+  const navigateTo = useCallback((path: string, options?: { replace?: boolean }) => {
     const newRoute = parsePath(path);
     setRoute(newRoute);
     if (typeof window !== 'undefined') {
-      window.history.pushState(null, '', path);
+      if (options?.replace) {
+        window.history.replaceState(null, '', path);
+      } else {
+        window.history.pushState(null, '', path);
+      }
       window.scrollTo(0, 0);
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
@@ -370,7 +394,7 @@ function AppContent() {
 
     return (
       <AdminLoginScreen
-        onLoginSuccess={() => navigateTo('/admin')}
+        onLoginSuccess={() => navigateTo('/admin', { replace: true })}
         onBack={() => navigateTo('/settings')}
         onNavigate={navigateTo}
       />
@@ -381,7 +405,7 @@ function AppContent() {
   if (isAdminRoute && !isAdmin) {
     return (
       <AdminLoginScreen
-        onLoginSuccess={() => navigateTo('/admin')}
+        onLoginSuccess={() => navigateTo('/admin', { replace: true })}
         onBack={() => navigateTo('/settings')}
         onNavigate={navigateTo}
       />

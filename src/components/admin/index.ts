@@ -5,3 +5,4 @@ export * from './QuickActionCard';
 export * from './RecentContentRow';
 export * from './WebsiteStatusCard';
 export * from './AdminLayout';
+export * from './ExpandedTextEditor';

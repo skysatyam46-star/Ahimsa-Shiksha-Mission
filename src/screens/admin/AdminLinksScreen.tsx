@@ -3,6 +3,7 @@ import { Plus, Edit3, Trash2, ArrowUp, ArrowDown, ExternalLink, Globe, CheckCirc
 import { PageContainer, Footer } from '../../components';
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
 import { DeleteConfirmModal } from '../../components/admin/DeleteConfirmModal';
+import { ExpandedTextEditor, ExpandButton } from '../../components/admin/ExpandedTextEditor';
 import { useData } from '../../context/DataContext';
 import { LinkItem } from '../../lib/adminStore';
 
@@ -23,6 +24,9 @@ export const AdminLinksScreen: React.FC<AdminLinksScreenProps> = ({ onNavigate }
   const [status, setStatus] = useState<'published' | 'draft'>('published');
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Expanded Editor Modal State
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   const showToast = (msg: string) => {
     setFeedback(msg);
@@ -199,9 +203,12 @@ export const AdminLinksScreen: React.FC<AdminLinksScreenProps> = ({ onNavigate }
           </div>
 
           <div>
-            <label htmlFor="link-desc" className="block text-[12px] font-semibold text-[#1F2421] dark:text-gray-200 mb-1">
-              विवरण (Description)
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label htmlFor="link-desc" className="text-[12px] font-semibold text-[#1F2421] dark:text-gray-200">
+                विवरण (Description)
+              </label>
+              <ExpandButton onClick={() => setIsDescriptionExpanded(true)} />
+            </div>
             <input
               id="link-desc"
               type="text"
@@ -364,6 +371,17 @@ export const AdminLinksScreen: React.FC<AdminLinksScreenProps> = ({ onNavigate }
         onConfirm={handleDeleteConfirm}
         onCancel={() => setItemToDelete(null)}
       />
+
+      {/* Expanded Text Editor Modal */}
+      {isDescriptionExpanded && (
+        <ExpandedTextEditor
+          isOpen={isDescriptionExpanded}
+          onClose={() => setIsDescriptionExpanded(false)}
+          title="लिंक विवरण"
+          value={description}
+          onChange={(newVal) => setDescription(newVal)}
+        />
+      )}
 
       <Footer />
     </PageContainer>

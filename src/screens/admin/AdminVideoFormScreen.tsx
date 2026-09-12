@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Save, AlertCircle, CheckCircle2, Globe } from 'lucide-react';
 import { PageContainer } from '../../components';
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
+import { ExpandedTextEditor, ExpandButton } from '../../components/admin/ExpandedTextEditor';
 import { useData } from '../../context/DataContext';
 import { VideoItem } from '../../lib/adminStore';
 
@@ -31,6 +32,9 @@ export const AdminVideoFormScreen: React.FC<AdminVideoFormScreenProps> = ({
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Expanded Editor Modal State
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   useEffect(() => {
     if (isEdit && existingItem) {
@@ -178,9 +182,12 @@ export const AdminVideoFormScreen: React.FC<AdminVideoFormScreenProps> = ({
 
         {/* 3. Description (Optional) */}
         <div>
-          <label htmlFor="video-desc" className="block text-[13.5px] font-bold text-[#1F2421] dark:text-gray-200 mb-1.5">
-            विवरण (वैकल्पिक)
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label htmlFor="video-desc" className="text-[13.5px] font-bold text-[#1F2421] dark:text-gray-200">
+              विवरण (वैकल्पिक)
+            </label>
+            <ExpandButton onClick={() => setIsDescriptionExpanded(true)} />
+          </div>
           <textarea
             id="video-desc"
             rows={3}
@@ -189,37 +196,6 @@ export const AdminVideoFormScreen: React.FC<AdminVideoFormScreenProps> = ({
             placeholder="वीडियो के बारे में थोड़ा लिखें…"
             className="w-full px-3.5 py-2.5 text-[13.5px] bg-[#FAF8F5] dark:bg-[#0F172A] border border-[#E8E5DF] dark:border-[#334155] rounded-xl focus:outline-none focus:border-[#16325C] dark:focus:border-[#93C5FD] text-[#1F2421] dark:text-white placeholder-[#8C96A3]"
           />
-        </div>
-
-        {/* 4. Language */}
-        <div>
-          <label className="block text-[13.5px] font-bold text-[#1F2421] dark:text-gray-200 mb-1.5">
-            सामग्री की भाषा
-          </label>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setLanguage('hi')}
-              className={`px-4 py-2 text-[13px] font-semibold rounded-xl border transition-colors ${
-                language === 'hi'
-                  ? 'bg-[#16325C] text-white border-[#16325C]'
-                  : 'bg-[#FAF8F5] dark:bg-slate-800 text-[#5C6773] dark:text-gray-300 border-[#E8E5DF] dark:border-slate-700'
-              }`}
-            >
-              हिंदी
-            </button>
-            <button
-              type="button"
-              onClick={() => setLanguage('en')}
-              className={`px-4 py-2 text-[13px] font-semibold rounded-xl border transition-colors ${
-                language === 'en'
-                  ? 'bg-[#16325C] text-white border-[#16325C]'
-                  : 'bg-[#FAF8F5] dark:bg-slate-800 text-[#5C6773] dark:text-gray-300 border-[#E8E5DF] dark:border-slate-700'
-              }`}
-            >
-              English
-            </button>
-          </div>
         </div>
 
         {/* Actions */}
@@ -251,6 +227,17 @@ export const AdminVideoFormScreen: React.FC<AdminVideoFormScreenProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Expanded Text Editor Modal */}
+      {isDescriptionExpanded && (
+        <ExpandedTextEditor
+          isOpen={isDescriptionExpanded}
+          onClose={() => setIsDescriptionExpanded(false)}
+          title="वीडियो का विवरण"
+          value={description}
+          onChange={(newVal) => setDescription(newVal)}
+        />
+      )}
     </PageContainer>
   );
 };

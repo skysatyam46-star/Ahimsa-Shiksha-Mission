@@ -6,7 +6,7 @@ import { AdminDrawer } from './AdminDrawer';
 interface AdminLayoutProps {
   children: React.ReactNode;
   activePath?: string;
-  onNavigate: (path: string) => void;
+  onNavigate: (path: string, options?: { replace?: boolean }) => void;
   onLogout: () => void;
   onShowPlaceholderNotice: (featureName: string) => void;
 }
@@ -33,7 +33,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
         <AdminHeader
           onOpenMenu={() => setIsMenuOpen(true)}
           onLogout={onLogout}
-          onNavigateToPublic={() => onNavigate('/')}
+          onNavigateToPublic={() => onNavigate('/', { replace: true })}
         />
 
         {/* Dedicated Admin Drawer Navigation */}

@@ -29,7 +29,7 @@ interface AdminDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   activePath?: string;
-  onNavigate: (path: string) => void;
+  onNavigate: (path: string, options?: { replace?: boolean }) => void;
   onLogout: () => void;
   onShowPlaceholderNotice?: (featureName: string) => void;
 }
@@ -223,7 +223,7 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({
             type="button"
             onClick={() => {
               onClose();
-              onNavigate('/');
+              onNavigate('/', { replace: true });
             }}
             className="w-full min-h-[40px] px-3 py-2 rounded-xl flex items-center justify-center gap-2 text-[13px] font-semibold text-[#16325C] dark:text-[#93C5FD] bg-[#EEF3FA] dark:bg-slate-800 hover:bg-[#E2ECF8] transition-colors tap-active"
           >

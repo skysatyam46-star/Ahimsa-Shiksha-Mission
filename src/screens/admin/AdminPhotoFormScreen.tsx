@@ -3,6 +3,7 @@ import { Save, AlertCircle, CheckCircle2, MapPin, Loader2 } from 'lucide-react';
 import { PageContainer, Footer } from '../../components';
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
 import { AdminFileUpload } from '../../components/admin/AdminFileUpload';
+import { ExpandedTextEditor, ExpandButton } from '../../components/admin/ExpandedTextEditor';
 import { useData, getAdminAuthHeaders } from '../../context/DataContext';
 import { PhotoItem } from '../../lib/adminStore';
 
@@ -32,6 +33,9 @@ export const AdminPhotoFormScreen: React.FC<AdminPhotoFormScreenProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Expanded Editor Modal State
+  const [isCaptionExpanded, setIsCaptionExpanded] = useState(false);
 
   useEffect(() => {
     if (isEdit && existingItem) {
@@ -200,9 +204,12 @@ export const AdminPhotoFormScreen: React.FC<AdminPhotoFormScreenProps> = ({
         {/* 3. Caption & 4. Location */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="photo-caption" className="block text-[13.5px] font-bold text-[#1F2421] dark:text-gray-200 mb-1.5">
-              कैप्शन (वैकल्पिक)
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label htmlFor="photo-caption" className="text-[13.5px] font-bold text-[#1F2421] dark:text-gray-200">
+                कैप्शन (वैकल्पिक)
+              </label>
+              <ExpandButton onClick={() => setIsCaptionExpanded(true)} />
+            </div>
             <input
               id="photo-caption"
               type="text"
@@ -271,6 +278,17 @@ export const AdminPhotoFormScreen: React.FC<AdminPhotoFormScreenProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Expanded Text Editor Modal */}
+      {isCaptionExpanded && (
+        <ExpandedTextEditor
+          isOpen={isCaptionExpanded}
+          onClose={() => setIsCaptionExpanded(false)}
+          title="फोटो कैप्शन"
+          value={caption}
+          onChange={(newVal) => setCaption(newVal)}
+        />
+      )}
 
       <Footer />
     </PageContainer>

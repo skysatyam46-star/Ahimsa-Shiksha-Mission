@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Save, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Save, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { PageContainer, Footer } from '../../components';
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
 import { AdminFileUpload } from '../../components/admin/AdminFileUpload';
-import { useData } from '../../context/DataContext';
+import { ExpandedTextEditor, ExpandButton } from '../../components/admin/ExpandedTextEditor';
+import { useData, getAdminAuthHeaders } from '../../context/DataContext';
 import { DocumentItem } from '../../lib/adminStore';
 
 interface AdminDocumentFormScreenProps {
@@ -28,11 +29,16 @@ export const AdminDocumentFormScreen: React.FC<AdminDocumentFormScreenProps> = (
   const [summary] = useState(existingItem?.summary || '');
   const [chaptersInput] = useState(existingItem?.chapters?.join('\n') || '');
   const [pdfUrl, setPdfUrl] = useState(existingItem?.pdfUrl || '');
+  const [fileId, setFileId] = useState(existingItem?.fileId || '');
+  const [isUploading, setIsUploading] = useState(false);
   const [language, setLanguage] = useState<'hi' | 'en'>(existingItem?.language || 'hi');
   const [status, setStatus] = useState<'published' | 'draft'>(existingItem?.status || 'published');
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Expanded Editor State
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   useEffect(() => {
     if (isEdit && existingItem) {
@@ -41,6 +47,7 @@ export const AdminDocumentFormScreen: React.FC<AdminDocumentFormScreenProps> = (
       setFileSize(existingItem.fileSize || '');
       setFileName(existingItem.fileName || 'document.pdf');
       setPdfUrl(existingItem.pdfUrl || '');
+      setFileId(existingItem.fileId || '');
       setLanguage(existingItem.language || 'hi');
       setStatus(existingItem.status || 'published');
     } else if (!isEdit) {
@@ -49,6 +56,7 @@ export const AdminDocumentFormScreen: React.FC<AdminDocumentFormScreenProps> = (
       setFileSize('');
       setFileName('');
       setPdfUrl('');
+      setFileId('');
       setLanguage('hi');
       setStatus('published');
       setError(null);
@@ -65,6 +73,46 @@ export const AdminDocumentFormScreen: React.FC<AdminDocumentFormScreenProps> = (
       return;
     }
 
+    if (!pdfUrl) {
+      setError('कृपया दस्तावेज फ़ाइल अवश्य चुनें/अपलोड करें।');
+      return;
+    }
+
+    let finalPdfUrl = pdfUrl;
+    let finalFileId = fileId || existingItem?.fileId;
+
+    // Upload to our generic backend upload-file endpoint if it's a local/preview file
+    if (pdfUrl.startsWith('data:') || pdfUrl.startsWith('blob:')) {
+      setIsUploading(true);
+      try {
+        const uploadRes = await fetch('/api/admin/upload-file', {
+          method: 'POST',
+          headers: getAdminAuthHeaders(),
+          credentials: 'include',
+          body: JSON.stringify({
+            file: pdfUrl,
+            fileName: fileName || `document_${Date.now()}.pdf`,
+            type: 'document',
+          }),
+        });
+
+        const uploadData = await uploadRes.json();
+
+        if (!uploadRes.ok || !uploadData.success) {
+          throw new Error(uploadData.error || 'दस्तावेज अपलोड करने में विफलता हुई।');
+        }
+
+        finalPdfUrl = uploadData.url;
+        finalFileId = uploadData.fileId;
+        setPdfUrl(finalPdfUrl);
+        setFileId(finalFileId);
+      } catch (err: any) {
+        setIsUploading(false);
+        setError(err?.message || 'दस्तावेज फ़ाइल सर्वर पर अपलोड नहीं हो सकी।');
+        return;
+      }
+    }
+
     const chapters = chaptersInput
       .split('\n')
       .map((c) => c.trim())
@@ -79,12 +127,14 @@ export const AdminDocumentFormScreen: React.FC<AdminDocumentFormScreenProps> = (
       fileName: fileName.trim() || 'document.pdf',
       summary: summary.trim() || description.trim(),
       chapters,
-      pdfUrl: pdfUrl.trim(),
+      pdfUrl: finalPdfUrl,
+      fileId: finalFileId,
       language,
       status: saveStatus,
     };
 
     try {
+      setIsUploading(true);
       if (isEdit && id) {
         await updateDocument(id, itemPayload);
         setSuccess('दस्तावेज सफलतापूर्वक अपडेट और डेटाबेस में सुरक्षित हो गया!');
@@ -97,6 +147,7 @@ export const AdminDocumentFormScreen: React.FC<AdminDocumentFormScreenProps> = (
         onNavigate('/admin/document');
       }, 800);
     } catch (err: any) {
+      setIsUploading(false);
       setError(err?.message || 'डेटाबेस में सहेजने में विफल। कृपया पुनः प्रयास करें।');
     }
   };
@@ -164,9 +215,12 @@ export const AdminDocumentFormScreen: React.FC<AdminDocumentFormScreenProps> = (
 
         {/* 3. Description (Optional) */}
         <div>
-          <label htmlFor="doc-desc" className="block text-[13.5px] font-bold text-[#1F2421] dark:text-gray-200 mb-1.5">
-            विवरण (वैकल्पिक)
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label htmlFor="doc-desc" className="text-[13.5px] font-bold text-[#1F2421] dark:text-gray-200">
+              विवरण (वैकल्पिक)
+            </label>
+            <ExpandButton onClick={() => setIsDescriptionExpanded(true)} />
+          </div>
           <textarea
             id="doc-desc"
             rows={3}
@@ -175,37 +229,6 @@ export const AdminDocumentFormScreen: React.FC<AdminDocumentFormScreenProps> = (
             placeholder="दस्तावेज के बारे में लिखें…"
             className="w-full px-3.5 py-2.5 text-[13.5px] bg-[#FAF8F5] dark:bg-[#0F172A] border border-[#E8E5DF] dark:border-[#334155] rounded-xl focus:outline-none focus:border-[#16325C] dark:focus:border-[#93C5FD] text-[#1F2421] dark:text-white placeholder-[#8C96A3]"
           />
-        </div>
-
-        {/* 4. Language */}
-        <div>
-          <label className="block text-[13.5px] font-bold text-[#1F2421] dark:text-gray-200 mb-1.5">
-            सामग्री की भाषा
-          </label>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setLanguage('hi')}
-              className={`px-4 py-2 text-[13px] font-semibold rounded-xl border transition-colors ${
-                language === 'hi'
-                  ? 'bg-[#16325C] text-white border-[#16325C]'
-                  : 'bg-[#FAF8F5] dark:bg-slate-800 text-[#5C6773] dark:text-gray-300 border-[#E8E5DF] dark:border-slate-700'
-              }`}
-            >
-              हिंदी
-            </button>
-            <button
-              type="button"
-              onClick={() => setLanguage('en')}
-              className={`px-4 py-2 text-[13px] font-semibold rounded-xl border transition-colors ${
-                language === 'en'
-                  ? 'bg-[#16325C] text-white border-[#16325C]'
-                  : 'bg-[#FAF8F5] dark:bg-slate-800 text-[#5C6773] dark:text-gray-300 border-[#E8E5DF] dark:border-slate-700'
-              }`}
-            >
-              English
-            </button>
-          </div>
         </div>
 
         {/* Bottom Actions */}
@@ -221,22 +244,44 @@ export const AdminDocumentFormScreen: React.FC<AdminDocumentFormScreenProps> = (
           <div className="flex items-center justify-end gap-2.5 order-1 sm:order-2">
             <button
               type="button"
+              disabled={isUploading}
               onClick={() => handleSave('draft')}
-              className="min-h-[44px] px-3.5 py-2 text-[12px] font-medium text-[#8C5D07] dark:text-amber-300 bg-amber-50/60 dark:bg-amber-950/40 hover:bg-amber-100/80 rounded-xl transition-colors tap-active"
+              className="min-h-[44px] px-3.5 py-2 text-[12px] font-medium text-[#8C5D07] dark:text-amber-300 bg-amber-50/60 dark:bg-amber-950/40 hover:bg-amber-100/80 rounded-xl transition-colors tap-active disabled:opacity-50"
             >
               ड्राफ्ट में रखें
             </button>
             <button
               type="button"
+              disabled={isUploading}
               onClick={() => handleSave('published')}
-              className="min-h-[44px] inline-flex items-center justify-center gap-1.5 px-6 py-2 text-[14px] font-bold text-white bg-[#16325C] dark:bg-[#254B85] hover:bg-[#1B3C6E] rounded-xl transition-colors shadow-xs tap-active flex-1 sm:flex-initial"
+              className="min-h-[44px] inline-flex items-center justify-center gap-1.5 px-6 py-2 text-[14px] font-bold text-white bg-[#16325C] dark:bg-[#254B85] hover:bg-[#1B3C6E] rounded-xl transition-colors shadow-xs tap-active flex-1 sm:flex-initial disabled:opacity-50"
             >
-              <Save size={16} />
-              <span>दस्तावेज प्रकाशित करें</span>
+              {isUploading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>अपलोड हो रहा है...</span>
+                </>
+              ) : (
+                <>
+                  <Save size={16} />
+                  <span>दस्तावेज प्रकाशित करें</span>
+                </>
+              )}
             </button>
           </div>
         </div>
       </div>
+
+      {/* Expanded Text Editor Modal */}
+      {isDescriptionExpanded && (
+        <ExpandedTextEditor
+          isOpen={isDescriptionExpanded}
+          onClose={() => setIsDescriptionExpanded(false)}
+          title="दस्तावेज का विवरण"
+          value={description}
+          onChange={(newVal) => setDescription(newVal)}
+        />
+      )}
 
       <Footer />
     </PageContainer>

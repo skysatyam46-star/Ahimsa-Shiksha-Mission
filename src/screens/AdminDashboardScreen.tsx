@@ -26,7 +26,7 @@ import {
 import { useData } from '../context/DataContext';
 
 interface AdminDashboardScreenProps {
-  onNavigate: (path: string) => void;
+  onNavigate: (path: string, options?: { replace?: boolean }) => void;
   onLogout: () => void;
 }
 
@@ -161,7 +161,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
               </p>
             </div>
             <button
-              onClick={() => onNavigate('/')}
+              onClick={() => onNavigate('/', { replace: true })}
               className="px-3.5 py-1.5 bg-[#FAF8F5] dark:bg-slate-800 border border-[#E8E5DF] dark:border-slate-700 rounded-xl text-[12.5px] font-semibold text-[#16325C] dark:text-[#93C5FD] hover:bg-[#EEF3FA] transition-all tap-active shrink-0 flex items-center gap-1.5"
             >
               <Globe size={14} />

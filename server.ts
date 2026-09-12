@@ -7,6 +7,7 @@ import ImageKit from "imagekit";
 import { createServer as createViteServer } from "vite";
 import { getApps, initializeApp, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import { GoogleGenAI } from "@google/genai";
 
 // Load environment variables
 dotenv.config();
@@ -788,6 +789,105 @@ app.post("/api/admin/upload-image", requireAdmin, async (req, res) => {
   }
 });
 
+// 7bb. Upload File (Supports Audios, PDFs/Documents, and Images - ImageKit with local server storage fallback)
+app.post("/api/admin/upload-file", requireAdmin, async (req, res) => {
+  try {
+    const { file, fileName, type } = req.body;
+    if (!file) {
+      return res.status(400).json({ success: false, error: "No file content provided for upload." });
+    }
+
+    // 1. If it's already an HTTP/HTTPS url, return as is
+    if (typeof file === "string" && (file.startsWith("http://") || file.startsWith("https://"))) {
+      return res.json({
+        success: true,
+        url: file,
+        fileId: `url_${Date.now()}`,
+      });
+    }
+
+    if (typeof file !== "string" || !file.startsWith("data:")) {
+      return res.status(400).json({
+        success: false,
+        error: "कृपया फ़ाइल को मान्य Base64 डेटा यूआरएल फॉर्मेट में भेजें।"
+      });
+    }
+
+    const match = file.match(/^data:([^;]+);base64,(.+)$/);
+    if (!match) {
+      return res.status(400).json({ success: false, error: "अमान्य फ़ाइल फॉर्मेट।" });
+    }
+
+    const mimeType = match[1];
+    const base64Data = match[2];
+
+    // Check file size (Base64 size limit ~30MB)
+    const approxSizeBytes = (base64Data.length * 3) / 4;
+    const maxSizeBytes = 30 * 1024 * 1024; // 30MB limit for general file uploads
+    if (approxSizeBytes > maxSizeBytes) {
+      return res.status(400).json({
+        success: false,
+        error: "चुनी गई फ़ाइल बहुत बड़ी है। अधिकतम सीमा 30MB है।"
+      });
+    }
+
+    // 2. Try ImageKit upload first if configured
+    const { ik, missing } = getImageKitInstance();
+    if (ik && missing.length === 0) {
+      try {
+        console.info(`[ImageKit] Uploading file (${fileName || 'file'}) to ImageKit...`);
+        const uploadRes = await ik.upload({
+          file,
+          fileName: fileName || `ahimsa_file_${Date.now()}`,
+          folder: type === "audio" ? "/ahimsa_audios" : type === "document" ? "/ahimsa_docs" : "/ahimsa_general",
+        });
+
+        console.info(`[ImageKit] Upload succeeded! URL: ${uploadRes.url}, fileId: ${uploadRes.fileId}`);
+        return res.json({
+          success: true,
+          url: uploadRes.url,
+          fileId: uploadRes.fileId,
+        });
+      } catch (ikErr: any) {
+        console.warn("[ImageKit] Upload failed, falling back to local storage:", ikErr);
+      }
+    } else {
+      console.info("[ImageKit] Not configured, using local storage fallback.");
+    }
+
+    // 3. Fall back to local file storage inside public/uploads
+    try {
+      const buffer = Buffer.from(base64Data, "base64");
+      const ext = mimeType.split("/")[1] || "bin";
+      const safeExt = fileName ? path.extname(fileName) : `.${ext}`;
+      const uniqueId = `local_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+      const localFileName = `${uniqueId}${safeExt}`;
+      const filePath = path.join(uploadsDir, localFileName);
+
+      fs.writeFileSync(filePath, buffer);
+      console.info(`[LocalUpload] Successfully saved local file to ${filePath}`);
+
+      return res.json({
+        success: true,
+        url: `/uploads/${localFileName}`,
+        fileId: uniqueId,
+      });
+    } catch (localErr: any) {
+      console.error("[LocalUpload] Saving local file failed:", localErr);
+      return res.status(500).json({
+        success: false,
+        error: `फ़ाइल सहेजने में विफल: ${localErr?.message || "स्थानीय सर्वर त्रुटि"}`,
+      });
+    }
+  } catch (err: any) {
+    console.error("[UploadFile] General upload failed:", err);
+    return res.status(500).json({
+      success: false,
+      error: `अपलोड विफल: ${err?.message || "सर्वर त्रुटि"}`,
+    });
+  }
+});
+
 // 7c. Delete Image (Supports ImageKit CDN or Local Server Storage Fallback)
 app.post("/api/admin/delete-image", requireAdmin, async (req, res) => {
   try {
@@ -1176,6 +1276,175 @@ app.post("/api/admin/notifications/mark-read", requireAdmin, async (req, res) =>
   } catch (error: any) {
     console.error("[ServerCMS] Error marking notifications read:", error);
     return res.status(500).json({ success: false, error: "Failed to update notification status." });
+  }
+});
+
+/* ---------------- VOICE-TO-TEXT AUDIO TRANSCRIPTION API ---------------- */
+
+let geminiAiClient: GoogleGenAI | null = null;
+function getGeminiClient(): GoogleGenAI {
+  if (!geminiAiClient) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY environment variable is missing or empty.");
+    }
+    geminiAiClient = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          "User-Agent": "aistudio-build",
+        },
+      },
+    });
+  }
+  return geminiAiClient;
+}
+
+// Server-side audio transcription powered by Gemini
+app.post("/api/admin/transcribe-audio", requireAdmin, async (req, res) => {
+  try {
+    const { audio, language = "hi" } = req.body || {};
+
+    if (!audio || typeof audio !== "string") {
+      return res.status(400).json({ success: false, error: "ऑडियो डेटा उपलब्ध नहीं है।" });
+    }
+
+    // Extract Base64 and MIME type
+    let mimeType = "audio/webm";
+    let base64Data = audio;
+
+    if (audio.startsWith("data:")) {
+      const match = audio.match(/^data:([^;]+);base64,(.+)$/);
+      if (match) {
+        // Strip codec details for Gemini inlineData e.g. audio/webm;codecs=opus -> audio/webm
+        mimeType = match[1].split(";")[0].trim();
+        base64Data = match[2];
+      }
+    }
+
+    if (!base64Data || base64Data.length < 50) {
+      return res.json({ success: true, text: "" });
+    }
+
+    // Normalize standard audio mime types if needed
+    if (mimeType.includes("webm")) mimeType = "audio/webm";
+    else if (mimeType.includes("ogg") || mimeType.includes("opus")) mimeType = "audio/ogg";
+    else if (mimeType.includes("mp4") || mimeType.includes("m4a")) mimeType = "audio/mp4";
+    else if (mimeType.includes("wav")) mimeType = "audio/wav";
+    else if (mimeType.includes("aac")) mimeType = "audio/aac";
+
+    const ai = getGeminiClient();
+
+    const promptText =
+      language === "en"
+        ? "Transcribe this spoken English audio exactly and cleanly. Return ONLY the transcribed words. Do not add quotes, markdown formatting, explanations, or commentary. If the audio is silence or unintelligible noise, return absolutely nothing."
+        : "इस बोले गए हिंदी ऑडियो को अत्यधिक सटीकता से शुद्ध देवनागरी हिंदी में ट्रांसक्राइब (प्रतिलेखन) करें। केवल बोले गए शब्द ही वापस करें। कोई उद्धरण चिह्न (quotes), मार्कडाउन या अतिरिक्त टिप्पणी न जोड़ें। यदि ऑडियो में कोई स्पष्ट आवाज या शब्द न हो, तो केवल खाली स्ट्रिंग लौटाएं।";
+
+    // Attempt transcription with primary transcription model gemini-2.5-flash / gemini-3.5-transcribe
+    let transcriptText = "";
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                inlineData: {
+                  mimeType,
+                  data: base64Data,
+                },
+              },
+              {
+                text: promptText,
+              },
+            ],
+          },
+        ],
+      });
+
+      transcriptText = response?.text || "";
+    } catch (primaryErr: any) {
+      console.warn("[Transcribe] Primary model failed, trying fallback...", primaryErr?.message);
+      // Fallback to gemini-2.5-flash / gemini-1.5-flash or flash-lite if needed
+      const fallbackResponse = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                inlineData: {
+                  mimeType,
+                  data: base64Data,
+                },
+              },
+              {
+                text: promptText,
+              },
+            ],
+          },
+        ],
+      });
+      transcriptText = fallbackResponse?.text || "";
+    }
+
+    // Clean transcription
+    let cleaned = transcriptText.trim();
+    // Remove accidental backticks or quotes wrapping the text
+    cleaned = cleaned.replace(/^["'`]+|["'`]+$/g, "").trim();
+
+    return res.json({
+      success: true,
+      text: cleaned,
+    });
+  } catch (error: any) {
+    console.error("[Transcribe] Audio transcription error:", error);
+    return res.status(500).json({
+      success: false,
+      error: error?.message || "आवाज प्रतिलेखन में त्रुटि हुई।",
+    });
+  }
+});
+
+// Admin Language Translation API (Hindi <-> English)
+app.post("/api/admin/translate", requireAdmin, async (req, res) => {
+  try {
+    const { text, targetLang = "en" } = req.body || {};
+
+    if (!text || typeof text !== "string" || !text.trim()) {
+      return res.status(400).json({ success: false, error: "कृपया अनुवाद के लिए सामग्री प्रदान करें।" });
+    }
+
+    const ai = getGeminiClient();
+
+    const promptText =
+      targetLang === "en"
+        ? `Translate the following Hindi text accurately and gracefully into English. Preserve paragraph breaks. Output ONLY the translated English text, without markdown formatting or introductory notes:\n\n${text}`
+        : `इस अंग्रेजी सामग्री का शुद्ध, सरल और अर्थपूर्ण देवनागरी हिंदी में अनुवाद करें। पैराग्राफ संरचना बनाए रखें। केवल अनुवादित हिंदी पाठ ही आउटपुट करें, कोई अतिरिक्त टिप्पणी न दें:\n\n${text}`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: promptText }],
+        },
+      ],
+    });
+
+    const translatedText = (response?.text || "").trim();
+
+    return res.json({
+      success: true,
+      translatedText,
+    });
+  } catch (error: any) {
+    console.error("[Translate] Translation error:", error);
+    return res.status(500).json({
+      success: false,
+      error: error?.message || "अनुवाद करने में विफलता हुई।",
+    });
   }
 });
 
